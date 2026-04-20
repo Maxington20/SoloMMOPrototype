@@ -298,8 +298,11 @@ public class EnemyController : MonoBehaviour
 
             if (playerProgression != null && enemyData != null)
             {
-                playerProgression.AddXp(enemyData.XpReward);
+                playerProgression.AddXp(enemyData.XpReward);               
             }
+
+            GetComponent<EnemyLoot>()?.DropLoot();
+            DisableCollisionOnDeath();
         }
 
         DisplayName displayName = GetComponent<DisplayName>();
@@ -374,6 +377,27 @@ public class EnemyController : MonoBehaviour
                     obj.SetActive(visible);
                 }
             }
+        }
+    }
+
+    private void DisableCollisionOnDeath()
+    {
+        Collider[] colliders = GetComponentsInChildren<Collider>();
+        foreach (Collider col in colliders)
+        {
+            col.enabled = false;
+        }
+
+        CharacterController characterController = GetComponent<CharacterController>();
+        if (characterController != null)
+        {
+            characterController.enabled = false;
+        }
+
+        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.enabled = false;
         }
     }
 }
