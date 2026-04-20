@@ -1,19 +1,29 @@
+using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class InventorySlotUI : MonoBehaviour
+public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text quantityText;
+    [SerializeField] private TMP_Text itemNameText;
     [SerializeField] private GameObject emptyStateObject;
 
     private int slotIndex;
+    private Action<int> onClicked;
 
-    public void Initialize(int index)
+    public void Initialize(int index, Action<int> clickHandler)
     {
         slotIndex = index;
+        onClicked = clickHandler;
         gameObject.name = $"InventorySlot_{index}";
+    }
+
+    private void Awake()
+    {
+        DisableChildRaycasts();
     }
 
     public void Refresh(InventorySlotData slotData)
@@ -27,16 +37,60 @@ public class InventorySlotUI : MonoBehaviour
         SetFilledVisual(slotData);
     }
 
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        onClicked?.Invoke(slotIndex);
+    }
+
+    private void DisableChildRaycasts()
+    {
+        if (iconImage != null)
+        {
+            iconImage.raycastTarget = false;
+        }
+
+        if (quantityText != null)
+        {
+            quantityText.raycastTarget = false;
+        }
+
+        if (itemNameText != null)
+        {
+            itemNameText.raycastTarget = false;
+        }
+
+        if (emptyStateObject != null)
+        {
+            Graphic[] graphics = emptyStateObject.GetComponentsInChildren<Graphic>(true);
+            for (int i = 0; i < graphics.Length; i++)
+            {
+                graphics[i].raycastTarget = false;
+            }
+        }
+    }
+
     private void SetEmptyVisual()
     {
         if (iconImage != null)
         {
             iconImage.enabled = false;
+            iconImage.sprite = null;
+            iconImage.color = Color.white;
         }
 
         if (quantityText != null)
         {
             quantityText.text = string.Empty;
+        }
+
+        if (itemNameText != null)
+        {
+            itemNameText.text = string.Empty;
         }
 
         if (emptyStateObject != null)
@@ -49,12 +103,27 @@ public class InventorySlotUI : MonoBehaviour
     {
         if (iconImage != null)
         {
-            iconImage.enabled = false;
+            iconImage.enabled = true;
+            iconImage.sprite = slotData.Item != null ? slotData.Item.Icon : null;
+
+            if (slotData.Item != null && slotData.Item.Icon != null)
+            {
+                iconImage.color = Color.white;
+            }
+            else
+            {
+                iconImage.color = new Color(0.18f, 0.18f, 0.18f, 0.9f);
+            }
         }
 
         if (quantityText != null)
         {
             quantityText.text = slotData.Quantity > 1 ? slotData.Quantity.ToString() : string.Empty;
+        }
+
+        if (itemNameText != null)
+        {
+            itemNameText.text = slotData.Item != null ? slotData.Item.DisplayName : string.Empty;
         }
 
         if (emptyStateObject != null)

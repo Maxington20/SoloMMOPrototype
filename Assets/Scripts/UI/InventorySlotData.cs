@@ -3,16 +3,30 @@ using System;
 [Serializable]
 public class InventorySlotData
 {
-    public bool IsEmpty = true;
+    public ItemData Item;
+    public int Quantity;
 
-    // Placeholder for future item support
-    public string ItemId = string.Empty;
-    public int Quantity = 0;
+    public bool IsEmpty => Item == null || Quantity <= 0;
+
+    public bool CanStack(ItemData item)
+    {
+        return !IsEmpty && Item == item && item != null && item.IsStackable;
+    }
+
+    public void Set(ItemData item, int quantity)
+    {
+        Item = item;
+        Quantity = quantity;
+
+        if (Item == null || Quantity <= 0)
+        {
+            Clear();
+        }
+    }
 
     public void Clear()
     {
-        IsEmpty = true;
-        ItemId = string.Empty;
+        Item = null;
         Quantity = 0;
     }
 }

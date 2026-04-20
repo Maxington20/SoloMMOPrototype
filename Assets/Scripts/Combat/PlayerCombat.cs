@@ -9,11 +9,12 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float chaseStopDistance = 1.5f;
 
     private float lastAttackTime;
+    private int equipmentBonusDamage;
     private Health currentTarget;
     private EnemyController currentEnemyTarget;
 
     public Transform CurrentTargetTransform => currentTarget != null ? currentTarget.transform : null;
-    public int Damage => damage;
+    public int Damage => damage + equipmentBonusDamage;
 
     private void Update()
     {
@@ -24,7 +25,13 @@ public class PlayerCombat : MonoBehaviour
     public void IncreaseDamage(int amount)
     {
         damage += amount;
-        Debug.Log($"Player damage increased to {damage}");
+        Debug.Log($"Player damage increased to {Damage}");
+    }
+
+    public void SetEquipmentBonusDamage(int amount)
+    {
+        equipmentBonusDamage = Mathf.Max(0, amount);
+        Debug.Log($"Player damage updated to {Damage}");
     }
 
     private void HandleTargetSelection()
@@ -94,8 +101,8 @@ public class PlayerCombat : MonoBehaviour
 
         lastAttackTime = Time.time;
 
-        Debug.Log($"Player auto-attacks {currentTarget.name} for {damage}");
-        currentTarget.TakeDamage(damage, gameObject);
+        Debug.Log($"Player auto-attacks {currentTarget.name} for {Damage}");
+        currentTarget.TakeDamage(Damage, gameObject);
 
         if (currentEnemyTarget != null)
         {

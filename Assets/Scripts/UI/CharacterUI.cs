@@ -13,12 +13,21 @@ public class CharacterUI : MonoBehaviour
     [SerializeField] private TMP_Text damageText;
     [SerializeField] private TMP_Text goldText;
 
+    [Header("Equipment Slots")]
+    [SerializeField] private EquipmentSlotUI headSlot;
+    [SerializeField] private EquipmentSlotUI chestSlot;
+    [SerializeField] private EquipmentSlotUI legsSlot;
+    [SerializeField] private EquipmentSlotUI feetSlot;
+    [SerializeField] private EquipmentSlotUI weaponSlot;
+    [SerializeField] private EquipmentSlotUI offhandSlot;
+
     [Header("Player References")]
     [SerializeField] private DisplayName displayName;
     [SerializeField] private PlayerProgression progression;
     [SerializeField] private Health health;
     [SerializeField] private PlayerCombat combat;
     [SerializeField] private PlayerInventory inventory;
+    [SerializeField] private PlayerEquipment equipment;
 
     [Header("Controls")]
     [SerializeField] private KeyCode toggleKey = KeyCode.C;
@@ -31,6 +40,13 @@ public class CharacterUI : MonoBehaviour
         {
             characterWindow.SetActive(false);
         }
+
+        if (headSlot != null) headSlot.Initialize(HandleEquipmentSlotClicked);
+        if (chestSlot != null) chestSlot.Initialize(HandleEquipmentSlotClicked);
+        if (legsSlot != null) legsSlot.Initialize(HandleEquipmentSlotClicked);
+        if (feetSlot != null) feetSlot.Initialize(HandleEquipmentSlotClicked);
+        if (weaponSlot != null) weaponSlot.Initialize(HandleEquipmentSlotClicked);
+        if (offhandSlot != null) offhandSlot.Initialize(HandleEquipmentSlotClicked);
     }
 
     private void Update()
@@ -65,37 +81,57 @@ public class CharacterUI : MonoBehaviour
     {
         if (nameText != null)
         {
-            nameText.text = displayName != null
-                ? displayName.Display
-                : "Name: Unknown";
+            nameText.text = displayName != null ? displayName.Display : "Unknown";
         }
 
         if (levelText != null)
         {
-            levelText.text = progression != null
-                ? $"Level: {progression.Level}"
-                : "Level: ?";
+            levelText.text = progression != null ? $"Level: {progression.Level}" : "Level: ?";
         }
 
         if (healthText != null)
         {
-            healthText.text = health != null
-                ? $"Health: {health.CurrentHealth}/{health.MaxHealth}"
-                : "Health: ?";
+            healthText.text = health != null ? $"Health: {health.CurrentHealth}/{health.MaxHealth}" : "Health: ?";
         }
 
         if (damageText != null)
         {
-            damageText.text = combat != null
-                ? $"Damage: {combat.Damage}"
-                : "Damage: ?";
+            damageText.text = combat != null ? $"Damage: {combat.Damage}" : "Damage: ?";
         }
 
         if (goldText != null)
         {
-            goldText.text = inventory != null
-                ? $"Gold: {inventory.Gold}"
-                : "Gold: 0";
+            goldText.text = inventory != null ? $"Gold: {inventory.Gold}" : "Gold: 0";
+        }
+
+        RefreshEquipmentSlots();
+    }
+
+    private void RefreshEquipmentSlots()
+    {
+        if (equipment == null)
+        {
+            return;
+        }
+
+        if (headSlot != null) headSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Head));
+        if (chestSlot != null) chestSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Chest));
+        if (legsSlot != null) legsSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Legs));
+        if (feetSlot != null) feetSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Feet));
+        if (weaponSlot != null) weaponSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Weapon));
+        if (offhandSlot != null) offhandSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Offhand));
+    }
+
+    private void HandleEquipmentSlotClicked(EquipmentSlotType slotType)
+    {
+        if (inventory == null)
+        {
+            return;
+        }
+
+        if (inventory.TryUnequip(slotType))
+        {
+            Refresh();
         }
     }
 }

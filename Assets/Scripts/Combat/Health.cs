@@ -6,12 +6,13 @@ public class Health : MonoBehaviour
     [SerializeField] private int maxHealth = 100;
 
     private int currentHealth;
+    private int equipmentBonusMaxHealth;
     private GameObject lastDamageSource;
 
     public int CurrentHealth => currentHealth;
-    public int MaxHealth => maxHealth;
+    public int MaxHealth => maxHealth + equipmentBonusMaxHealth;
     public bool IsDead => currentHealth <= 0;
-    public float HealthPercent => maxHealth <= 0 ? 0f : (float)currentHealth / maxHealth;
+    public float HealthPercent => MaxHealth <= 0 ? 0f : (float)currentHealth / MaxHealth;
     public GameObject LastDamageSource => lastDamageSource;
 
     public event Action OnHealthChanged;
@@ -35,7 +36,7 @@ public class Health : MonoBehaviour
         currentHealth -= amount;
         currentHealth = Mathf.Max(currentHealth, 0);
 
-        Debug.Log($"{gameObject.name} took {amount} damage. Health: {currentHealth}/{maxHealth}");
+        Debug.Log($"{gameObject.name} took {amount} damage. Health: {currentHealth}/{MaxHealth}");
 
         OnDamaged?.Invoke(amount, source);
         OnHealthChanged?.Invoke();
@@ -48,7 +49,7 @@ public class Health : MonoBehaviour
 
     public void ResetHealth()
     {
-        currentHealth = maxHealth;
+        currentHealth = MaxHealth;
         lastDamageSource = null;
         OnHealthChanged?.Invoke();
     }
@@ -59,12 +60,27 @@ public class Health : MonoBehaviour
 
         if (fullyHeal)
         {
-            currentHealth = maxHealth;
+            currentHealth = MaxHealth;
         }
         else
         {
-            currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+            currentHealth = Mathf.Min(currentHealth + amount, MaxHealth);
         }
+
+        OnHealthChanged?.Invoke();
+    }
+
+    public void SetEquipmentBonusHealth(int amount)
+    {
+        int oldMaxHealth = MaxHealth;
+
+        equipmentBonusMaxHealth = Mathf.Max(0, amount);
+
+        int newMaxHealth = MaxHealth;
+        int delta = newMaxHealth - oldMaxHealth;
+
+        currentHealth += delta;
+        currentHealth = Mathf.Clamp(currentHealth, 0, newMaxHealth);
 
         OnHealthChanged?.Invoke();
     }

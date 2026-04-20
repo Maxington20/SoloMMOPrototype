@@ -36,10 +36,6 @@ public class InventoryUI : MonoBehaviour
             PlayerInventory.Instance.OnGoldChanged += HandleGoldChanged;
             PlayerInventory.Instance.OnInventoryChanged += HandleInventoryChanged;
         }
-        else
-        {
-            Debug.LogWarning("InventoryUI: PlayerInventory.Instance was not found in Start.");
-        }
 
         ApplyCursorState();
     }
@@ -63,21 +59,8 @@ public class InventoryUI : MonoBehaviour
 
     private void BuildSlots()
     {
-        if (slotContainer == null)
+        if (slotContainer == null || slotPrefab == null || PlayerInventory.Instance == null)
         {
-            Debug.LogWarning("InventoryUI: slotContainer is not assigned.");
-            return;
-        }
-
-        if (slotPrefab == null)
-        {
-            Debug.LogWarning("InventoryUI: slotPrefab is not assigned.");
-            return;
-        }
-
-        if (PlayerInventory.Instance == null)
-        {
-            Debug.LogWarning("InventoryUI: PlayerInventory.Instance is null, cannot build slots.");
             return;
         }
 
@@ -91,8 +74,21 @@ public class InventoryUI : MonoBehaviour
         for (int i = 0; i < PlayerInventory.Instance.SlotCount; i++)
         {
             InventorySlotUI slotUI = Instantiate(slotPrefab, slotContainer);
-            slotUI.Initialize(i);
+            slotUI.Initialize(i, HandleSlotClicked);
             slotUIs.Add(slotUI);
+        }
+    }
+
+    private void HandleSlotClicked(int slotIndex)
+    {
+        if (PlayerInventory.Instance == null)
+        {
+            return;
+        }
+
+        if (PlayerInventory.Instance.TryEquipFromSlot(slotIndex))
+        {
+            RefreshAll();
         }
     }
 
@@ -111,8 +107,6 @@ public class InventoryUI : MonoBehaviour
 
     private void ApplyCursorState()
     {
-        // WoW-style behavior:
-        // keep cursor visible and unlocked all the time.
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
