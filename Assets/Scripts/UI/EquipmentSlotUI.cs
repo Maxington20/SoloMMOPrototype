@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler
+public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private EquipmentSlotType slotType;
     [SerializeField] private Image iconImage;
@@ -12,6 +12,7 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler
     [SerializeField] private GameObject emptyStateObject;
 
     private Action<EquipmentSlotType> onClicked;
+    private ItemData currentItem;
 
     public EquipmentSlotType SlotType => slotType;
 
@@ -27,6 +28,7 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler
 
     public void Refresh(ItemData item)
     {
+        currentItem = item;
         bool isEmpty = item == null;
 
         if (emptyStateObject != null)
@@ -72,6 +74,27 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler
         }
 
         onClicked?.Invoke(slotType);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentItem == null)
+        {
+            return;
+        }
+
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Show(currentItem);
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Hide();
+        }
     }
 
     private void DisableChildRaycasts()

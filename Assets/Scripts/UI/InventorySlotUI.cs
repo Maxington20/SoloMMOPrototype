@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
+public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text quantityText;
@@ -13,6 +13,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
     private int slotIndex;
     private Action<int> onClicked;
+    private ItemData currentItem;
 
     public void Initialize(int index, Action<int> clickHandler)
     {
@@ -28,12 +29,15 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
     public void Refresh(InventorySlotData slotData)
     {
+        currentItem = null;
+
         if (slotData == null || slotData.IsEmpty)
         {
             SetEmptyVisual();
             return;
         }
 
+        currentItem = slotData.Item;
         SetFilledVisual(slotData);
     }
 
@@ -44,7 +48,33 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
             return;
         }
 
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Hide();
+        }
+
         onClicked?.Invoke(slotIndex);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentItem == null)
+        {
+            return;
+        }
+
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Show(currentItem);
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Hide();
+        }
     }
 
     private void DisableChildRaycasts()
@@ -108,7 +138,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
             if (slotData.Item != null && slotData.Item.Icon != null)
             {
-                iconImage.color = Color.white;
+                iconImage.color = new Color(0.0f, 0.0f, 0.0f, 0.9f);
             }
             else
             {
