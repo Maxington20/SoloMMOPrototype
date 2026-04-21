@@ -57,6 +57,11 @@ public class PlayerInventory : MonoBehaviour
 
     public void AddGold(int amount)
     {
+        AddGold(amount, true);
+    }
+
+    public void AddGold(int amount, bool postLootMessage)
+    {
         if (amount <= 0)
         {
             return;
@@ -65,7 +70,7 @@ public class PlayerInventory : MonoBehaviour
         Gold += amount;
         OnGoldChanged?.Invoke(Gold);
 
-        if (ChatManager.Instance != null)
+        if (postLootMessage && ChatManager.Instance != null)
         {
             ChatManager.Instance.PostSystem($"You loot {amount} gold.");
         }
@@ -144,6 +149,97 @@ public class PlayerInventory : MonoBehaviour
     public bool AddItem(ItemData item, int quantity = 1)
     {
         return AddItemInternal(item, quantity, true);
+    }
+
+    public bool TryBuyItem(ItemData item, int quantity = 1)
+    {
+        if (item == null || quantity <= 0)
+        {
+            return false;
+        }
+
+        int totalCost = item.BuyValue * quantity;
+
+        if (totalCost <= 0)
+        {
+            if (ChatManager.Instance != null)
+            {
+                ChatManager.Instance.PostSystem($"{item.DisplayName} cannot be purchased.");
+            }
+
+            return false;
+        }
+
+        if (!CanAddItem(item, quantity))
+        {
+            if (ChatManager.Instance != null)
+            {
+                ChatManager.Instance.PostSystem("Inventory is full.");
+            }
+
+            return false;
+        }
+
+        if (!SpendGold(totalCost))
+        {
+            if (ChatManager.Instance != null)
+            {
+                ChatManager.Instance.PostSystem("You do not have enough gold.");
+            }
+
+            return false;
+        }
+
+        AddItemInternal(item, quantity, false);
+        OnInventoryChanged?.Invoke();
+
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem($"You buy {item.DisplayName} for {totalCost} gold.");
+        }
+
+        return true;
+    }
+
+    public bool TrySellItemFromSlot(int slotIndex, int quantity = 1)
+    {
+        InventorySlotData slot = GetSlot(slotIndex);
+        if (slot == null || slot.IsEmpty || slot.Item == null)
+        {
+            return false;
+        }
+
+        if (quantity <= 0)
+        {
+            return false;
+        }
+
+        int quantityToSell = Mathf.Min(quantity, slot.Quantity);
+        ItemData item = slot.Item;
+
+        if (item.SellValue <= 0)
+        {
+            if (ChatManager.Instance != null)
+            {
+                ChatManager.Instance.PostSystem($"{item.DisplayName} cannot be sold.");
+            }
+
+            return false;
+        }
+
+        RemoveFromSlotInternal(slotIndex, quantityToSell, false);
+
+        int totalGold = item.SellValue * quantityToSell;
+        AddGold(totalGold, false);
+
+        OnInventoryChanged?.Invoke();
+
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem($"You sell {item.DisplayName} for {totalGold} gold.");
+        }
+
+        return true;
     }
 
     public bool TryEquipFromSlot(int slotIndex)

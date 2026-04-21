@@ -15,7 +15,8 @@ MonoBehaviour:
   displayName: Worn Helm
   itemType: 1
   icon: {fileID: 0}
-  sellValue: 1
+  sellValue: 3
+  buyValue: 10
   isStackable: 0
   maxStack: 1
   isEquippable: 1

@@ -8,6 +8,7 @@ public class ItemData : ScriptableObject
     [SerializeField] private ItemType itemType = ItemType.Junk;
     [SerializeField] private Sprite icon;
     [SerializeField] private int sellValue = 1;
+    [SerializeField] private int buyValue = 5;
 
     [Header("Stacking")]
     [SerializeField] private bool isStackable = false;
@@ -22,7 +23,8 @@ public class ItemData : ScriptableObject
     public string DisplayName => displayName;
     public ItemType ItemType => itemType;
     public Sprite Icon => icon;
-    public int SellValue => sellValue;
+    public int SellValue => Mathf.Max(0, sellValue);
+    public int BuyValue => Mathf.Max(0, buyValue);
     public bool IsStackable => isStackable;
     public int MaxStack => Mathf.Max(1, maxStack);
     public bool IsEquippable => isEquippable;
