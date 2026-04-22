@@ -11,7 +11,9 @@ public class ItemContextMenuUI : MonoBehaviour
     {
         None,
         InventorySlot,
-        EquipmentSlot
+        EquipmentSlot,
+        VendorBuyItem,
+        VendorSellInventorySlot
     }
 
     [Header("Root")]
@@ -32,6 +34,7 @@ public class ItemContextMenuUI : MonoBehaviour
 
     private ContextType currentContextType = ContextType.None;
     private int currentInventorySlotIndex = -1;
+    private int currentVendorItemIndex = -1;
     private EquipmentSlotType currentEquipmentSlotType = EquipmentSlotType.None;
     private ItemData currentItem;
     private Vector2 currentOpenScreenPosition;
@@ -104,6 +107,7 @@ public class ItemContextMenuUI : MonoBehaviour
 
         currentContextType = ContextType.InventorySlot;
         currentInventorySlotIndex = slotIndex;
+        currentVendorItemIndex = -1;
         currentEquipmentSlotType = EquipmentSlotType.None;
         currentItem = item;
         currentOpenScreenPosition = screenPosition;
@@ -124,11 +128,54 @@ public class ItemContextMenuUI : MonoBehaviour
 
         currentContextType = ContextType.EquipmentSlot;
         currentInventorySlotIndex = -1;
+        currentVendorItemIndex = -1;
         currentEquipmentSlotType = slotType;
         currentItem = item;
         currentOpenScreenPosition = screenPosition;
 
         ConfigurePrimaryAction(true, "Unequip");
+
+        ShowMenu(screenPosition);
+    }
+
+    public void OpenForVendorBuyItem(int vendorItemIndex, ItemData item, Vector2 screenPosition)
+    {
+        if (item == null)
+        {
+            Hide();
+            return;
+        }
+
+        currentContextType = ContextType.VendorBuyItem;
+        currentInventorySlotIndex = -1;
+        currentVendorItemIndex = vendorItemIndex;
+        currentEquipmentSlotType = EquipmentSlotType.None;
+        currentItem = item;
+        currentOpenScreenPosition = screenPosition;
+
+        ConfigurePrimaryAction(true, "Buy");
+
+        ShowMenu(screenPosition);
+    }
+
+    public void OpenForVendorSellInventorySlot(int inventorySlotIndex, ItemData item, Vector2 screenPosition)
+    {
+        if (item == null)
+        {
+            Hide();
+            return;
+        }
+
+        currentContextType = ContextType.VendorSellInventorySlot;
+        currentInventorySlotIndex = inventorySlotIndex;
+        currentVendorItemIndex = -1;
+        currentEquipmentSlotType = EquipmentSlotType.None;
+        currentItem = item;
+        currentOpenScreenPosition = screenPosition;
+
+        bool canSell = item.SellValue > 0;
+        ConfigurePrimaryAction(canSell, "Sell");
+
         ShowMenu(screenPosition);
     }
 
@@ -136,6 +183,7 @@ public class ItemContextMenuUI : MonoBehaviour
     {
         currentContextType = ContextType.None;
         currentInventorySlotIndex = -1;
+        currentVendorItemIndex = -1;
         currentEquipmentSlotType = EquipmentSlotType.None;
         currentItem = null;
 
@@ -174,22 +222,36 @@ public class ItemContextMenuUI : MonoBehaviour
 
     private void HandlePrimaryActionClicked()
     {
-        if (PlayerInventory.Instance == null)
-        {
-            Hide();
-            return;
-        }
-
         bool changedSomething = false;
 
         switch (currentContextType)
         {
             case ContextType.InventorySlot:
-                changedSomething = PlayerInventory.Instance.TryEquipFromSlot(currentInventorySlotIndex);
+                if (PlayerInventory.Instance != null)
+                {
+                    changedSomething = PlayerInventory.Instance.TryEquipFromSlot(currentInventorySlotIndex);
+                }
                 break;
 
             case ContextType.EquipmentSlot:
-                changedSomething = PlayerInventory.Instance.TryUnequip(currentEquipmentSlotType);
+                if (PlayerInventory.Instance != null)
+                {
+                    changedSomething = PlayerInventory.Instance.TryUnequip(currentEquipmentSlotType);
+                }
+                break;
+
+            case ContextType.VendorBuyItem:
+                if (VendorUI.Instance != null)
+                {
+                    changedSomething = VendorUI.Instance.TryBuyVendorItem(currentVendorItemIndex);
+                }
+                break;
+
+            case ContextType.VendorSellInventorySlot:
+                if (VendorUI.Instance != null)
+                {
+                    changedSomething = VendorUI.Instance.TrySellInventorySlot(currentInventorySlotIndex);
+                }
                 break;
         }
 

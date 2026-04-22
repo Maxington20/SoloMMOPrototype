@@ -109,6 +109,11 @@ public class VendorUI : MonoBehaviour
             vendorWindow.SetActive(false);
         }
 
+        if (ItemContextMenuUI.Instance != null)
+        {
+            ItemContextMenuUI.Instance.Hide();
+        }
+
         if (ItemTooltipUI.Instance != null)
         {
             ItemTooltipUI.Instance.Hide();
@@ -118,6 +123,52 @@ public class VendorUI : MonoBehaviour
     public bool IsOpenFor(VendorNPC vendor)
     {
         return isOpen && currentVendor == vendor;
+    }
+
+    public bool TryBuyVendorItem(int slotIndex)
+    {
+        if (!isOpen || currentVendor == null || PlayerInventory.Instance == null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<ItemData> items = currentVendor.ItemsForSale;
+        if (slotIndex < 0 || slotIndex >= items.Count)
+        {
+            return false;
+        }
+
+        ItemData item = items[slotIndex];
+        if (item == null)
+        {
+            return false;
+        }
+
+        bool result = PlayerInventory.Instance.TryBuyItem(item, 1);
+
+        if (result)
+        {
+            RefreshAll();
+        }
+
+        return result;
+    }
+
+    public bool TrySellInventorySlot(int slotIndex)
+    {
+        if (!isOpen || PlayerInventory.Instance == null)
+        {
+            return false;
+        }
+
+        bool result = PlayerInventory.Instance.TrySellItemFromSlot(slotIndex, 1);
+
+        if (result)
+        {
+            RefreshAll();
+        }
+
+        return result;
     }
 
     private void BuildVendorSlots()
@@ -139,7 +190,7 @@ public class VendorUI : MonoBehaviour
         for (int i = 0; i < slotCount; i++)
         {
             VendorSlotUI slotUI = Instantiate(vendorSlotPrefab, vendorSlotContainer);
-            slotUI.Initialize(i, HandleVendorSlotClicked);
+            slotUI.Initialize(i, HandleVendorSlotLeftClicked, HandleVendorSlotRightClicked);
             vendorSlotUIs.Add(slotUI);
         }
     }
@@ -161,14 +212,20 @@ public class VendorUI : MonoBehaviour
         for (int i = 0; i < PlayerInventory.Instance.SlotCount; i++)
         {
             InventorySlotUI slotUI = Instantiate(inventorySlotPrefab, playerInventorySlotContainer);
-            slotUI.Initialize(i, HandlePlayerInventorySlotClicked);
+            slotUI.Initialize(i, HandlePlayerInventorySlotLeftClicked, HandlePlayerInventorySlotRightClicked);
             playerSlotUIs.Add(slotUI);
         }
     }
 
-    private void HandleVendorSlotClicked(int slotIndex)
+    private void HandleVendorSlotLeftClicked(int slotIndex)
     {
-        if (!isOpen || currentVendor == null || PlayerInventory.Instance == null)
+        // Intentionally empty.
+        // Vendor items now use right-click context menu instead of immediate buy on left click.
+    }
+
+    private void HandleVendorSlotRightClicked(int slotIndex, Vector2 screenPosition)
+    {
+        if (!isOpen || currentVendor == null || ItemContextMenuUI.Instance == null)
         {
             return;
         }
@@ -176,32 +233,51 @@ public class VendorUI : MonoBehaviour
         IReadOnlyList<ItemData> items = currentVendor.ItemsForSale;
         if (slotIndex < 0 || slotIndex >= items.Count)
         {
+            ItemContextMenuUI.Instance.Hide();
             return;
         }
 
         ItemData item = items[slotIndex];
         if (item == null)
         {
+            ItemContextMenuUI.Instance.Hide();
             return;
         }
 
-        if (PlayerInventory.Instance.TryBuyItem(item, 1))
+        if (ItemTooltipUI.Instance != null)
         {
-            RefreshAll();
+            ItemTooltipUI.Instance.Hide();
         }
+
+        ItemContextMenuUI.Instance.OpenForVendorBuyItem(slotIndex, item, screenPosition);
     }
 
-    private void HandlePlayerInventorySlotClicked(int slotIndex)
+    private void HandlePlayerInventorySlotLeftClicked(int slotIndex)
     {
-        if (!isOpen || PlayerInventory.Instance == null)
+        // Intentionally empty.
+        // Vendor sell-side inventory now uses right-click context menu instead of immediate sell on left click.
+    }
+
+    private void HandlePlayerInventorySlotRightClicked(int slotIndex, Vector2 screenPosition)
+    {
+        if (!isOpen || PlayerInventory.Instance == null || ItemContextMenuUI.Instance == null)
         {
             return;
         }
 
-        if (PlayerInventory.Instance.TrySellItemFromSlot(slotIndex, 1))
+        InventorySlotData slotData = PlayerInventory.Instance.GetSlot(slotIndex);
+        if (slotData == null || slotData.IsEmpty || slotData.Item == null)
         {
-            RefreshAll();
+            ItemContextMenuUI.Instance.Hide();
+            return;
         }
+
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Hide();
+        }
+
+        ItemContextMenuUI.Instance.OpenForVendorSellInventorySlot(slotIndex, slotData.Item, screenPosition);
     }
 
     private void HandleGoldChanged(int _)
