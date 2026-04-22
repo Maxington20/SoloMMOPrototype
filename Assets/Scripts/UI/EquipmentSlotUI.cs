@@ -4,21 +4,29 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private EquipmentSlotType slotType;
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text textLabel;
     [SerializeField] private GameObject emptyStateObject;
 
-    private Action<EquipmentSlotType> onClicked;
+    private Action<EquipmentSlotType> onLeftClicked;
+    private Action<EquipmentSlotType, Vector2> onRightClicked;
     private ItemData currentItem;
 
     public EquipmentSlotType SlotType => slotType;
 
-    public void Initialize(Action<EquipmentSlotType> clickHandler)
+    public void Initialize(Action<EquipmentSlotType> leftClickHandler)
     {
-        onClicked = clickHandler;
+        onLeftClicked = leftClickHandler;
+        onRightClicked = null;
+    }
+
+    public void Initialize(Action<EquipmentSlotType> leftClickHandler, Action<EquipmentSlotType, Vector2> rightClickHandler)
+    {
+        onLeftClicked = leftClickHandler;
+        onRightClicked = rightClickHandler;
     }
 
     private void Awake()
@@ -68,32 +76,30 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
+        if (eventData.button == PointerEventData.InputButton.Left)
         {
+            onLeftClicked?.Invoke(slotType);
             return;
         }
 
-        onClicked?.Invoke(slotType);
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (currentItem == null)
+        if (eventData.button == PointerEventData.InputButton.Right)
         {
-            return;
-        }
+            if (currentItem == null)
+            {
+                if (ItemContextMenuUI.Instance != null)
+                {
+                    ItemContextMenuUI.Instance.Hide();
+                }
 
-        if (ItemTooltipUI.Instance != null)
-        {
-            ItemTooltipUI.Instance.Show(currentItem);
-        }
-    }
+                if (ItemTooltipUI.Instance != null)
+                {
+                    ItemTooltipUI.Instance.Hide();
+                }
 
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (ItemTooltipUI.Instance != null)
-        {
-            ItemTooltipUI.Instance.Hide();
+                return;
+            }
+
+            onRightClicked?.Invoke(slotType, eventData.position);
         }
     }
 

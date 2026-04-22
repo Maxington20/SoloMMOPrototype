@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text quantityText;
@@ -12,13 +12,23 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     [SerializeField] private GameObject emptyStateObject;
 
     private int slotIndex;
-    private Action<int> onClicked;
+    private Action<int> onLeftClicked;
+    private Action<int, Vector2> onRightClicked;
     private ItemData currentItem;
 
-    public void Initialize(int index, Action<int> clickHandler)
+    public void Initialize(int index, Action<int> leftClickHandler)
     {
         slotIndex = index;
-        onClicked = clickHandler;
+        onLeftClicked = leftClickHandler;
+        onRightClicked = null;
+        gameObject.name = $"InventorySlot_{index}";
+    }
+
+    public void Initialize(int index, Action<int> leftClickHandler, Action<int, Vector2> rightClickHandler)
+    {
+        slotIndex = index;
+        onLeftClicked = leftClickHandler;
+        onRightClicked = rightClickHandler;
         gameObject.name = $"InventorySlot_{index}";
     }
 
@@ -43,37 +53,30 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
+        if (eventData.button == PointerEventData.InputButton.Left)
         {
+            onLeftClicked?.Invoke(slotIndex);
             return;
         }
 
-        if (ItemTooltipUI.Instance != null)
+        if (eventData.button == PointerEventData.InputButton.Right)
         {
-            ItemTooltipUI.Instance.Hide();
-        }
+            if (currentItem == null)
+            {
+                if (ItemContextMenuUI.Instance != null)
+                {
+                    ItemContextMenuUI.Instance.Hide();
+                }
 
-        onClicked?.Invoke(slotIndex);
-    }
+                if (ItemTooltipUI.Instance != null)
+                {
+                    ItemTooltipUI.Instance.Hide();
+                }
 
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (currentItem == null)
-        {
-            return;
-        }
+                return;
+            }
 
-        if (ItemTooltipUI.Instance != null)
-        {
-            ItemTooltipUI.Instance.Show(currentItem);
-        }
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (ItemTooltipUI.Instance != null)
-        {
-            ItemTooltipUI.Instance.Hide();
+            onRightClicked?.Invoke(slotIndex, eventData.position);
         }
     }
 

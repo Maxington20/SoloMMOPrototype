@@ -41,12 +41,12 @@ public class CharacterUI : MonoBehaviour
             characterWindow.SetActive(false);
         }
 
-        if (headSlot != null) headSlot.Initialize(HandleEquipmentSlotClicked);
-        if (chestSlot != null) chestSlot.Initialize(HandleEquipmentSlotClicked);
-        if (legsSlot != null) legsSlot.Initialize(HandleEquipmentSlotClicked);
-        if (feetSlot != null) feetSlot.Initialize(HandleEquipmentSlotClicked);
-        if (weaponSlot != null) weaponSlot.Initialize(HandleEquipmentSlotClicked);
-        if (offhandSlot != null) offhandSlot.Initialize(HandleEquipmentSlotClicked);
+        if (headSlot != null) headSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked);
+        if (chestSlot != null) chestSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked);
+        if (legsSlot != null) legsSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked);
+        if (feetSlot != null) feetSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked);
+        if (weaponSlot != null) weaponSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked);
+        if (offhandSlot != null) offhandSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked);
     }
 
     private void Update()
@@ -69,6 +69,19 @@ public class CharacterUI : MonoBehaviour
         if (characterWindow != null)
         {
             characterWindow.SetActive(isOpen);
+        }
+
+        if (!isOpen)
+        {
+            if (ItemContextMenuUI.Instance != null)
+            {
+                ItemContextMenuUI.Instance.Hide();
+            }
+
+            if (ItemTooltipUI.Instance != null)
+            {
+                ItemTooltipUI.Instance.Hide();
+            }
         }
 
         if (isOpen)
@@ -122,16 +135,31 @@ public class CharacterUI : MonoBehaviour
         if (offhandSlot != null) offhandSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Offhand));
     }
 
-    private void HandleEquipmentSlotClicked(EquipmentSlotType slotType)
+    private void HandleEquipmentSlotLeftClicked(EquipmentSlotType slotType)
     {
-        if (inventory == null)
+        // Intentionally empty.
+        // Equipped items now use right-click context menu instead of auto-unequip on left click.
+    }
+
+    private void HandleEquipmentSlotRightClicked(EquipmentSlotType slotType, Vector2 screenPosition)
+    {
+        if (!isOpen || equipment == null || ItemContextMenuUI.Instance == null)
         {
             return;
         }
 
-        if (inventory.TryUnequip(slotType))
+        ItemData item = equipment.GetEquippedItem(slotType);
+        if (item == null)
         {
-            Refresh();
+            ItemContextMenuUI.Instance.Hide();
+            return;
         }
+
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Hide();
+        }
+
+        ItemContextMenuUI.Instance.OpenForEquipmentSlot(slotType, item, screenPosition);
     }
 }

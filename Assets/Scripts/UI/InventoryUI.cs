@@ -74,22 +74,37 @@ public class InventoryUI : MonoBehaviour
         for (int i = 0; i < PlayerInventory.Instance.SlotCount; i++)
         {
             InventorySlotUI slotUI = Instantiate(slotPrefab, slotContainer);
-            slotUI.Initialize(i, HandleSlotClicked);
+            slotUI.Initialize(i, HandleSlotLeftClicked, HandleSlotRightClicked);
             slotUIs.Add(slotUI);
         }
     }
 
-    private void HandleSlotClicked(int slotIndex)
+    private void HandleSlotLeftClicked(int slotIndex)
     {
-        if (PlayerInventory.Instance == null)
+        // Intentionally empty.
+        // Inventory items now use right-click context menu instead of auto-equip on left click.
+    }
+
+    private void HandleSlotRightClicked(int slotIndex, Vector2 screenPosition)
+    {
+        if (!isOpen || PlayerInventory.Instance == null || ItemContextMenuUI.Instance == null)
         {
             return;
         }
 
-        if (PlayerInventory.Instance.TryEquipFromSlot(slotIndex))
+        InventorySlotData slotData = PlayerInventory.Instance.GetSlot(slotIndex);
+        if (slotData == null || slotData.IsEmpty || slotData.Item == null)
         {
-            RefreshAll();
+            ItemContextMenuUI.Instance.Hide();
+            return;
         }
+
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Hide();
+        }
+
+        ItemContextMenuUI.Instance.OpenForInventorySlot(slotIndex, slotData.Item, screenPosition);
     }
 
     private void ToggleInventory()
@@ -99,6 +114,19 @@ public class InventoryUI : MonoBehaviour
         if (inventoryWindow != null)
         {
             inventoryWindow.SetActive(isOpen);
+        }
+
+        if (!isOpen)
+        {
+            if (ItemContextMenuUI.Instance != null)
+            {
+                ItemContextMenuUI.Instance.Hide();
+            }
+
+            if (ItemTooltipUI.Instance != null)
+            {
+                ItemTooltipUI.Instance.Hide();
+            }
         }
 
         ApplyCursorState();

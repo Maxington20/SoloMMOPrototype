@@ -17,10 +17,15 @@ public class ItemTooltipUI : MonoBehaviour
     [SerializeField] private TMP_Text bonusText;
     [SerializeField] private TMP_Text sellValueText;
 
+    [Header("Optional Close Button")]
+    [SerializeField] private Button closeButton;
+
     [Header("Settings")]
     [SerializeField] private Vector2 cursorOffset = new Vector2(18f, -18f);
+    [SerializeField] private Vector2 screenPadding = new Vector2(16f, 16f);
 
     private Canvas rootCanvas;
+    private bool followMouse = true;
 
     private void Awake()
     {
@@ -33,6 +38,11 @@ public class ItemTooltipUI : MonoBehaviour
         Instance = this;
         rootCanvas = GetComponentInParent<Canvas>();
 
+        if (closeButton != null)
+        {
+            closeButton.onClick.AddListener(Hide);
+        }
+
         DisableTooltipRaycasts();
         Hide();
     }
@@ -44,7 +54,16 @@ public class ItemTooltipUI : MonoBehaviour
             return;
         }
 
-        FollowMouse();
+        if (followMouse)
+        {
+            Vector2 screenPosition = (Vector2)Input.mousePosition + cursorOffset;
+            PositionTooltipClamped(screenPosition, preferLeftWhenNeeded: false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Hide();
+        }
     }
 
     public void Show(ItemData item)
@@ -55,11 +74,49 @@ public class ItemTooltipUI : MonoBehaviour
             return;
         }
 
+        followMouse = true;
+        Populate(item);
+
         if (tooltipRoot != null)
         {
             tooltipRoot.SetActive(true);
         }
 
+        transform.SetAsLastSibling();
+        Vector2 screenPosition = (Vector2)Input.mousePosition + cursorOffset;
+        PositionTooltipClamped(screenPosition, preferLeftWhenNeeded: false);
+    }
+
+    public void ShowAtScreenPosition(ItemData item, Vector2 screenPosition)
+    {
+        if (item == null)
+        {
+            Hide();
+            return;
+        }
+
+        followMouse = false;
+        Populate(item);
+
+        if (tooltipRoot != null)
+        {
+            tooltipRoot.SetActive(true);
+        }
+
+        transform.SetAsLastSibling();
+        PositionTooltipClamped(screenPosition, preferLeftWhenNeeded: true);
+    }
+
+    public void Hide()
+    {
+        if (tooltipRoot != null)
+        {
+            tooltipRoot.SetActive(false);
+        }
+    }
+
+    private void Populate(ItemData item)
+    {
         if (canvasGroup != null)
         {
             canvasGroup.blocksRaycasts = false;
@@ -86,30 +143,35 @@ public class ItemTooltipUI : MonoBehaviour
         {
             sellValueText.text = $"Sell Value: {item.SellValue} Gold";
         }
-
-        FollowMouse();
-    }
-
-    public void Hide()
-    {
-        if (tooltipRoot != null)
-        {
-            tooltipRoot.SetActive(false);
-        }
     }
 
     private void DisableTooltipRaycasts()
     {
-        if (canvasGroup != null)
-        {
-            canvasGroup.blocksRaycasts = false;
-            canvasGroup.interactable = false;
-        }
-
         Graphic[] graphics = GetComponentsInChildren<Graphic>(true);
         for (int i = 0; i < graphics.Length; i++)
         {
             graphics[i].raycastTarget = false;
+        }
+
+        if (closeButton != null)
+        {
+            Image closeImage = closeButton.GetComponent<Image>();
+            if (closeImage != null)
+            {
+                closeImage.raycastTarget = true;
+            }
+
+            TMP_Text closeText = closeButton.GetComponentInChildren<TMP_Text>(true);
+            if (closeText != null)
+            {
+                closeText.raycastTarget = false;
+            }
+        }
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.blocksRaycasts = true;
+            canvasGroup.interactable = true;
         }
     }
 
@@ -159,9 +221,53 @@ public class ItemTooltipUI : MonoBehaviour
         };
     }
 
-    private void FollowMouse()
+    private void PositionTooltipClamped(Vector2 desiredScreenPosition, bool preferLeftWhenNeeded)
     {
-        Vector2 screenPosition = (Vector2)Input.mousePosition + cursorOffset;
+        if (tooltipPanel == null)
+        {
+            return;
+        }
+
+        Canvas.ForceUpdateCanvases();
+
+        Vector2 panelSize = tooltipPanel.rect.size;
+        float screenWidth = Screen.width;
+        float screenHeight = Screen.height;
+
+        Vector2 finalPosition = desiredScreenPosition;
+
+        if (preferLeftWhenNeeded)
+        {
+            if (finalPosition.x + panelSize.x > screenWidth - screenPadding.x)
+            {
+                finalPosition.x -= panelSize.x;
+            }
+
+            if (finalPosition.y - panelSize.y < screenPadding.y)
+            {
+                finalPosition.y += panelSize.y;
+            }
+        }
+
+        finalPosition.x = Mathf.Clamp(
+            finalPosition.x,
+            screenPadding.x,
+            screenWidth - panelSize.x - screenPadding.x);
+
+        finalPosition.y = Mathf.Clamp(
+            finalPosition.y,
+            panelSize.y + screenPadding.y,
+            screenHeight - screenPadding.y);
+
+        SetPanelScreenPosition(finalPosition);
+    }
+
+    private void SetPanelScreenPosition(Vector2 screenPosition)
+    {
+        if (tooltipPanel == null)
+        {
+            return;
+        }
 
         if (rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
         {
