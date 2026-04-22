@@ -242,6 +242,72 @@ public class PlayerInventory : MonoBehaviour
         return true;
     }
 
+    public bool TryMoveOrSwapSlot(int sourceIndex, int targetIndex)
+    {
+        if (sourceIndex < 0 || sourceIndex >= slots.Count || targetIndex < 0 || targetIndex >= slots.Count)
+        {
+            return false;
+        }
+
+        if (sourceIndex == targetIndex)
+        {
+            return false;
+        }
+
+        InventorySlotData sourceSlot = slots[sourceIndex];
+        InventorySlotData targetSlot = slots[targetIndex];
+
+        if (sourceSlot == null || sourceSlot.IsEmpty || sourceSlot.Item == null)
+        {
+            return false;
+        }
+
+        bool changed = false;
+
+        if (targetSlot.IsEmpty)
+        {
+            targetSlot.Set(sourceSlot.Item, sourceSlot.Quantity);
+            sourceSlot.Clear();
+            changed = true;
+        }
+        else if (sourceSlot.Item == targetSlot.Item && sourceSlot.Item.IsStackable)
+        {
+            int maxStack = sourceSlot.Item.MaxStack;
+            int freeSpace = maxStack - targetSlot.Quantity;
+
+            if (freeSpace > 0)
+            {
+                int amountToMove = Mathf.Min(freeSpace, sourceSlot.Quantity);
+                targetSlot.Quantity += amountToMove;
+                sourceSlot.Quantity -= amountToMove;
+
+                if (sourceSlot.Quantity <= 0)
+                {
+                    sourceSlot.Clear();
+                }
+
+                changed = amountToMove > 0;
+            }
+        }
+        else
+        {
+            ItemData sourceItem = sourceSlot.Item;
+            int sourceQuantity = sourceSlot.Quantity;
+
+            sourceSlot.Set(targetSlot.Item, targetSlot.Quantity);
+            targetSlot.Set(sourceItem, sourceQuantity);
+
+            changed = true;
+        }
+
+        if (changed)
+        {
+            OnInventoryChanged?.Invoke();
+        }
+
+        return changed;
+    }
+
     public bool TryEquipFromSlot(int slotIndex)
     {
         if (playerEquipment == null)

@@ -4,7 +4,12 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
+public class InventorySlotUI : MonoBehaviour,
+    IPointerClickHandler,
+    IBeginDragHandler,
+    IDragHandler,
+    IEndDragHandler,
+    IDropHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text quantityText;
@@ -14,13 +19,29 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
     private int slotIndex;
     private Action<int> onLeftClicked;
     private Action<int, Vector2> onRightClicked;
+    private Action<int, PointerEventData> onBeginDragAction;
+    private Action<PointerEventData> onDragAction;
+    private Action<int, PointerEventData> onEndDragAction;
+    private Action<int, PointerEventData> onDropAction;
+
     private ItemData currentItem;
+    private RectTransform rectTransform;
+    private CanvasGroup canvasGroup;
+    private LayoutElement layoutElement;
+
+    public RectTransform RectTransform => rectTransform;
+    public ItemData CurrentItem => currentItem;
+    public int SlotIndex => slotIndex;
 
     public void Initialize(int index, Action<int> leftClickHandler)
     {
         slotIndex = index;
         onLeftClicked = leftClickHandler;
         onRightClicked = null;
+        onBeginDragAction = null;
+        onDragAction = null;
+        onEndDragAction = null;
+        onDropAction = null;
         gameObject.name = $"InventorySlot_{index}";
     }
 
@@ -29,11 +50,48 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
         slotIndex = index;
         onLeftClicked = leftClickHandler;
         onRightClicked = rightClickHandler;
+        onBeginDragAction = null;
+        onDragAction = null;
+        onEndDragAction = null;
+        onDropAction = null;
+        gameObject.name = $"InventorySlot_{index}";
+    }
+
+    public void Initialize(
+        int index,
+        Action<int> leftClickHandler,
+        Action<int, Vector2> rightClickHandler,
+        Action<int, PointerEventData> beginDragHandler,
+        Action<PointerEventData> dragHandler,
+        Action<int, PointerEventData> endDragHandler,
+        Action<int, PointerEventData> dropHandler)
+    {
+        slotIndex = index;
+        onLeftClicked = leftClickHandler;
+        onRightClicked = rightClickHandler;
+        onBeginDragAction = beginDragHandler;
+        onDragAction = dragHandler;
+        onEndDragAction = endDragHandler;
+        onDropAction = dropHandler;
         gameObject.name = $"InventorySlot_{index}";
     }
 
     private void Awake()
     {
+        rectTransform = GetComponent<RectTransform>();
+        canvasGroup = GetComponent<CanvasGroup>();
+        layoutElement = GetComponent<LayoutElement>();
+
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+
+        if (layoutElement == null)
+        {
+            layoutElement = gameObject.AddComponent<LayoutElement>();
+        }
+
         DisableChildRaycasts();
     }
 
@@ -49,6 +107,19 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
         currentItem = slotData.Item;
         SetFilledVisual(slotData);
+    }
+
+    public void SetDraggingVisualState(bool isDragging)
+    {
+        if (canvasGroup != null)
+        {
+            canvasGroup.blocksRaycasts = !isDragging;
+        }
+
+        if (layoutElement != null)
+        {
+            layoutElement.ignoreLayout = isDragging;
+        }
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -78,6 +149,46 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
             onRightClicked?.Invoke(slotIndex, eventData.position);
         }
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        if (currentItem == null)
+        {
+            return;
+        }
+
+        onBeginDragAction?.Invoke(slotIndex, eventData);
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        onDragAction?.Invoke(eventData);
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        onEndDragAction?.Invoke(slotIndex, eventData);
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        onDropAction?.Invoke(slotIndex, eventData);
     }
 
     private void DisableChildRaycasts()
@@ -141,7 +252,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
             if (slotData.Item != null && slotData.Item.Icon != null)
             {
-                iconImage.color = new Color(0.0f, 0.0f, 0.0f, 0.9f);
+                iconImage.color = Color.white;
             }
             else
             {

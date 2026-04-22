@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class InventoryUI : MonoBehaviour
 {
@@ -15,13 +16,32 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private KeyCode secondaryToggleKey = KeyCode.B;
 
     private readonly List<InventorySlotUI> slotUIs = new List<InventorySlotUI>();
+
     private bool isOpen;
+    private bool isDragging;
+    private bool dropHandledThisDrag;
+    private int dragSourceSlotIndex = -1;
+
+    private Canvas rootCanvas;
+    private RectTransform canvasRectTransform;
+
+    private InventorySlotUI draggedSlotUI;
+    private Transform draggedOriginalParent;
+    private int draggedOriginalSiblingIndex;
+
+    private InventorySlotUI dragPlaceholderSlotUI;
 
     public bool IsOpen => isOpen;
 
     private void Start()
     {
         isOpen = false;
+        rootCanvas = GetComponentInParent<Canvas>();
+
+        if (rootCanvas != null)
+        {
+            canvasRectTransform = rootCanvas.transform as RectTransform;
+        }
 
         if (inventoryWindow != null)
         {
@@ -55,6 +75,11 @@ public class InventoryUI : MonoBehaviour
         {
             ToggleInventory();
         }
+
+        if (isDragging)
+        {
+            UpdateDraggedSlotPosition(Input.mousePosition);
+        }
     }
 
     private void BuildSlots()
@@ -74,7 +99,14 @@ public class InventoryUI : MonoBehaviour
         for (int i = 0; i < PlayerInventory.Instance.SlotCount; i++)
         {
             InventorySlotUI slotUI = Instantiate(slotPrefab, slotContainer);
-            slotUI.Initialize(i, HandleSlotLeftClicked, HandleSlotRightClicked);
+            slotUI.Initialize(
+                i,
+                HandleSlotLeftClicked,
+                HandleSlotRightClicked,
+                HandleSlotBeginDrag,
+                HandleSlotDrag,
+                HandleSlotEndDrag,
+                HandleSlotDrop);
             slotUIs.Add(slotUI);
         }
     }
@@ -82,12 +114,12 @@ public class InventoryUI : MonoBehaviour
     private void HandleSlotLeftClicked(int slotIndex)
     {
         // Intentionally empty.
-        // Inventory items now use right-click context menu instead of auto-equip on left click.
+        // Left mouse is reserved for drag-and-drop in the main inventory window.
     }
 
     private void HandleSlotRightClicked(int slotIndex, Vector2 screenPosition)
     {
-        if (!isOpen || PlayerInventory.Instance == null || ItemContextMenuUI.Instance == null)
+        if (!isOpen || isDragging || PlayerInventory.Instance == null || ItemContextMenuUI.Instance == null)
         {
             return;
         }
@@ -105,6 +137,97 @@ public class InventoryUI : MonoBehaviour
         }
 
         ItemContextMenuUI.Instance.OpenForInventorySlot(slotIndex, slotData.Item, screenPosition);
+    }
+
+    private void HandleSlotBeginDrag(int slotIndex, PointerEventData eventData)
+    {
+        if (!isOpen || PlayerInventory.Instance == null || rootCanvas == null)
+        {
+            return;
+        }
+
+        InventorySlotData slotData = PlayerInventory.Instance.GetSlot(slotIndex);
+        if (slotData == null || slotData.IsEmpty || slotData.Item == null)
+        {
+            return;
+        }
+
+        InventorySlotUI slotUI = GetSlotUI(slotIndex);
+        if (slotUI == null)
+        {
+            return;
+        }
+
+        dragSourceSlotIndex = slotIndex;
+        isDragging = true;
+        dropHandledThisDrag = false;
+        draggedSlotUI = slotUI;
+        draggedOriginalParent = slotUI.transform.parent;
+        draggedOriginalSiblingIndex = slotUI.transform.GetSiblingIndex();
+
+        if (ItemContextMenuUI.Instance != null)
+        {
+            ItemContextMenuUI.Instance.Hide();
+        }
+
+        if (ItemTooltipUI.Instance != null)
+        {
+            ItemTooltipUI.Instance.Hide();
+        }
+
+        CreateDragPlaceholder();
+
+        draggedSlotUI.SetDraggingVisualState(true);
+        draggedSlotUI.transform.SetParent(rootCanvas.transform, true);
+        draggedSlotUI.transform.SetAsLastSibling();
+
+        UpdateDraggedSlotPosition(eventData.position);
+    }
+
+    private void HandleSlotDrag(PointerEventData eventData)
+    {
+        if (!isDragging)
+        {
+            return;
+        }
+
+        UpdateDraggedSlotPosition(eventData.position);
+    }
+
+    private void HandleSlotEndDrag(int slotIndex, PointerEventData eventData)
+    {
+        if (!isDragging)
+        {
+            return;
+        }
+
+        if (!dropHandledThisDrag)
+        {
+            RestoreDraggedSlotVisual();
+            ClearDragState();
+        }
+    }
+
+    private void HandleSlotDrop(int targetSlotIndex, PointerEventData eventData)
+    {
+        if (!isDragging || PlayerInventory.Instance == null)
+        {
+            return;
+        }
+
+        dropHandledThisDrag = true;
+
+        int sourceIndex = dragSourceSlotIndex;
+        bool moved = PlayerInventory.Instance.TryMoveOrSwapSlot(sourceIndex, targetSlotIndex);
+
+        RestoreDraggedSlotVisual();
+
+        if (moved)
+        {
+            RefreshSlots();
+        }
+
+        ClearDragState();
     }
 
     private void ToggleInventory()
@@ -126,6 +249,12 @@ public class InventoryUI : MonoBehaviour
             if (ItemTooltipUI.Instance != null)
             {
                 ItemTooltipUI.Instance.Hide();
+            }
+
+            if (isDragging)
+            {
+                RestoreDraggedSlotVisual();
+                ClearDragState();
             }
         }
 
@@ -177,5 +306,108 @@ public class InventoryUI : MonoBehaviour
     private void HandleInventoryChanged()
     {
         RefreshSlots();
+    }
+
+    private InventorySlotUI GetSlotUI(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= slotUIs.Count)
+        {
+            return null;
+        }
+
+        return slotUIs[slotIndex];
+    }
+
+    private void UpdateDraggedSlotPosition(Vector2 screenPosition)
+    {
+        if (!isDragging || draggedSlotUI == null || draggedSlotUI.RectTransform == null)
+        {
+            return;
+        }
+
+        if (rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+        {
+            if (canvasRectTransform != null &&
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvasRectTransform,
+                    screenPosition,
+                    rootCanvas.worldCamera,
+                    out Vector2 localPoint))
+            {
+                draggedSlotUI.RectTransform.localPosition = localPoint;
+                return;
+            }
+        }
+
+        draggedSlotUI.RectTransform.position = screenPosition;
+    }
+
+    private void CreateDragPlaceholder()
+    {
+        if (slotPrefab == null || draggedOriginalParent == null)
+        {
+            return;
+        }
+
+        DestroyDragPlaceholder();
+
+        dragPlaceholderSlotUI = Instantiate(slotPrefab, draggedOriginalParent);
+        dragPlaceholderSlotUI.transform.SetSiblingIndex(draggedOriginalSiblingIndex);
+        dragPlaceholderSlotUI.gameObject.name = "InventoryDragPlaceholder";
+
+        dragPlaceholderSlotUI.Refresh(null);
+        dragPlaceholderSlotUI.SetDraggingVisualState(false);
+
+        CanvasGroup placeholderCanvasGroup = dragPlaceholderSlotUI.GetComponent<CanvasGroup>();
+        if (placeholderCanvasGroup != null)
+        {
+            placeholderCanvasGroup.blocksRaycasts = false;
+            placeholderCanvasGroup.interactable = false;
+        }
+
+        dragPlaceholderSlotUI.enabled = false;
+    }
+
+    private void RestoreDraggedSlotVisual()
+    {
+        if (draggedSlotUI == null)
+        {
+            DestroyDragPlaceholder();
+            return;
+        }
+
+        draggedSlotUI.transform.SetParent(draggedOriginalParent, false);
+
+        if (dragPlaceholderSlotUI != null)
+        {
+            int placeholderSiblingIndex = dragPlaceholderSlotUI.transform.GetSiblingIndex();
+            draggedSlotUI.transform.SetSiblingIndex(placeholderSiblingIndex);
+        }
+        else
+        {
+            draggedSlotUI.transform.SetSiblingIndex(draggedOriginalSiblingIndex);
+        }
+
+        draggedSlotUI.SetDraggingVisualState(false);
+        DestroyDragPlaceholder();
+    }
+
+    private void DestroyDragPlaceholder()
+    {
+        if (dragPlaceholderSlotUI != null)
+        {
+            Destroy(dragPlaceholderSlotUI.gameObject);
+            dragPlaceholderSlotUI = null;
+        }
+    }
+
+    private void ClearDragState()
+    {
+        isDragging = false;
+        dropHandledThisDrag = false;
+        dragSourceSlotIndex = -1;
+        draggedSlotUI = null;
+        draggedOriginalParent = null;
+        draggedOriginalSiblingIndex = -1;
     }
 }
