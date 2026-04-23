@@ -17,6 +17,7 @@ public class PlayerInventory : MonoBehaviour
 
     private readonly List<InventorySlotData> slots = new List<InventorySlotData>();
     private PlayerEquipment playerEquipment;
+    private Health playerHealth;
 
     public int Gold { get; private set; }
     public int SlotCount => slotCount;
@@ -32,6 +33,7 @@ public class PlayerInventory : MonoBehaviour
 
         Instance = this;
         playerEquipment = GetComponent<PlayerEquipment>();
+        playerHealth = GetComponent<Health>();
 
         Gold = Mathf.Max(0, startingGold);
         InitializeSlots();
@@ -101,6 +103,27 @@ public class PlayerInventory : MonoBehaviour
         }
 
         return slots[index];
+    }
+
+    public int GetTotalQuantityOfItem(ItemData item)
+    {
+        if (item == null)
+        {
+            return 0;
+        }
+
+        int total = 0;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            InventorySlotData slot = slots[i];
+            if (slot != null && !slot.IsEmpty && slot.Item == item)
+            {
+                total += slot.Quantity;
+            }
+        }
+
+        return total;
     }
 
     public bool CanAddItem(ItemData item, int quantity = 1)
@@ -240,6 +263,58 @@ public class PlayerInventory : MonoBehaviour
         }
 
         return true;
+    }
+
+    public bool TryUseItemFromSlot(int slotIndex)
+    {
+        InventorySlotData slot = GetSlot(slotIndex);
+        if (slot == null || slot.IsEmpty || slot.Item == null)
+        {
+            return false;
+        }
+
+        ItemData item = slot.Item;
+        if (!item.IsUsable)
+        {
+            return false;
+        }
+
+        bool used = ApplyItemUse(item);
+        if (!used)
+        {
+            return false;
+        }
+
+        RemoveFromSlotInternal(slotIndex, 1, false);
+        OnInventoryChanged?.Invoke();
+
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem($"You use {item.DisplayName}.");
+        }
+
+        return true;
+    }
+
+    public bool TryUseFirstMatchingItem(ItemData item)
+    {
+        if (item == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            InventorySlotData slot = slots[i];
+            if (slot == null || slot.IsEmpty || slot.Item != item)
+            {
+                continue;
+            }
+
+            return TryUseItemFromSlot(i);
+        }
+
+        return false;
     }
 
     public bool TryMoveOrSwapSlot(int sourceIndex, int targetIndex)
@@ -513,6 +588,24 @@ public class PlayerInventory : MonoBehaviour
         }
 
         return true;
+    }
+
+    private bool ApplyItemUse(ItemData item)
+    {
+        if (item == null || !item.IsUsable)
+        {
+            return false;
+        }
+
+        bool usedSomething = false;
+
+        if (item.HealthRestoreAmount > 0 && playerHealth != null)
+        {
+            int restored = playerHealth.RestoreHealth(item.HealthRestoreAmount);
+            usedSomething = restored > 0;
+        }
+
+        return usedSomething;
     }
 
     private bool AddItemInternal(ItemData item, int quantity, bool notify)

@@ -47,6 +47,26 @@ public class Health : MonoBehaviour
         }
     }
 
+    public int RestoreHealth(int amount)
+    {
+        if (amount <= 0 || IsDead)
+        {
+            return 0;
+        }
+
+        int oldHealth = currentHealth;
+        currentHealth = Mathf.Clamp(currentHealth + amount, 0, MaxHealth);
+
+        int restored = currentHealth - oldHealth;
+
+        if (restored > 0)
+        {
+            OnHealthChanged?.Invoke();
+        }
+
+        return restored;
+    }
+
     public void ResetHealth()
     {
         currentHealth = MaxHealth;

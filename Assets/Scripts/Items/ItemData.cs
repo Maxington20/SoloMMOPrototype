@@ -20,6 +20,10 @@ public class ItemData : ScriptableObject
     [SerializeField] private int damageBonus = 0;
     [SerializeField] private int healthBonus = 0;
 
+    [Header("Usable / Consumable")]
+    [SerializeField] private bool isUsable = false;
+    [SerializeField] private int healthRestoreAmount = 0;
+
     public string DisplayName => displayName;
     public ItemType ItemType => itemType;
     public Sprite Icon => icon;
@@ -31,4 +35,6 @@ public class ItemData : ScriptableObject
     public EquipmentSlotType EquipmentSlot => equipmentSlot;
     public int DamageBonus => damageBonus;
     public int HealthBonus => healthBonus;
+    public bool IsUsable => isUsable;
+    public int HealthRestoreAmount => Mathf.Max(0, healthRestoreAmount);
 }

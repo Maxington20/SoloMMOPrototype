@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class ItemContextMenuUI : MonoBehaviour
@@ -112,8 +111,15 @@ public class ItemContextMenuUI : MonoBehaviour
         currentItem = item;
         currentOpenScreenPosition = screenPosition;
 
-        bool canEquip = item.IsEquippable && item.EquipmentSlot != EquipmentSlotType.None;
-        ConfigurePrimaryAction(canEquip, "Equip");
+        if (item.IsUsable)
+        {
+            ConfigurePrimaryAction(true, "Use");
+        }
+        else
+        {
+            bool canEquip = item.IsEquippable && item.EquipmentSlot != EquipmentSlotType.None;
+            ConfigurePrimaryAction(canEquip, "Equip");
+        }
 
         ShowMenu(screenPosition);
     }
@@ -134,7 +140,6 @@ public class ItemContextMenuUI : MonoBehaviour
         currentOpenScreenPosition = screenPosition;
 
         ConfigurePrimaryAction(true, "Unequip");
-
         ShowMenu(screenPosition);
     }
 
@@ -154,7 +159,6 @@ public class ItemContextMenuUI : MonoBehaviour
         currentOpenScreenPosition = screenPosition;
 
         ConfigurePrimaryAction(true, "Buy");
-
         ShowMenu(screenPosition);
     }
 
@@ -175,7 +179,6 @@ public class ItemContextMenuUI : MonoBehaviour
 
         bool canSell = item.SellValue > 0;
         ConfigurePrimaryAction(canSell, "Sell");
-
         ShowMenu(screenPosition);
     }
 
@@ -229,7 +232,14 @@ public class ItemContextMenuUI : MonoBehaviour
             case ContextType.InventorySlot:
                 if (PlayerInventory.Instance != null)
                 {
-                    changedSomething = PlayerInventory.Instance.TryEquipFromSlot(currentInventorySlotIndex);
+                    if (currentItem != null && currentItem.IsUsable)
+                    {
+                        changedSomething = PlayerInventory.Instance.TryUseItemFromSlot(currentInventorySlotIndex);
+                    }
+                    else
+                    {
+                        changedSomething = PlayerInventory.Instance.TryEquipFromSlot(currentInventorySlotIndex);
+                    }
                 }
                 break;
 
