@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Health))]
 public class PlayerCombat : MonoBehaviour
@@ -34,9 +35,55 @@ public class PlayerCombat : MonoBehaviour
         Debug.Log($"Player damage updated to {Damage}");
     }
 
+    public bool TryUseAbilityOnCurrentTarget(string abilityName, int amount, float range)
+    {
+        if (currentTarget == null || currentTarget.IsDead)
+        {
+            ClearTarget();
+            return false;
+        }
+
+        float distanceToTarget = Vector3.Distance(transform.position, currentTarget.transform.position);
+        if (distanceToTarget > range)
+        {
+            return false;
+        }
+
+        FaceTarget(currentTarget.transform);
+
+        currentTarget.TakeDamage(amount, gameObject);
+
+        if (currentEnemyTarget != null)
+        {
+            currentEnemyTarget.SetTarget(transform);
+        }
+
+        string targetName = currentTarget.name;
+        DisplayName displayName = currentTarget.GetComponent<DisplayName>();
+        if (displayName != null)
+        {
+            targetName = displayName.Display;
+        }
+
+        Debug.Log($"Player uses {abilityName} on {targetName} for {amount}");
+
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(
+                $"You use {abilityName} on {targetName} for {amount} damage.");
+        }
+
+        return true;
+    }
+
     private void HandleTargetSelection()
     {
         if (!Input.GetMouseButtonDown(0))
+        {
+            return;
+        }
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             return;
         }

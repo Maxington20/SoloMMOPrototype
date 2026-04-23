@@ -9,6 +9,7 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private TMP_Text keybindText;
+    [SerializeField] private TMP_Text cooldownText;
     [SerializeField] private GameObject emptyStateObject;
 
     private int slotIndex;
@@ -30,10 +31,8 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
         DisableChildRaycasts();
     }
 
-    public void Refresh(ItemData item, int quantity)
+    public void RefreshEmpty()
     {
-        bool isEmpty = item == null;
-
         if (keybindText != null)
         {
             keybindText.text = (slotIndex + 1).ToString();
@@ -41,12 +40,42 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
 
         if (emptyStateObject != null)
         {
-            emptyStateObject.SetActive(isEmpty);
+            emptyStateObject.SetActive(true);
         }
 
         if (iconImage != null)
         {
-            if (isEmpty)
+            iconImage.enabled = false;
+            iconImage.sprite = null;
+            iconImage.color = Color.white;
+        }
+
+        if (quantityText != null)
+        {
+            quantityText.text = string.Empty;
+        }
+
+        if (cooldownText != null)
+        {
+            cooldownText.text = string.Empty;
+        }
+    }
+
+    public void RefreshItem(ItemData item, int quantity)
+    {
+        if (keybindText != null)
+        {
+            keybindText.text = (slotIndex + 1).ToString();
+        }
+
+        if (emptyStateObject != null)
+        {
+            emptyStateObject.SetActive(item == null);
+        }
+
+        if (iconImage != null)
+        {
+            if (item == null)
             {
                 iconImage.enabled = false;
                 iconImage.sprite = null;
@@ -56,21 +85,63 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
             {
                 iconImage.enabled = true;
                 iconImage.sprite = item.Icon;
-
-                if (quantity > 0)
-                {
-                    iconImage.color = Color.white;
-                }
-                else
-                {
-                    iconImage.color = new Color(1f, 1f, 1f, 0.35f);
-                }
+                iconImage.color = quantity > 0
+                    ? Color.white
+                    : new Color(1f, 1f, 1f, 0.35f);
             }
         }
 
         if (quantityText != null)
         {
             quantityText.text = quantity > 1 ? quantity.ToString() : string.Empty;
+        }
+
+        if (cooldownText != null)
+        {
+            cooldownText.text = string.Empty;
+        }
+    }
+
+    public void RefreshAbility(AbilityData ability, float cooldownRemaining)
+    {
+        if (keybindText != null)
+        {
+            keybindText.text = (slotIndex + 1).ToString();
+        }
+
+        if (emptyStateObject != null)
+        {
+            emptyStateObject.SetActive(ability == null);
+        }
+
+        if (iconImage != null)
+        {
+            if (ability == null)
+            {
+                iconImage.enabled = false;
+                iconImage.sprite = null;
+                iconImage.color = Color.white;
+            }
+            else
+            {
+                iconImage.enabled = true;
+                iconImage.sprite = ability.Icon;
+                iconImage.color = cooldownRemaining > 0f
+                    ? new Color(1f, 1f, 1f, 0.45f)
+                    : Color.white;
+            }
+        }
+
+        if (quantityText != null)
+        {
+            quantityText.text = string.Empty;
+        }
+
+        if (cooldownText != null)
+        {
+            cooldownText.text = cooldownRemaining > 0f
+                ? Mathf.CeilToInt(cooldownRemaining).ToString()
+                : string.Empty;
         }
     }
 
@@ -106,6 +177,11 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
         if (keybindText != null)
         {
             keybindText.raycastTarget = false;
+        }
+
+        if (cooldownText != null)
+        {
+            cooldownText.raycastTarget = false;
         }
 
         if (emptyStateObject != null)

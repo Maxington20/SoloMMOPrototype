@@ -38,6 +38,11 @@ public class HotbarUI : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        RefreshAll();
+    }
+
     private void BuildSlots()
     {
         if (slotContainer == null || slotPrefab == null || PlayerHotbar.Instance == null)
@@ -131,9 +136,24 @@ public class HotbarUI : MonoBehaviour
 
         for (int i = 0; i < slotUIs.Count; i++)
         {
-            ItemData item = PlayerHotbar.Instance.GetAssignedItem(i);
-            int quantity = PlayerHotbar.Instance.GetQuantityForSlot(i);
-            slotUIs[i].Refresh(item, quantity);
+            switch (PlayerHotbar.Instance.GetSlotContentType(i))
+            {
+                case HotbarSlotContentType.Item:
+                    slotUIs[i].RefreshItem(
+                        PlayerHotbar.Instance.GetAssignedItem(i),
+                        PlayerHotbar.Instance.GetQuantityForSlot(i));
+                    break;
+
+                case HotbarSlotContentType.Ability:
+                    slotUIs[i].RefreshAbility(
+                        PlayerHotbar.Instance.GetAssignedAbility(i),
+                        PlayerHotbar.Instance.GetCooldownRemainingForSlot(i));
+                    break;
+
+                default:
+                    slotUIs[i].RefreshEmpty();
+                    break;
+            }
         }
     }
 }

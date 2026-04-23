@@ -14,11 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   displayName: Wolf Pelt
   itemType: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 80ee784c448eb294ea8f6fbee89b7135, type: 3}
   sellValue: 2
+  buyValue: 5
   isStackable: 1
   maxStack: 20
   isEquippable: 0
   equipmentSlot: 0
   damageBonus: 0
   healthBonus: 0
+  isUsable: 0
+  healthRestoreAmount: 0
