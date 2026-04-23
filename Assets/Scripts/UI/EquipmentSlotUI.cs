@@ -1,5 +1,4 @@
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -13,7 +12,6 @@ public class EquipmentSlotUI : MonoBehaviour,
 {
     [SerializeField] private EquipmentSlotType slotType;
     [SerializeField] private Image iconImage;
-    [SerializeField] private TMP_Text textLabel;
     [SerializeField] private GameObject emptyStateObject;
 
     private Action<EquipmentSlotType> onLeftClicked;
@@ -120,11 +118,6 @@ public class EquipmentSlotUI : MonoBehaviour,
                 }
             }
         }
-
-        if (textLabel != null)
-        {
-            textLabel.text = item != null ? item.DisplayName : GetSlotDisplayName(slotType);
-        }
     }
 
     public void SetDraggingVisualState(bool isDragging)
@@ -216,11 +209,6 @@ public class EquipmentSlotUI : MonoBehaviour,
             iconImage.raycastTarget = false;
         }
 
-        if (textLabel != null)
-        {
-            textLabel.raycastTarget = false;
-        }
-
         if (emptyStateObject != null)
         {
             Graphic[] graphics = emptyStateObject.GetComponentsInChildren<Graphic>(true);
@@ -229,19 +217,5 @@ public class EquipmentSlotUI : MonoBehaviour,
                 graphics[i].raycastTarget = false;
             }
         }
-    }
-
-    private string GetSlotDisplayName(EquipmentSlotType type)
-    {
-        return type switch
-        {
-            EquipmentSlotType.Head => "Head",
-            EquipmentSlotType.Chest => "Chest",
-            EquipmentSlotType.Legs => "Legs",
-            EquipmentSlotType.Feet => "Feet",
-            EquipmentSlotType.Weapon => "Weapon",
-            EquipmentSlotType.Offhand => "Offhand",
-            _ => "Empty"
-        };
     }
 }
