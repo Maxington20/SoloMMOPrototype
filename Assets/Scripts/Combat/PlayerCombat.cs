@@ -90,20 +90,35 @@ public class PlayerCombat : MonoBehaviour
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        if (!Physics.Raycast(ray, out RaycastHit hit, 100f))
+        if (!Physics.Raycast(ray, out RaycastHit hit, 100f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
         {
             ClearTarget();
             return;
         }
 
-        Health targetHealth = hit.collider.GetComponent<Health>();
+        EnemyLoot enemyLoot = hit.collider.GetComponentInParent<EnemyLoot>();
+        Health clickedHealth = hit.collider.GetComponentInParent<Health>();
+
+        if (enemyLoot != null && clickedHealth != null && clickedHealth.IsDead && enemyLoot.CanBeLooted)
+        {
+            ClearTarget();
+
+            if (LootWindowUI.Instance != null)
+            {
+                LootWindowUI.Instance.OpenLoot(enemyLoot);
+            }
+
+            return;
+        }
+
+        Health targetHealth = hit.collider.GetComponentInParent<Health>();
         if (targetHealth == null || targetHealth.IsDead)
         {
             ClearTarget();
             return;
         }
 
-        EnemyController enemy = hit.collider.GetComponent<EnemyController>();
+        EnemyController enemy = hit.collider.GetComponentInParent<EnemyController>();
         if (enemy == null)
         {
             ClearTarget();
@@ -113,8 +128,8 @@ public class PlayerCombat : MonoBehaviour
         currentTarget = targetHealth;
         currentEnemyTarget = enemy;
 
-        DisplayName displayName = hit.collider.GetComponent<DisplayName>();
-        string targetName = displayName != null ? displayName.Display : hit.collider.name;
+        DisplayName displayName = hit.collider.GetComponentInParent<DisplayName>();
+        string targetName = displayName != null ? displayName.Display : targetHealth.gameObject.name;
 
         Debug.Log($"Target selected: {targetName}");
 

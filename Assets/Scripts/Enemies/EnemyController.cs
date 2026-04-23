@@ -24,6 +24,9 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private Renderer[] renderersToHideOnDeath;
     [SerializeField] private GameObject[] objectsToHideOnDeath;
 
+    [Header("Corpse / Loot")]
+    [SerializeField] private bool hideBodyOnDeath = false;
+
     private Transform target;
     private Transform player;
     private float lastAttackTime;
@@ -291,6 +294,8 @@ public class EnemyController : MonoBehaviour
             QuestManager.Instance.RegisterEnemyKilled(gameObject, health.LastDamageSource);
         }
 
+        EnemyLoot enemyLoot = GetComponent<EnemyLoot>();
+
         if (health.LastDamageSource != null && health.LastDamageSource.CompareTag("Player"))
         {
             PlayerProgression playerProgression = health.LastDamageSource.GetComponent<PlayerProgression>();
@@ -298,12 +303,16 @@ public class EnemyController : MonoBehaviour
 
             if (playerProgression != null && enemyData != null)
             {
-                playerProgression.AddXp(enemyData.XpReward);               
+                playerProgression.AddXp(enemyData.XpReward);
             }
 
-            GetComponent<EnemyLoot>()?.DropLoot();
-            DisableCollisionOnDeath();
+            if (enemyLoot != null)
+            {
+                enemyLoot.GenerateLoot();
+            }
         }
+
+        DisableCollisionOnDeath(enemyLoot != null ? enemyLoot.LootClickCollider : null);
 
         DisplayName displayName = GetComponent<DisplayName>();
         string enemyName = displayName != null ? displayName.Display : gameObject.name;
@@ -319,8 +328,10 @@ public class EnemyController : MonoBehaviour
         respawnTimer = respawnDelay;
         hasWanderDestination = false;
 
-        characterController.enabled = false;
-        SetVisible(false);
+        if (hideBodyOnDeath)
+        {
+            SetVisible(false);
+        }
     }
 
     private void HandleRespawnCountdown()
@@ -347,8 +358,15 @@ public class EnemyController : MonoBehaviour
         transform.position = homePosition;
         transform.rotation = homeRotation;
 
-        health.ResetHealth();
+        EnemyLoot enemyLoot = GetComponent<EnemyLoot>();
+        if (enemyLoot != null)
+        {
+            enemyLoot.ResetLoot();
+        }
 
+        ReenableCollisionAfterRespawn();
+
+        health.ResetHealth();
         SetVisible(true);
 
         characterController.enabled = true;
@@ -380,15 +398,25 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    private void DisableCollisionOnDeath()
+    private void DisableCollisionOnDeath(Collider colliderToKeepEnabled)
     {
-        Collider[] colliders = GetComponentsInChildren<Collider>();
+        Collider[] colliders = GetComponentsInChildren<Collider>(true);
         foreach (Collider col in colliders)
         {
+            if (col == null)
+            {
+                continue;
+            }
+
+            if (colliderToKeepEnabled != null && col == colliderToKeepEnabled)
+            {
+                col.enabled = true;
+                continue;
+            }
+
             col.enabled = false;
         }
 
-        CharacterController characterController = GetComponent<CharacterController>();
         if (characterController != null)
         {
             characterController.enabled = false;
@@ -398,6 +426,24 @@ public class EnemyController : MonoBehaviour
         if (agent != null)
         {
             agent.enabled = false;
+        }
+    }
+
+    private void ReenableCollisionAfterRespawn()
+    {
+        Collider[] colliders = GetComponentsInChildren<Collider>(true);
+        foreach (Collider col in colliders)
+        {
+            if (col != null)
+            {
+                col.enabled = true;
+            }
+        }
+
+        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.enabled = true;
         }
     }
 }
