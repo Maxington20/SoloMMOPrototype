@@ -40,6 +40,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1561462014743781140}
+  - {fileID: 4246316986993715195}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3262879697721899363
@@ -162,6 +163,7 @@ MonoBehaviour:
   respawnDelay: 8
   renderersToHideOnDeath: []
   objectsToHideOnDeath: []
+  hideBodyOnDeath: 0
 --- !u!143 &3684617761936486195
 CharacterController:
   m_ObjectHideFlags: 0
@@ -229,8 +231,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyType: 1
   xpReward: 40
-  minGold: 1
-  maxGold: 5
+  minGold: 2
+  maxGold: 8
+  lootSlotCount: 6
+  lootTable:
+  - item: {fileID: 11400000, guid: 4f46ab2331265394584527e4224de0b7, type: 2}
+    dropChance: 0.15
+    minQuantity: 1
+    maxQuantity: 1
+  - item: {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
+    dropChance: 0.25
+    minQuantity: 1
+    maxQuantity: 1
 --- !u!114 &5448741595172155239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -244,7 +256,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLoot
   enemyData: {fileID: 2998863200717848812}
-  lootPrefab: {fileID: 2181813029268750383, guid: b1bf4076c956bb649a3d84f9b54ef3e4, type: 3}
+  lootClickCollider: {fileID: 4587735395288715589}
+  lootIndicatorObject: {fileID: 0}
+  defaultLootSlotCount: 6
 --- !u!1 &1105335585389521241
 GameObject:
   m_ObjectHideFlags: 0
@@ -323,6 +337,61 @@ MonoBehaviour:
   displayName: Goblin
   worldOffset: {x: 0, y: 2.2, z: 0}
   visualRoot: {fileID: 5160716579013327797}
+--- !u!1 &1529020723078456899
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4246316986993715195}
+  - component: {fileID: 4587735395288715589}
+  m_Layer: 0
+  m_Name: LootClickCollider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4246316986993715195
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529020723078456899}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6105053478087004263}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &4587735395288715589
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529020723078456899}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.8
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3012625691906342002
 GameObject:
   m_ObjectHideFlags: 0
