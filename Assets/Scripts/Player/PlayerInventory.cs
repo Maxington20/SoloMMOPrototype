@@ -367,6 +367,113 @@ public class PlayerInventory : MonoBehaviour
         return true;
     }
 
+    public bool TryEquipFromSlotToEquipmentSlot(int slotIndex, EquipmentSlotType targetSlotType)
+    {
+        if (playerEquipment == null)
+        {
+            Debug.LogWarning("PlayerInventory: PlayerEquipment component not found.");
+            return false;
+        }
+
+        InventorySlotData sourceSlot = GetSlot(slotIndex);
+        if (sourceSlot == null || sourceSlot.IsEmpty || sourceSlot.Item == null)
+        {
+            return false;
+        }
+
+        ItemData item = sourceSlot.Item;
+
+        if (!item.IsEquippable || item.EquipmentSlot != targetSlotType)
+        {
+            return false;
+        }
+
+        ItemData currentlyEquipped = playerEquipment.GetEquippedItem(targetSlotType);
+
+        bool sourceSlotWillBeEmptyAfterRemove = sourceSlot.Quantity <= 1;
+
+        if (currentlyEquipped != null && !sourceSlotWillBeEmptyAfterRemove && !CanAddItem(currentlyEquipped, 1))
+        {
+            if (ChatManager.Instance != null)
+            {
+                ChatManager.Instance.PostSystem("Inventory is full.");
+            }
+
+            return false;
+        }
+
+        RemoveFromSlotInternal(slotIndex, 1, false);
+
+        bool equipped = playerEquipment.Equip(item, out ItemData replacedItem);
+
+        if (!equipped)
+        {
+            AddItemInternal(item, 1, false);
+            OnInventoryChanged?.Invoke();
+            return false;
+        }
+
+        if (replacedItem != null)
+        {
+            InventorySlotData updatedSourceSlot = GetSlot(slotIndex);
+
+            if (updatedSourceSlot != null && updatedSourceSlot.IsEmpty)
+            {
+                updatedSourceSlot.Set(replacedItem, 1);
+            }
+            else
+            {
+                AddItemInternal(replacedItem, 1, false);
+            }
+        }
+
+        OnInventoryChanged?.Invoke();
+
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem($"You equip {item.DisplayName}.");
+        }
+
+        return true;
+    }
+
+    public bool TryMoveEquippedItemToInventorySlot(EquipmentSlotType equipmentSlotType, int targetSlotIndex)
+    {
+        if (playerEquipment == null)
+        {
+            Debug.LogWarning("PlayerInventory: PlayerEquipment component not found.");
+            return false;
+        }
+
+        InventorySlotData targetSlot = GetSlot(targetSlotIndex);
+        if (targetSlot == null || !targetSlot.IsEmpty)
+        {
+            return false;
+        }
+
+        ItemData equippedItem = playerEquipment.GetEquippedItem(equipmentSlotType);
+        if (equippedItem == null)
+        {
+            return false;
+        }
+
+        bool unequipped = playerEquipment.Unequip(equipmentSlotType, out ItemData removedItem);
+        if (!unequipped || removedItem == null)
+        {
+            return false;
+        }
+
+        targetSlot.Set(removedItem, 1);
+        OnInventoryChanged?.Invoke();
+
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem($"You unequip {removedItem.DisplayName}.");
+        }
+
+        return true;
+    }
+
     public bool TryUnequip(EquipmentSlotType slotType)
     {
         if (playerEquipment == null)

@@ -5,6 +5,8 @@ using UnityEngine.EventSystems;
 
 public class InventoryUI : MonoBehaviour
 {
+    public static InventoryUI Instance { get; private set; }
+
     [Header("Window")]
     [SerializeField] private GameObject inventoryWindow;
     [SerializeField] private Transform slotContainer;
@@ -32,6 +34,19 @@ public class InventoryUI : MonoBehaviour
     private InventorySlotUI dragPlaceholderSlotUI;
 
     public bool IsOpen => isOpen;
+    public bool IsDraggingInventoryItem => isDragging;
+    public int DraggedInventorySlotIndex => dragSourceSlotIndex;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
 
     private void Start()
     {
@@ -210,15 +225,52 @@ public class InventoryUI : MonoBehaviour
 
     private void HandleSlotDrop(int targetSlotIndex, PointerEventData eventData)
     {
-        if (!isDragging || PlayerInventory.Instance == null)
+        if (PlayerInventory.Instance == null)
+        {
+            return;
+        }
+
+        if (isDragging)
+        {
+            dropHandledThisDrag = true;
+
+            int sourceIndex = dragSourceSlotIndex;
+            bool moved = PlayerInventory.Instance.TryMoveOrSwapSlot(sourceIndex, targetSlotIndex);
+
+            RestoreDraggedSlotVisual();
+
+            if (moved)
+            {
+                RefreshSlots();
+            }
+
+            ClearDragState();
+            return;
+        }
+
+        if (CharacterUI.Instance != null && CharacterUI.Instance.IsDraggingEquipmentItem)
+        {
+            bool moved = PlayerInventory.Instance.TryMoveEquippedItemToInventorySlot(
+                CharacterUI.Instance.DraggedEquipmentSlotType,
+                targetSlotIndex);
+
+            CharacterUI.Instance.CompleteExternalDrop(moved);
+
+            if (moved)
+            {
+                RefreshSlots();
+            }
+        }
+    }
+
+    public void CompleteExternalDrop(bool moved)
+    {
+        if (!isDragging)
         {
             return;
         }
 
         dropHandledThisDrag = true;
-
-        int sourceIndex = dragSourceSlotIndex;
-        bool moved = PlayerInventory.Instance.TryMoveOrSwapSlot(sourceIndex, targetSlotIndex);
 
         RestoreDraggedSlotVisual();
 
