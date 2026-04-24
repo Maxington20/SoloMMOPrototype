@@ -12,6 +12,7 @@ public class InventorySlotUI : MonoBehaviour,
     IDropHandler
 {
     [SerializeField] private Image iconImage;
+    [SerializeField] private Image rarityBorderImage;
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private TMP_Text itemNameText;
     [SerializeField] private GameObject emptyStateObject;
@@ -153,12 +154,7 @@ public class InventorySlotUI : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
-        {
-            return;
-        }
-
-        if (currentItem == null)
+        if (eventData.button != PointerEventData.InputButton.Left || currentItem == null)
         {
             return;
         }
@@ -193,20 +189,10 @@ public class InventorySlotUI : MonoBehaviour,
 
     private void DisableChildRaycasts()
     {
-        if (iconImage != null)
-        {
-            iconImage.raycastTarget = false;
-        }
-
-        if (quantityText != null)
-        {
-            quantityText.raycastTarget = false;
-        }
-
-        if (itemNameText != null)
-        {
-            itemNameText.raycastTarget = false;
-        }
+        if (iconImage != null) iconImage.raycastTarget = false;
+        if (rarityBorderImage != null) rarityBorderImage.raycastTarget = false;
+        if (quantityText != null) quantityText.raycastTarget = false;
+        if (itemNameText != null) itemNameText.raycastTarget = false;
 
         if (emptyStateObject != null)
         {
@@ -227,6 +213,12 @@ public class InventorySlotUI : MonoBehaviour,
             iconImage.color = Color.white;
         }
 
+        if (rarityBorderImage != null)
+        {
+            rarityBorderImage.enabled = false;
+            rarityBorderImage.color = Color.clear;
+        }
+
         if (quantityText != null)
         {
             quantityText.text = string.Empty;
@@ -235,6 +227,7 @@ public class InventorySlotUI : MonoBehaviour,
         if (itemNameText != null)
         {
             itemNameText.text = string.Empty;
+            itemNameText.color = Color.white;
         }
 
         if (emptyStateObject != null)
@@ -245,19 +238,23 @@ public class InventorySlotUI : MonoBehaviour,
 
     private void SetFilledVisual(InventorySlotData slotData)
     {
+        ItemData item = slotData.Item;
+
         if (iconImage != null)
         {
             iconImage.enabled = true;
-            iconImage.sprite = slotData.Item != null ? slotData.Item.Icon : null;
+            iconImage.sprite = item != null ? item.Icon : null;
+            iconImage.color = item != null && item.Icon != null
+                ? Color.white
+                : new Color(0.18f, 0.18f, 0.18f, 0.9f);
+        }
 
-            if (slotData.Item != null && slotData.Item.Icon != null)
-            {
-                iconImage.color = Color.white;
-            }
-            else
-            {
-                iconImage.color = new Color(0.18f, 0.18f, 0.18f, 0.9f);
-            }
+        if (rarityBorderImage != null)
+        {
+            rarityBorderImage.enabled = item != null;
+            rarityBorderImage.color = item != null
+                ? ItemRarityUtility.GetColor(item.Rarity)
+                : Color.clear;
         }
 
         if (quantityText != null)
@@ -267,7 +264,10 @@ public class InventorySlotUI : MonoBehaviour,
 
         if (itemNameText != null)
         {
-            itemNameText.text = slotData.Item != null ? slotData.Item.DisplayName : string.Empty;
+            itemNameText.text = item != null ? item.DisplayName : string.Empty;
+            itemNameText.color = item != null
+                ? ItemRarityUtility.GetColor(item.Rarity)
+                : Color.white;
         }
 
         if (emptyStateObject != null)

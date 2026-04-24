@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class VendorSlotUI : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image iconImage;
+    [SerializeField] private Image rarityBorderImage;
     [SerializeField] private TMP_Text itemNameText;
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private GameObject emptyStateObject;
@@ -40,7 +41,6 @@ public class VendorSlotUI : MonoBehaviour, IPointerClickHandler
     public void Refresh(ItemData item)
     {
         currentItem = item;
-
         bool isEmpty = item == null;
 
         if (emptyStateObject != null)
@@ -60,21 +60,26 @@ public class VendorSlotUI : MonoBehaviour, IPointerClickHandler
             {
                 iconImage.enabled = true;
                 iconImage.sprite = item.Icon;
-
-                if (item.Icon != null)
-                {
-                    iconImage.color = Color.white;
-                }
-                else
-                {
-                    iconImage.color = new Color(0.18f, 0.18f, 0.18f, 0.9f);
-                }
+                iconImage.color = item.Icon != null
+                    ? Color.white
+                    : new Color(0.18f, 0.18f, 0.18f, 0.9f);
             }
+        }
+
+        if (rarityBorderImage != null)
+        {
+            rarityBorderImage.enabled = !isEmpty;
+            rarityBorderImage.color = !isEmpty
+                ? ItemRarityUtility.GetColor(item.Rarity)
+                : Color.clear;
         }
 
         if (itemNameText != null)
         {
             itemNameText.text = isEmpty ? string.Empty : item.DisplayName;
+            itemNameText.color = isEmpty
+                ? Color.white
+                : ItemRarityUtility.GetColor(item.Rarity);
         }
 
         if (priceText != null)
@@ -114,20 +119,10 @@ public class VendorSlotUI : MonoBehaviour, IPointerClickHandler
 
     private void DisableChildRaycasts()
     {
-        if (iconImage != null)
-        {
-            iconImage.raycastTarget = false;
-        }
-
-        if (itemNameText != null)
-        {
-            itemNameText.raycastTarget = false;
-        }
-
-        if (priceText != null)
-        {
-            priceText.raycastTarget = false;
-        }
+        if (iconImage != null) iconImage.raycastTarget = false;
+        if (rarityBorderImage != null) rarityBorderImage.raycastTarget = false;
+        if (itemNameText != null) itemNameText.raycastTarget = false;
+        if (priceText != null) priceText.raycastTarget = false;
 
         if (emptyStateObject != null)
         {

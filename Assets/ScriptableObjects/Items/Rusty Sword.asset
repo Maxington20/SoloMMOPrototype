@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   displayName: Rusty Sword
   itemType: 1
+  rarity: 2
   icon: {fileID: 21300000, guid: bcf90893b53604749961cbf297a0057c, type: 3}
   sellValue: 1
   buyValue: 5

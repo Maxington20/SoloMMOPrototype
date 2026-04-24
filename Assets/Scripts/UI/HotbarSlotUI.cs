@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
 {
     [SerializeField] private Image iconImage;
+    [SerializeField] private Image rarityBorderImage;
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private TMP_Text keybindText;
     [SerializeField] private TMP_Text cooldownText;
@@ -50,6 +51,12 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
             iconImage.color = Color.white;
         }
 
+        if (rarityBorderImage != null)
+        {
+            rarityBorderImage.enabled = false;
+            rarityBorderImage.color = Color.clear;
+        }
+
         if (quantityText != null)
         {
             quantityText.text = string.Empty;
@@ -89,6 +96,21 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
                     ? Color.white
                     : new Color(1f, 1f, 1f, 0.35f);
             }
+        }
+
+        if (rarityBorderImage != null)
+        {
+            rarityBorderImage.enabled = item != null;
+            Color rarityColor = item != null
+                ? ItemRarityUtility.GetColor(item.Rarity)
+                : Color.clear;
+
+            if (item != null && quantity <= 0)
+            {
+                rarityColor.a = 0.35f;
+            }
+
+            rarityBorderImage.color = rarityColor;
         }
 
         if (quantityText != null)
@@ -132,6 +154,12 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
             }
         }
 
+        if (rarityBorderImage != null)
+        {
+            rarityBorderImage.enabled = false;
+            rarityBorderImage.color = Color.clear;
+        }
+
         if (quantityText != null)
         {
             quantityText.text = string.Empty;
@@ -164,25 +192,11 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
 
     private void DisableChildRaycasts()
     {
-        if (iconImage != null)
-        {
-            iconImage.raycastTarget = false;
-        }
-
-        if (quantityText != null)
-        {
-            quantityText.raycastTarget = false;
-        }
-
-        if (keybindText != null)
-        {
-            keybindText.raycastTarget = false;
-        }
-
-        if (cooldownText != null)
-        {
-            cooldownText.raycastTarget = false;
-        }
+        if (iconImage != null) iconImage.raycastTarget = false;
+        if (rarityBorderImage != null) rarityBorderImage.raycastTarget = false;
+        if (quantityText != null) quantityText.raycastTarget = false;
+        if (keybindText != null) keybindText.raycastTarget = false;
+        if (cooldownText != null) cooldownText.raycastTarget = false;
 
         if (emptyStateObject != null)
         {

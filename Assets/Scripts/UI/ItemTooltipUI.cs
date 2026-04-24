@@ -123,14 +123,18 @@ public class ItemTooltipUI : MonoBehaviour
             canvasGroup.interactable = false;
         }
 
+        Color rarityColor = ItemRarityUtility.GetColor(item.Rarity);
+
         if (itemNameText != null)
         {
             itemNameText.text = item.DisplayName;
+            itemNameText.color = rarityColor;
         }
 
         if (itemTypeText != null)
         {
             itemTypeText.text = BuildTypeLine(item);
+            itemTypeText.color = rarityColor;
         }
 
         if (bonusText != null)
@@ -177,12 +181,14 @@ public class ItemTooltipUI : MonoBehaviour
 
     private string BuildTypeLine(ItemData item)
     {
+        string rarityName = ItemRarityUtility.GetDisplayName(item.Rarity);
+
         if (item.IsEquippable)
         {
-            return $"Equipment - {GetEquipmentSlotName(item.EquipmentSlot)}";
+            return $"{rarityName} Equipment - {GetEquipmentSlotName(item.EquipmentSlot)}";
         }
 
-        return item.ItemType.ToString();
+        return $"{rarityName} {item.ItemType}";
     }
 
     private string BuildBonusText(ItemData item)
@@ -202,6 +208,16 @@ public class ItemTooltipUI : MonoBehaviour
             }
 
             result += $"+{item.HealthBonus} Health";
+        }
+
+        if (item.IsUsable && item.HealthRestoreAmount > 0)
+        {
+            if (!string.IsNullOrEmpty(result))
+            {
+                result += "\n";
+            }
+
+            result += $"Restores {item.HealthRestoreAmount} Health";
         }
 
         return result;

@@ -12,6 +12,7 @@ public class EquipmentSlotUI : MonoBehaviour,
 {
     [SerializeField] private EquipmentSlotType slotType;
     [SerializeField] private Image iconImage;
+    [SerializeField] private Image rarityBorderImage;
     [SerializeField] private GameObject emptyStateObject;
 
     private Action<EquipmentSlotType> onLeftClicked;
@@ -107,16 +108,18 @@ public class EquipmentSlotUI : MonoBehaviour,
             {
                 iconImage.enabled = true;
                 iconImage.sprite = item.Icon;
-
-                if (item.Icon != null)
-                {
-                    iconImage.color = Color.white;
-                }
-                else
-                {
-                    iconImage.color = new Color(0.18f, 0.18f, 0.18f, 0.9f);
-                }
+                iconImage.color = item.Icon != null
+                    ? Color.white
+                    : new Color(0.18f, 0.18f, 0.18f, 0.9f);
             }
+        }
+
+        if (rarityBorderImage != null)
+        {
+            rarityBorderImage.enabled = !isEmpty;
+            rarityBorderImage.color = !isEmpty
+                ? ItemRarityUtility.GetColor(item.Rarity)
+                : Color.clear;
         }
     }
 
@@ -164,12 +167,7 @@ public class EquipmentSlotUI : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
-        {
-            return;
-        }
-
-        if (currentItem == null)
+        if (eventData.button != PointerEventData.InputButton.Left || currentItem == null)
         {
             return;
         }
@@ -204,10 +202,8 @@ public class EquipmentSlotUI : MonoBehaviour,
 
     private void DisableChildRaycasts()
     {
-        if (iconImage != null)
-        {
-            iconImage.raycastTarget = false;
-        }
+        if (iconImage != null) iconImage.raycastTarget = false;
+        if (rarityBorderImage != null) rarityBorderImage.raycastTarget = false;
 
         if (emptyStateObject != null)
         {

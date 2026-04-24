@@ -6,6 +6,7 @@ public class ItemData : ScriptableObject
     [Header("Basic")]
     [SerializeField] private string displayName = "New Item";
     [SerializeField] private ItemType itemType = ItemType.Junk;
+    [SerializeField] private ItemRarity rarity = ItemRarity.Common;
     [SerializeField] private Sprite icon;
     [SerializeField] private int sellValue = 1;
     [SerializeField] private int buyValue = 5;
@@ -26,6 +27,7 @@ public class ItemData : ScriptableObject
 
     public string DisplayName => displayName;
     public ItemType ItemType => itemType;
+    public ItemRarity Rarity => rarity;
     public Sprite Icon => icon;
     public int SellValue => Mathf.Max(0, sellValue);
     public int BuyValue => Mathf.Max(0, buyValue);
