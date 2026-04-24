@@ -12,7 +12,9 @@ public class QuestManager : MonoBehaviour
         description = "Cull the wolves threatening the outskirts.",
         targetEnemyType = EnemyType.Wolf,
         requiredKills = 3,
-        xpReward = 100
+        xpReward = 100,
+        goldReward = 10,
+        itemRewardQuantity = 1
     };
 
     [SerializeField] private QuestDefinition goblinQuest = new QuestDefinition
@@ -22,7 +24,9 @@ public class QuestManager : MonoBehaviour
         description = "Thin out the goblins near the woods.",
         targetEnemyType = EnemyType.Goblin,
         requiredKills = 2,
-        xpReward = 150
+        xpReward = 150,
+        goldReward = 20,
+        itemRewardQuantity = 1
     };
 
     public ActiveQuest CurrentQuest { get; private set; }
@@ -70,10 +74,7 @@ public class QuestManager : MonoBehaviour
             return;
         }
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"Still working on {CurrentQuest.definition.title}.");
-        }
+        PostSystem($"Still working on {CurrentQuest.definition.title}.");
     }
 
     public void AcceptQuest(QuestDefinition definition)
@@ -84,11 +85,7 @@ public class QuestManager : MonoBehaviour
         }
 
         CurrentQuest = new ActiveQuest(definition);
-
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"Quest accepted: {definition.title}.");
-        }
+        PostSystem($"Quest accepted: {definition.title}.");
     }
 
     public void TurnInQuest()
@@ -98,26 +95,61 @@ public class QuestManager : MonoBehaviour
             return;
         }
 
-        string completedTitle = CurrentQuest.definition.title;
-        QuestType completedType = CurrentQuest.definition.questType;
-        int xpReward = CurrentQuest.definition.xpReward;
+        QuestDefinition completedQuest = CurrentQuest.definition;
+        if (completedQuest == null)
+        {
+            CurrentQuest = null;
+            return;
+        }
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null)
+        if (playerObject == null)
         {
-            PlayerProgression progression = playerObject.GetComponent<PlayerProgression>();
-            if (progression != null)
+            return;
+        }
+
+        PlayerInventory inventory = playerObject.GetComponent<PlayerInventory>();
+        PlayerProgression progression = playerObject.GetComponent<PlayerProgression>();
+
+        int itemQuantity = Mathf.Max(1, completedQuest.itemRewardQuantity);
+
+        if (completedQuest.itemReward != null)
+        {
+            if (inventory == null)
             {
-                progression.AddXp(xpReward);
+                PostSystem("Cannot turn in quest because player inventory was not found.");
+                return;
             }
+
+            if (!inventory.CanAddItem(completedQuest.itemReward, itemQuantity))
+            {
+                PostSystem("Inventory is full. Make space before turning in this quest.");
+                return;
+            }
+        }
+
+        string completedTitle = completedQuest.title;
+        QuestType completedType = completedQuest.questType;
+
+        if (progression != null && completedQuest.xpReward > 0)
+        {
+            progression.AddXp(completedQuest.xpReward);
+        }
+
+        if (inventory != null && completedQuest.goldReward > 0)
+        {
+            inventory.AddGold(completedQuest.goldReward, false);
+            PostSystem($"You receive {completedQuest.goldReward} gold.");
+        }
+
+        if (inventory != null && completedQuest.itemReward != null)
+        {
+            inventory.AddItem(completedQuest.itemReward, itemQuantity);
         }
 
         CurrentQuest = null;
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"Quest completed: {completedTitle}.");
-        }
+        PostSystem($"Quest completed: {completedTitle}.");
 
         if (completedType == QuestType.KillWolves)
         {
@@ -156,15 +188,19 @@ public class QuestManager : MonoBehaviour
 
         CurrentQuest.currentKills++;
 
+        PostSystem($"{CurrentQuest.definition.title}: {CurrentQuest.currentKills}/{CurrentQuest.definition.requiredKills}");
+
+        if (CurrentQuest.IsComplete)
+        {
+            PostSystem($"Return to the quest giver to turn in {CurrentQuest.definition.title}.");
+        }
+    }
+
+    private void PostSystem(string message)
+    {
         if (ChatManager.Instance != null)
         {
-            ChatManager.Instance.PostSystem(
-                $"{CurrentQuest.definition.title}: {CurrentQuest.currentKills}/{CurrentQuest.definition.requiredKills}");
-        }
-
-        if (CurrentQuest.IsComplete && ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"Return to the quest giver to turn in {CurrentQuest.definition.title}.");
+            ChatManager.Instance.PostSystem(message);
         }
     }
 }

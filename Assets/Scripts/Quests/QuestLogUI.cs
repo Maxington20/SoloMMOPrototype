@@ -113,7 +113,7 @@ public class QuestLogUI : MonoBehaviour
 
         if (rewardText != null)
         {
-            rewardText.text = $"Reward:\n{definition.xpReward} XP";
+            rewardText.text = BuildRewardText(definition);
         }
 
         if (statusText != null)
@@ -150,6 +150,46 @@ public class QuestLogUI : MonoBehaviour
         {
             statusText.text = "No active quest";
         }
+    }
+
+    private string BuildRewardText(QuestDefinition definition)
+    {
+        if (definition == null)
+        {
+            return "Reward:\nNone";
+        }
+
+        string reward = "Reward:";
+
+        bool hasReward = false;
+
+        if (definition.xpReward > 0)
+        {
+            reward += $"\n{definition.xpReward} XP";
+            hasReward = true;
+        }
+
+        if (definition.goldReward > 0)
+        {
+            reward += $"\n{definition.goldReward} Gold";
+            hasReward = true;
+        }
+
+        if (definition.itemReward != null)
+        {
+            int quantity = Mathf.Max(1, definition.itemRewardQuantity);
+            reward += quantity > 1
+                ? $"\n{definition.itemReward.DisplayName} x{quantity}"
+                : $"\n{definition.itemReward.DisplayName}";
+            hasReward = true;
+        }
+
+        if (!hasReward)
+        {
+            reward += "\nNone";
+        }
+
+        return reward;
     }
 
     private string GetEnemyDisplayName(EnemyType enemyType)

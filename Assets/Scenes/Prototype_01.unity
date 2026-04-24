@@ -22252,6 +22252,9 @@ MonoBehaviour:
     targetEnemyType: 0
     requiredKills: 3
     xpReward: 100
+    goldReward: 10
+    itemReward: {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
+    itemRewardQuantity: 1
   goblinQuest:
     questType: 1
     title: Goblin Trouble
@@ -22259,6 +22262,9 @@ MonoBehaviour:
     targetEnemyType: 1
     requiredKills: 2
     xpReward: 150
+    goldReward: 20
+    itemReward: {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
+    itemRewardQuantity: 2
 --- !u!4 &1861185948
 Transform:
   m_ObjectHideFlags: 0
