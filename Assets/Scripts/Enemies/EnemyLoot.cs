@@ -7,7 +7,10 @@ public class EnemyLoot : MonoBehaviour
     [Header("References")]
     [SerializeField] private EnemyData enemyData;
     [SerializeField] private Collider lootClickCollider;
-    [SerializeField] private GameObject lootIndicatorObject;
+
+    [Header("Loot Indicator")]
+    [SerializeField] private GameObject lootIndicatorPrefab;
+    [SerializeField] private Vector3 lootIndicatorLocalPosition = new Vector3(0f, 2.4f, 0f);
 
     [Header("Settings")]
     [SerializeField] private int defaultLootSlotCount = 6;
@@ -16,6 +19,7 @@ public class EnemyLoot : MonoBehaviour
     private readonly HashSet<ItemData> uniqueItemsAlreadyDropped = new HashSet<ItemData>();
 
     private Health health;
+    private GameObject spawnedLootIndicator;
     private int goldAmount;
     private bool lootGenerated;
 
@@ -44,6 +48,7 @@ public class EnemyLoot : MonoBehaviour
         health = GetComponent<Health>();
 
         BuildEmptyLootSlots();
+        CreateLootIndicatorIfNeeded();
         SetLootInteractable(false);
     }
 
@@ -294,6 +299,21 @@ public class EnemyLoot : MonoBehaviour
         }
     }
 
+    private void CreateLootIndicatorIfNeeded()
+    {
+        if (lootIndicatorPrefab == null || spawnedLootIndicator != null)
+        {
+            return;
+        }
+
+        spawnedLootIndicator = Instantiate(lootIndicatorPrefab, transform);
+        spawnedLootIndicator.name = "LootIndicator";
+        spawnedLootIndicator.transform.localPosition = lootIndicatorLocalPosition;
+        spawnedLootIndicator.transform.localRotation = Quaternion.identity;
+        spawnedLootIndicator.transform.localScale = Vector3.one;
+        spawnedLootIndicator.SetActive(false);
+    }
+
     private void RefreshLootState()
     {
         SetLootInteractable(CanBeLooted);
@@ -307,9 +327,9 @@ public class EnemyLoot : MonoBehaviour
             lootClickCollider.enabled = isInteractable;
         }
 
-        if (lootIndicatorObject != null)
+        if (spawnedLootIndicator != null)
         {
-            lootIndicatorObject.SetActive(isInteractable);
+            spawnedLootIndicator.SetActive(isInteractable);
         }
     }
 }

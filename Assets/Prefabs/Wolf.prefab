@@ -78,6 +78,7 @@ Transform:
   m_Children:
   - {fileID: 7597200420614971903}
   - {fileID: 7225133481877476049}
+  - {fileID: 1535374910458435938}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &6813523631756200588
@@ -303,7 +304,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLoot
   enemyData: {fileID: 4269588256471811823}
   lootClickCollider: {fileID: 5200781542558344615}
-  lootIndicatorObject: {fileID: 0}
+  lootIndicatorPrefab: {fileID: 1382458731154545871}
+  lootIndicatorLocalPosition: {x: 0, y: 2.4, z: 0}
   defaultLootSlotCount: 6
 --- !u!1 &4193225523691303986
 GameObject:
@@ -650,3 +652,78 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1001 &3278448129207911059
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4486358482448419676}
+    m_Modifications:
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4490117210318167644, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+      propertyPath: m_Name
+      value: LootIndicator
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+--- !u!1 &1382458731154545871 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4490117210318167644, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+  m_PrefabInstance: {fileID: 3278448129207911059}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1535374910458435938 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4049259899569789937, guid: 3da87f532248e7f42bc4b362165394f0, type: 3}
+  m_PrefabInstance: {fileID: 3278448129207911059}
+  m_PrefabAsset: {fileID: 0}
