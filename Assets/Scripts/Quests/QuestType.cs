@@ -1,5 +1,16 @@
 public enum QuestType
 {
     KillWolves,
-    KillGoblins
+    KillGoblins,
+    KillOrcs,
+    KillDragons,
+    KillWitches,
+    KillGhosts,
+    KillDemons,
+    KillWizards,
+    KillPriests,
+    KillWarriors,
+    KillKnights,
+    KillArchers,
+    KillMages
 }

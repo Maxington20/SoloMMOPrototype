@@ -1,33 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class QuestManager : MonoBehaviour
 {
     public static QuestManager Instance { get; private set; }
 
-    [Header("Quest Definitions")]
-    [SerializeField] private QuestDefinition wolfQuest = new QuestDefinition
-    {
-        questType = QuestType.KillWolves,
-        title = "Wolf Hunt",
-        description = "Cull the wolves threatening the outskirts.",
-        targetEnemyType = EnemyType.Wolf,
-        requiredKills = 3,
-        xpReward = 100,
-        goldReward = 10,
-        itemRewardQuantity = 1
-    };
+    [Header("Quest Chain")]
+    [SerializeField] private List<QuestDefinition> quests = new List<QuestDefinition>();
 
-    [SerializeField] private QuestDefinition goblinQuest = new QuestDefinition
-    {
-        questType = QuestType.KillGoblins,
-        title = "Goblin Trouble",
-        description = "Thin out the goblins near the woods.",
-        targetEnemyType = EnemyType.Goblin,
-        requiredKills = 2,
-        xpReward = 150,
-        goldReward = 20,
-        itemRewardQuantity = 1
-    };
+    [Header("State")]
+    [SerializeField] private int nextQuestIndex = 0;
 
     public ActiveQuest CurrentQuest { get; private set; }
 
@@ -49,7 +31,14 @@ public class QuestManager : MonoBehaviour
     {
         if (CurrentQuest == null)
         {
-            return "Press F to accept Wolf Hunt.";
+            QuestDefinition nextQuest = GetNextAvailableQuest();
+
+            if (nextQuest == null)
+            {
+                return "No quests available.";
+            }
+
+            return $"Press F to accept {nextQuest.title}.";
         }
 
         if (CurrentQuest.IsComplete)
@@ -64,7 +53,15 @@ public class QuestManager : MonoBehaviour
     {
         if (CurrentQuest == null)
         {
-            AcceptQuest(wolfQuest);
+            QuestDefinition nextQuest = GetNextAvailableQuest();
+
+            if (nextQuest == null)
+            {
+                PostSystem("No quests available.");
+                return;
+            }
+
+            AcceptQuest(nextQuest);
             return;
         }
 
@@ -128,9 +125,6 @@ public class QuestManager : MonoBehaviour
             }
         }
 
-        string completedTitle = completedQuest.title;
-        QuestType completedType = completedQuest.questType;
-
         if (progression != null && completedQuest.xpReward > 0)
         {
             progression.AddXp(completedQuest.xpReward);
@@ -147,13 +141,21 @@ public class QuestManager : MonoBehaviour
             inventory.AddItem(completedQuest.itemReward, itemQuantity);
         }
 
+        string completedTitle = completedQuest.title;
+
         CurrentQuest = null;
+        AdvanceQuestIndex();
 
         PostSystem($"Quest completed: {completedTitle}.");
 
-        if (completedType == QuestType.KillWolves)
+        QuestDefinition nextQuest = GetNextAvailableQuest();
+        if (nextQuest != null)
         {
-            AcceptQuest(goblinQuest);
+            PostSystem($"New quest available: {nextQuest.title}.");
+        }
+        else
+        {
+            PostSystem("No more quests available.");
         }
     }
 
@@ -193,6 +195,31 @@ public class QuestManager : MonoBehaviour
         if (CurrentQuest.IsComplete)
         {
             PostSystem($"Return to the quest giver to turn in {CurrentQuest.definition.title}.");
+        }
+    }
+
+    private QuestDefinition GetNextAvailableQuest()
+    {
+        if (quests == null || quests.Count == 0)
+        {
+            return null;
+        }
+
+        if (nextQuestIndex < 0 || nextQuestIndex >= quests.Count)
+        {
+            return null;
+        }
+
+        return quests[nextQuestIndex];
+    }
+
+    private void AdvanceQuestIndex()
+    {
+        nextQuestIndex++;
+
+        if (nextQuestIndex > quests.Count)
+        {
+            nextQuestIndex = quests.Count;
         }
     }
 

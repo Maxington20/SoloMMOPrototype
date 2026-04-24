@@ -22245,26 +22245,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bde4b796131b88a4889cba4e540bbad2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestManager
-  wolfQuest:
-    questType: 0
-    title: Wolf Hunt
-    description: Cull the wolves threatening the outskirts.
+  quests:
+  - questType: 0
+    title: Cull the Wolves
+    description: Too many wolves. go get 'em slugger!
     targetEnemyType: 0
     requiredKills: 3
     xpReward: 100
     goldReward: 10
     itemReward: {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
     itemRewardQuantity: 1
-  goblinQuest:
-    questType: 1
+  - questType: 1
     title: Goblin Trouble
     description: Thin out the goblins near the woods.
     targetEnemyType: 1
     requiredKills: 2
-    xpReward: 150
-    goldReward: 20
+    xpReward: 200
+    goldReward: 15
     itemReward: {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
     itemRewardQuantity: 2
+  nextQuestIndex: 0
 --- !u!4 &1861185948
 Transform:
   m_ObjectHideFlags: 0
