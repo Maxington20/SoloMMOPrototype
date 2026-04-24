@@ -13,6 +13,8 @@ public class EnemyLoot : MonoBehaviour
     [SerializeField] private int defaultLootSlotCount = 6;
 
     private readonly List<InventorySlotData> lootSlots = new List<InventorySlotData>();
+    private readonly HashSet<ItemData> uniqueItemsAlreadyDropped = new HashSet<ItemData>();
+
     private Health health;
     private int goldAmount;
     private bool lootGenerated;
@@ -54,35 +56,10 @@ public class EnemyLoot : MonoBehaviour
         }
 
         BuildEmptyLootSlots();
+        uniqueItemsAlreadyDropped.Clear();
 
-        goldAmount = UnityEngine.Random.Range(enemyData.MinGold, enemyData.MaxGold + 1);
-
-        EnemyLootTableEntry[] lootTable = enemyData.LootTable;
-        if (lootTable != null)
-        {
-            for (int i = 0; i < lootTable.Length; i++)
-            {
-                EnemyLootTableEntry entry = lootTable[i];
-
-                if (entry == null || entry.Item == null)
-                {
-                    continue;
-                }
-
-                if (UnityEngine.Random.value > entry.DropChance)
-                {
-                    continue;
-                }
-
-                int quantity = UnityEngine.Random.Range(entry.MinQuantity, entry.MaxQuantity + 1);
-                if (quantity <= 0)
-                {
-                    continue;
-                }
-
-                AddItemToLoot(entry.Item, quantity);
-            }
-        }
+        RollGold();
+        RollItems();
 
         lootGenerated = true;
         RefreshLootState();
@@ -92,6 +69,7 @@ public class EnemyLoot : MonoBehaviour
     {
         goldAmount = 0;
         lootGenerated = false;
+        uniqueItemsAlreadyDropped.Clear();
 
         BuildEmptyLootSlots();
         RefreshLootState();
@@ -151,30 +129,81 @@ public class EnemyLoot : MonoBehaviour
         return true;
     }
 
-    private bool HasAnyLoot()
+    private void RollGold()
     {
-        if (goldAmount > 0)
+        goldAmount = 0;
+
+        if (UnityEngine.Random.value > enemyData.GoldDropChance)
         {
-            return true;
+            return;
         }
 
-        for (int i = 0; i < lootSlots.Count; i++)
+        if (enemyData.MaxGold <= 0)
         {
-            InventorySlotData slot = lootSlots[i];
-            if (slot != null && !slot.IsEmpty && slot.Item != null)
+            return;
+        }
+
+        goldAmount = UnityEngine.Random.Range(enemyData.MinGold, enemyData.MaxGold + 1);
+    }
+
+    private void RollItems()
+    {
+        EnemyLootTableEntry[] lootTable = enemyData.LootTable;
+        if (lootTable == null || lootTable.Length == 0)
+        {
+            return;
+        }
+
+        for (int roll = 0; roll < enemyData.ItemDropRolls; roll++)
+        {
+            TryRollOneItem(lootTable);
+        }
+    }
+
+    private void TryRollOneItem(EnemyLootTableEntry[] lootTable)
+    {
+        List<EnemyLootTableEntry> successfulDrops = new List<EnemyLootTableEntry>();
+
+        for (int i = 0; i < lootTable.Length; i++)
+        {
+            EnemyLootTableEntry entry = lootTable[i];
+
+            if (entry == null || entry.Item == null)
             {
-                return true;
+                continue;
+            }
+
+            if (entry.UniquePerCorpse && uniqueItemsAlreadyDropped.Contains(entry.Item))
+            {
+                continue;
+            }
+
+            if (UnityEngine.Random.value <= entry.DropChance)
+            {
+                successfulDrops.Add(entry);
             }
         }
 
-        return false;
+        if (successfulDrops.Count == 0)
+        {
+            return;
+        }
+
+        EnemyLootTableEntry selectedEntry = successfulDrops[UnityEngine.Random.Range(0, successfulDrops.Count)];
+        int quantity = UnityEngine.Random.Range(selectedEntry.MinQuantity, selectedEntry.MaxQuantity + 1);
+
+        bool added = AddItemToLoot(selectedEntry.Item, quantity);
+        if (added && selectedEntry.UniquePerCorpse)
+        {
+            uniqueItemsAlreadyDropped.Add(selectedEntry.Item);
+        }
     }
 
-    private void AddItemToLoot(ItemData item, int quantity)
+    private bool AddItemToLoot(ItemData item, int quantity)
     {
         if (item == null || quantity <= 0)
         {
-            return;
+            return false;
         }
 
         int remaining = quantity;
@@ -201,7 +230,7 @@ public class EnemyLoot : MonoBehaviour
 
                 if (remaining <= 0)
                 {
-                    return;
+                    return true;
                 }
             }
         }
@@ -210,7 +239,7 @@ public class EnemyLoot : MonoBehaviour
         {
             if (remaining <= 0)
             {
-                return;
+                return true;
             }
 
             InventorySlotData slot = lootSlots[i];
@@ -228,6 +257,27 @@ public class EnemyLoot : MonoBehaviour
         {
             Debug.LogWarning($"EnemyLoot on {name} ran out of loot slots while adding {item.DisplayName}.");
         }
+
+        return remaining < quantity;
+    }
+
+    private bool HasAnyLoot()
+    {
+        if (goldAmount > 0)
+        {
+            return true;
+        }
+
+        for (int i = 0; i < lootSlots.Count; i++)
+        {
+            InventorySlotData slot = lootSlots[i];
+            if (slot != null && !slot.IsEmpty && slot.Item != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void BuildEmptyLootSlots()

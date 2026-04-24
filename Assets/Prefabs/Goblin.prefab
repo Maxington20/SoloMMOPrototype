@@ -231,18 +231,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyType: 1
   xpReward: 40
-  minGold: 2
-  maxGold: 8
+  goldDropChance: 1
+  minGold: 3
+  maxGold: 9
   lootSlotCount: 6
+  itemDropRolls: 2
   lootTable:
   - item: {fileID: 11400000, guid: 4f46ab2331265394584527e4224de0b7, type: 2}
-    dropChance: 0.15
+    dropChance: 0.18
     minQuantity: 1
     maxQuantity: 1
+    uniquePerCorpse: 1
   - item: {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
-    dropChance: 0.25
+    dropChance: 0.35
+    minQuantity: 1
+    maxQuantity: 2
+    uniquePerCorpse: 0
+  - item: {fileID: 11400000, guid: 689a2cdfd990b1f48b988a14bdf91fee, type: 2}
+    dropChance: 0.12
     minQuantity: 1
     maxQuantity: 1
+    uniquePerCorpse: 1
+  - item: {fileID: 11400000, guid: b049b6c0b53368442aa4a40b11215dbd, type: 2}
+    dropChance: 0.1
+    minQuantity: 1
+    maxQuantity: 1
+    uniquePerCorpse: 1
 --- !u!114 &5448741595172155239
 MonoBehaviour:
   m_ObjectHideFlags: 0
