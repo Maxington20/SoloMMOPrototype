@@ -72,9 +72,9 @@ public class PlayerInventory : MonoBehaviour
         Gold += amount;
         OnGoldChanged?.Invoke(Gold);
 
-        if (postLootMessage && ChatManager.Instance != null)
+        if (postLootMessage)
         {
-            ChatManager.Instance.PostSystem($"You loot {amount} gold.");
+            PostSystem($"You loot {amount} gold.");
         }
     }
 
@@ -185,41 +185,26 @@ public class PlayerInventory : MonoBehaviour
 
         if (totalCost <= 0)
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem($"{item.DisplayName} cannot be purchased.");
-            }
-
+            PostSystem($"{item.DisplayName} cannot be purchased.");
             return false;
         }
 
         if (!CanAddItem(item, quantity))
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem("Inventory is full.");
-            }
-
+            PostSystem("Inventory is full.");
             return false;
         }
 
         if (!SpendGold(totalCost))
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem("You do not have enough gold.");
-            }
-
+            PostSystem("You do not have enough gold.");
             return false;
         }
 
         AddItemInternal(item, quantity, false);
         OnInventoryChanged?.Invoke();
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"You buy {item.DisplayName} for {totalCost} gold.");
-        }
+        PostSystem($"You buy {FormatItemQuantity(item, quantity)} for {totalCost} gold.");
 
         return true;
     }
@@ -242,11 +227,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (item.SellValue <= 0)
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem($"{item.DisplayName} cannot be sold.");
-            }
-
+            PostSystem($"{item.DisplayName} cannot be sold.");
             return false;
         }
 
@@ -257,10 +238,7 @@ public class PlayerInventory : MonoBehaviour
 
         OnInventoryChanged?.Invoke();
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"You sell {item.DisplayName} for {totalGold} gold.");
-        }
+        PostSystem($"You sell {FormatItemQuantity(item, quantityToSell)} for {totalGold} gold.");
 
         return true;
     }
@@ -276,6 +254,7 @@ public class PlayerInventory : MonoBehaviour
         ItemData item = slot.Item;
         if (!item.IsUsable)
         {
+            PostSystem($"{item.DisplayName} cannot be used.");
             return false;
         }
 
@@ -288,10 +267,7 @@ public class PlayerInventory : MonoBehaviour
         RemoveFromSlotInternal(slotIndex, 1, false);
         OnInventoryChanged?.Invoke();
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"You use {item.DisplayName}.");
-        }
+        PostSystem($"You use {item.DisplayName}.");
 
         return true;
     }
@@ -314,6 +290,7 @@ public class PlayerInventory : MonoBehaviour
             return TryUseItemFromSlot(i);
         }
 
+        PostSystem($"You do not have any {item.DisplayName}.");
         return false;
     }
 
@@ -401,6 +378,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (!item.IsEquippable || item.EquipmentSlot == EquipmentSlotType.None)
         {
+            PostSystem($"{item.DisplayName} cannot be equipped.");
             return false;
         }
 
@@ -408,11 +386,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (currentlyEquipped != null && !CanAddItem(currentlyEquipped, 1))
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem("Inventory is full.");
-            }
-
+            PostSystem("Inventory is full.");
             return false;
         }
 
@@ -434,10 +408,7 @@ public class PlayerInventory : MonoBehaviour
 
         OnInventoryChanged?.Invoke();
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"You equip {item.DisplayName}.");
-        }
+        PostSystem($"You equip {item.DisplayName}.");
 
         return true;
     }
@@ -460,6 +431,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (!item.IsEquippable || item.EquipmentSlot != targetSlotType)
         {
+            PostSystem($"{item.DisplayName} cannot be equipped there.");
             return false;
         }
 
@@ -469,11 +441,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (currentlyEquipped != null && !sourceSlotWillBeEmptyAfterRemove && !CanAddItem(currentlyEquipped, 1))
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem("Inventory is full.");
-            }
-
+            PostSystem("Inventory is full.");
             return false;
         }
 
@@ -504,10 +472,7 @@ public class PlayerInventory : MonoBehaviour
 
         OnInventoryChanged?.Invoke();
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"You equip {item.DisplayName}.");
-        }
+        PostSystem($"You equip {item.DisplayName}.");
 
         return true;
     }
@@ -541,10 +506,7 @@ public class PlayerInventory : MonoBehaviour
         targetSlot.Set(removedItem, 1);
         OnInventoryChanged?.Invoke();
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"You unequip {removedItem.DisplayName}.");
-        }
+        PostSystem($"You unequip {removedItem.DisplayName}.");
 
         return true;
     }
@@ -565,11 +527,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (!CanAddItem(equippedItem, 1))
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem("Inventory is full.");
-            }
-
+            PostSystem("Inventory is full.");
             return false;
         }
 
@@ -582,10 +540,7 @@ public class PlayerInventory : MonoBehaviour
         AddItemInternal(removedItem, 1, false);
         OnInventoryChanged?.Invoke();
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"You unequip {removedItem.DisplayName}.");
-        }
+        PostSystem($"You unequip {removedItem.DisplayName}.");
 
         return true;
     }
@@ -599,10 +554,31 @@ public class PlayerInventory : MonoBehaviour
 
         bool usedSomething = false;
 
-        if (item.HealthRestoreAmount > 0 && playerHealth != null)
+        if (item.HealthRestoreAmount > 0)
         {
+            if (playerHealth == null)
+            {
+                return false;
+            }
+
+            if (playerHealth.IsDead)
+            {
+                PostSystem("You cannot use that while dead.");
+                return false;
+            }
+
+            if (playerHealth.CurrentHealth >= playerHealth.MaxHealth)
+            {
+                PostSystem("You are already at full health.");
+                return false;
+            }
+
             int restored = playerHealth.RestoreHealth(item.HealthRestoreAmount);
-            usedSomething = restored > 0;
+            if (restored > 0)
+            {
+                usedSomething = true;
+                PostSystem($"{item.DisplayName} restores {restored} health.");
+            }
         }
 
         return usedSomething;
@@ -617,6 +593,11 @@ public class PlayerInventory : MonoBehaviour
 
         if (!CanAddItem(item, quantity))
         {
+            if (notify)
+            {
+                PostSystem("Inventory is full.");
+            }
+
             return false;
         }
 
@@ -668,11 +649,7 @@ public class PlayerInventory : MonoBehaviour
         if (notify)
         {
             OnInventoryChanged?.Invoke();
-
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem($"You receive {item.DisplayName}.");
-            }
+            PostSystem($"You receive {FormatItemQuantity(item, quantity)}.");
         }
 
         return true;
@@ -696,6 +673,29 @@ public class PlayerInventory : MonoBehaviour
         if (notify)
         {
             OnInventoryChanged?.Invoke();
+        }
+    }
+
+    private string FormatItemQuantity(ItemData item, int quantity)
+    {
+        if (item == null)
+        {
+            return "item";
+        }
+
+        if (quantity <= 1)
+        {
+            return item.DisplayName;
+        }
+
+        return $"{item.DisplayName} x{quantity}";
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
         }
     }
 }

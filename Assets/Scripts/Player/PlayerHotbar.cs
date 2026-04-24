@@ -103,8 +103,14 @@ public class PlayerHotbar : MonoBehaviour
 
     public void AssignItemToSlot(int slotIndex, ItemData item)
     {
-        if (!IsValidSlot(slotIndex) || item == null || !item.IsUsable)
+        if (!IsValidSlot(slotIndex) || item == null)
         {
+            return;
+        }
+
+        if (!item.IsUsable)
+        {
+            PostSystem($"{item.DisplayName} cannot be placed on the hotbar.");
             return;
         }
 
@@ -194,6 +200,9 @@ public class PlayerHotbar : MonoBehaviour
 
         switch (slotTypes[slotIndex])
         {
+            case HotbarSlotContentType.Empty:
+                return false;
+
             case HotbarSlotContentType.Item:
                 if (playerInventory == null)
                 {
@@ -203,6 +212,12 @@ public class PlayerHotbar : MonoBehaviour
                 ItemData item = assignedItems[slotIndex];
                 if (item == null)
                 {
+                    return false;
+                }
+
+                if (playerInventory.GetTotalQuantityOfItem(item) <= 0)
+                {
+                    PostSystem($"You do not have any {item.DisplayName}.");
                     return false;
                 }
 
@@ -243,5 +258,13 @@ public class PlayerHotbar : MonoBehaviour
             5 => KeyCode.Alpha6,
             _ => KeyCode.None
         };
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
+        }
     }
 }

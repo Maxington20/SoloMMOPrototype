@@ -37,15 +37,23 @@ public class PlayerCombat : MonoBehaviour
 
     public bool TryUseAbilityOnCurrentTarget(string abilityName, int amount, float range)
     {
-        if (currentTarget == null || currentTarget.IsDead)
+        if (currentTarget == null)
+        {
+            PostSystem("No target.");
+            return false;
+        }
+
+        if (currentTarget.IsDead)
         {
             ClearTarget();
+            PostSystem("Target is dead.");
             return false;
         }
 
         float distanceToTarget = Vector3.Distance(transform.position, currentTarget.transform.position);
         if (distanceToTarget > range)
         {
+            PostSystem($"{abilityName} is out of range.");
             return false;
         }
 
@@ -58,20 +66,11 @@ public class PlayerCombat : MonoBehaviour
             currentEnemyTarget.SetTarget(transform);
         }
 
-        string targetName = currentTarget.name;
-        DisplayName displayName = currentTarget.GetComponent<DisplayName>();
-        if (displayName != null)
-        {
-            targetName = displayName.Display;
-        }
+        string targetName = GetTargetDisplayName(currentTarget.gameObject);
 
         Debug.Log($"Player uses {abilityName} on {targetName} for {amount}");
 
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem(
-                $"You use {abilityName} on {targetName} for {amount} damage.");
-        }
+        PostSystem($"You use {abilityName} on {targetName} for {amount} damage.");
 
         return true;
     }
@@ -128,20 +127,20 @@ public class PlayerCombat : MonoBehaviour
         currentTarget = targetHealth;
         currentEnemyTarget = enemy;
 
-        DisplayName displayName = hit.collider.GetComponentInParent<DisplayName>();
-        string targetName = displayName != null ? displayName.Display : targetHealth.gameObject.name;
+        string targetName = GetTargetDisplayName(targetHealth.gameObject);
 
         Debug.Log($"Target selected: {targetName}");
-
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem($"Target selected: {targetName}.");
-        }
+        PostSystem($"Target selected: {targetName}.");
     }
 
     private void HandleAutoAttack()
     {
-        if (currentTarget == null || currentTarget.IsDead)
+        if (currentTarget == null)
+        {
+            return;
+        }
+
+        if (currentTarget.IsDead)
         {
             ClearTarget();
             return;
@@ -189,9 +188,28 @@ public class PlayerCombat : MonoBehaviour
             10f * Time.deltaTime);
     }
 
+    private string GetTargetDisplayName(GameObject targetObject)
+    {
+        if (targetObject == null)
+        {
+            return "target";
+        }
+
+        DisplayName displayName = targetObject.GetComponent<DisplayName>();
+        return displayName != null ? displayName.Display : targetObject.name;
+    }
+
     private void ClearTarget()
     {
         currentTarget = null;
         currentEnemyTarget = null;
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
+        }
     }
 }

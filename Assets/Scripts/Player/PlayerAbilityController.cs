@@ -43,8 +43,10 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        if (IsOnCooldown(ability))
+        float cooldownRemaining = GetRemainingCooldown(ability);
+        if (cooldownRemaining > 0f)
         {
+            PostSystem($"{ability.DisplayName} is on cooldown for {Mathf.CeilToInt(cooldownRemaining)} more second(s).");
             return false;
         }
 
@@ -80,21 +82,41 @@ public class PlayerAbilityController : MonoBehaviour
     {
         bool didSomething = false;
 
-        if (ability.HealthRestoreAmount > 0 && playerHealth != null)
+        if (ability.HealthRestoreAmount > 0)
         {
+            if (playerHealth == null)
+            {
+                return false;
+            }
+
+            if (playerHealth.IsDead)
+            {
+                PostSystem("You cannot use that while dead.");
+                return false;
+            }
+
+            if (playerHealth.CurrentHealth >= playerHealth.MaxHealth)
+            {
+                PostSystem("You are already at full health.");
+                return false;
+            }
+
             int restored = playerHealth.RestoreHealth(ability.HealthRestoreAmount);
             if (restored > 0)
             {
                 didSomething = true;
-
-                if (ChatManager.Instance != null)
-                {
-                    ChatManager.Instance.PostSystem(
-                        $"You use {ability.DisplayName} and restore {restored} health.");
-                }
+                PostSystem($"You use {ability.DisplayName} and restore {restored} health.");
             }
         }
 
         return didSomething;
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
+        }
     }
 }
