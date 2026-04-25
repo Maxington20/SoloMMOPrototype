@@ -698,4 +698,64 @@ public class PlayerInventory : MonoBehaviour
             ChatManager.Instance.PostSystem(message);
         }
     }
+
+        public bool CanRemoveItem(ItemData item, int quantity)
+    {
+        if (item == null || quantity <= 0)
+        {
+            return false;
+        }
+
+        return GetTotalQuantityOfItem(item) >= quantity;
+    }
+
+    public bool RemoveItem(ItemData item, int quantity, bool notify = true)
+    {
+        if (item == null || quantity <= 0)
+        {
+            return false;
+        }
+
+        if (!CanRemoveItem(item, quantity))
+        {
+            return false;
+        }
+
+        int remaining = quantity;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            InventorySlotData slot = slots[i];
+
+            if (slot == null || slot.IsEmpty || slot.Item != item)
+            {
+                continue;
+            }
+
+            int amountToRemove = Mathf.Min(slot.Quantity, remaining);
+            slot.Quantity -= amountToRemove;
+            remaining -= amountToRemove;
+
+            if (slot.Quantity <= 0)
+            {
+                slot.Clear();
+            }
+
+            if (remaining <= 0)
+            {
+                break;
+            }
+        }
+
+        if (notify)
+        {
+            OnInventoryChanged?.Invoke();
+        }
+        else
+        {
+            OnInventoryChanged?.Invoke();
+        }
+
+        return true;
+    }
 }
