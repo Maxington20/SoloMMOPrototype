@@ -51,7 +51,10 @@ public class QuestRewardChoiceUI : MonoBehaviour
         if (rewardChoiceWindow != null)
         {
             rewardChoiceWindow.SetActive(true);
+            rewardChoiceWindow.transform.SetAsLastSibling();
         }
+
+        transform.SetAsLastSibling();
 
         if (titleText != null)
         {
@@ -86,6 +89,7 @@ public class QuestRewardChoiceUI : MonoBehaviour
         for (int i = 0; i < quest.choiceItemRewards.Count; i++)
         {
             QuestItemReward reward = quest.choiceItemRewards[i];
+
             if (reward == null || reward.Item == null)
             {
                 continue;
