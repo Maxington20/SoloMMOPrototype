@@ -11,13 +11,14 @@ public class QuestManager : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private int maxActiveQuests = 10;
 
-    [Header("State")]
-    [SerializeField] private int nextQuestIndex = 0;
-
     private readonly List<ActiveQuest> activeQuests = new List<ActiveQuest>();
+    private readonly List<QuestDefinition> completedQuests = new List<QuestDefinition>();
+
     private ActiveQuest pendingTurnInQuest;
 
     public IReadOnlyList<ActiveQuest> ActiveQuests => activeQuests;
+    public IReadOnlyList<QuestDefinition> AllQuests => quests;
+
     public bool HasActiveQuest => activeQuests.Count > 0;
     public bool HasCompletableQuest => GetFirstCompletableQuest() != null;
 
@@ -37,18 +38,18 @@ public class QuestManager : MonoBehaviour
         ActiveQuest completableQuest = GetFirstCompletableQuest();
         if (completableQuest != null)
         {
-            return $"Press F to turn in {completableQuest.definition.title}.";
+            return $"Press F to speak with the quest giver.";
         }
 
-        QuestDefinition nextQuest = GetNextAvailableQuest();
-        if (nextQuest != null && activeQuests.Count < maxActiveQuests)
+        QuestDefinition availableQuest = GetFirstAvailableQuest();
+        if (availableQuest != null)
         {
-            return $"Press F to accept {nextQuest.title}.";
+            return $"Press F to speak with the quest giver.";
         }
 
         if (activeQuests.Count > 0)
         {
-            return $"Active quests: {activeQuests.Count}";
+            return $"Press F to review your quests.";
         }
 
         return "No quests available.";
@@ -56,27 +57,83 @@ public class QuestManager : MonoBehaviour
 
     public void InteractWithQuestGiver()
     {
-        ActiveQuest completableQuest = GetFirstCompletableQuest();
-        if (completableQuest != null)
+        if (QuestGiverUI.Instance != null)
         {
-            TurnInQuest(completableQuest);
+            QuestGiverUI.Instance.Open();
             return;
         }
 
-        QuestDefinition nextQuest = GetNextAvailableQuest();
-        if (nextQuest == null)
+        PostSystem("Quest giver UI is missing.");
+    }
+
+    public List<QuestDefinition> GetAvailableQuests()
+    {
+        List<QuestDefinition> available = new List<QuestDefinition>();
+
+        if (quests == null)
         {
-            PostSystem("No quests available.");
-            return;
+            return available;
         }
 
-        if (activeQuests.Count >= maxActiveQuests)
+        for (int i = 0; i < quests.Count; i++)
         {
-            PostSystem("Your quest log is full.");
-            return;
+            QuestDefinition quest = quests[i];
+
+            if (quest == null)
+            {
+                continue;
+            }
+
+            if (IsQuestAlreadyActive(quest))
+            {
+                continue;
+            }
+
+            if (IsQuestCompleted(quest))
+            {
+                continue;
+            }
+
+            available.Add(quest);
         }
 
-        AcceptQuest(nextQuest);
+        return available;
+    }
+
+    public List<ActiveQuest> GetCompletableQuests()
+    {
+        List<ActiveQuest> completable = new List<ActiveQuest>();
+        PlayerInventory inventory = GetPlayerInventory();
+
+        for (int i = 0; i < activeQuests.Count; i++)
+        {
+            ActiveQuest quest = activeQuests[i];
+
+            if (quest != null && quest.IsComplete(inventory))
+            {
+                completable.Add(quest);
+            }
+        }
+
+        return completable;
+    }
+
+    public List<ActiveQuest> GetInProgressQuests()
+    {
+        List<ActiveQuest> inProgress = new List<ActiveQuest>();
+        PlayerInventory inventory = GetPlayerInventory();
+
+        for (int i = 0; i < activeQuests.Count; i++)
+        {
+            ActiveQuest quest = activeQuests[i];
+
+            if (quest != null && !quest.IsComplete(inventory))
+            {
+                inProgress.Add(quest);
+            }
+        }
+
+        return inProgress;
     }
 
     public void AcceptQuest(QuestDefinition definition)
@@ -86,15 +143,25 @@ public class QuestManager : MonoBehaviour
             return;
         }
 
+        if (activeQuests.Count >= maxActiveQuests)
+        {
+            PostSystem("Your quest log is full.");
+            return;
+        }
+
         if (IsQuestAlreadyActive(definition))
         {
             PostSystem($"You already have {definition.title}.");
             return;
         }
 
-        activeQuests.Add(new ActiveQuest(definition));
-        nextQuestIndex++;
+        if (IsQuestCompleted(definition))
+        {
+            PostSystem($"You have already completed {definition.title}.");
+            return;
+        }
 
+        activeQuests.Add(new ActiveQuest(definition));
         PostSystem($"Quest accepted: {definition.title}.");
     }
 
@@ -191,7 +258,18 @@ public class QuestManager : MonoBehaviour
         }
 
         activeQuests.Remove(quest);
+
+        if (!completedQuests.Contains(completedQuest))
+        {
+            completedQuests.Add(completedQuest);
+        }
+
         PostSystem($"Quest completed: {completedQuest.title}.");
+
+        if (QuestGiverUI.Instance != null && QuestGiverUI.Instance.IsOpen)
+        {
+            QuestGiverUI.Instance.Refresh();
+        }
     }
 
     public void RegisterEnemyKilled(GameObject enemyObject, GameObject killer)
@@ -242,19 +320,10 @@ public class QuestManager : MonoBehaviour
         }
     }
 
-    private QuestDefinition GetNextAvailableQuest()
+    private QuestDefinition GetFirstAvailableQuest()
     {
-        if (quests == null || quests.Count == 0)
-        {
-            return null;
-        }
-
-        if (nextQuestIndex < 0 || nextQuestIndex >= quests.Count)
-        {
-            return null;
-        }
-
-        return quests[nextQuestIndex];
+        List<QuestDefinition> available = GetAvailableQuests();
+        return available.Count > 0 ? available[0] : null;
     }
 
     private ActiveQuest GetFirstCompletableQuest()
@@ -283,6 +352,11 @@ public class QuestManager : MonoBehaviour
         }
 
         return false;
+    }
+
+    private bool IsQuestCompleted(QuestDefinition definition)
+    {
+        return completedQuests.Contains(definition);
     }
 
     private bool QuestNeedsEnemyType(ActiveQuest quest, EnemyType enemyType)
