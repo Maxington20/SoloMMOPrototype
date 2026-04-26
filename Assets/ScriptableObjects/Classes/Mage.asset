@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63bb6cefb9eeafc4a9a16bf652ede59b, type: 3}
+  m_Name: Mage
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterClassData
+  className: Mage
+  role: 0
+  description: A fragile spellcaster who deals strong damage from range and relies
+    on magic to survice.
+  icon: {fileID: 21300000, guid: a0a1d349d708a8849ae66bba032fd638, type: 3}
+  startingMaxHealth: 90
+  startingBaseDamage: 8
+  allowedWeaponTypes: 0500000006000000
+  startingAbilities:
+  - {fileID: 11400000, guid: 9bc5469e5309b024485ea408fae486a6, type: 2}
+  - {fileID: 11400000, guid: 18f7f17fb476a084691e9acd6c3d410d, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}

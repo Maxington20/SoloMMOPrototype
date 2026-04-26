@@ -8633,7 +8633,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 619484213}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.44444445
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -24877,6 +24877,7 @@ GameObject:
   - component: {fileID: 1861179887}
   - component: {fileID: 1861179888}
   - component: {fileID: 1861179889}
+  - component: {fileID: 1861179890}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -25143,6 +25144,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
   - {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
   - {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
+  - {fileID: 11400000, guid: 42f3609c51313174f8c35c828ae0b8e5, type: 2}
+  - {fileID: 11400000, guid: 74142010c0fb01646bb6491bad3e6666, type: 2}
 --- !u!114 &1861179888
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25157,8 +25160,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHotbar
   slotCount: 6
   startingAbilityAssignments:
-  - {fileID: 11400000, guid: bf672076b8de83340b816c7d067a2383, type: 2}
-  - {fileID: 11400000, guid: f39a9a74fbd28a04d8e86543bb52c233, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -25175,6 +25178,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e94268ba3995648b97fcca4ffa2854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAbilityController
+--- !u!114 &1861179890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea9b10465de633040a68eab9bb33ce40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerClassController
+  selectedClass: {fileID: 11400000, guid: e899347b8fe33964d99dc1326ce3a152, type: 2}
+  applyClassStatsOnStart: 1
+  assignClassAbilitiesToHotbar: 1
 --- !u!1 &1861185946
 GameObject:
   m_ObjectHideFlags: 0

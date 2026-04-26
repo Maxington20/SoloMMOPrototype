@@ -4,7 +4,8 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(Health))]
 public class PlayerCombat : MonoBehaviour
 {
-    [SerializeField] private float attackRange = 2.5f;
+    [Header("Auto Attack")]
+    [SerializeField] private float attackRange = 1.8f;
     [SerializeField] private int damage = 20;
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private float chaseStopDistance = 1.5f;
@@ -13,14 +14,28 @@ public class PlayerCombat : MonoBehaviour
     private int equipmentBonusDamage;
     private Health currentTarget;
     private EnemyController currentEnemyTarget;
+    private PlayerEquipment playerEquipment;
 
     public Transform CurrentTargetTransform => currentTarget != null ? currentTarget.transform : null;
     public int Damage => damage + equipmentBonusDamage;
+    public float CurrentAttackRange => GetCurrentAttackRange();
+    public bool CurrentAutoAttackIsMelee => GetCurrentAutoAttackIsMelee();
+
+    private void Awake()
+    {
+        playerEquipment = GetComponent<PlayerEquipment>();
+    }
 
     private void Update()
     {
         HandleTargetSelection();
         HandleAutoAttack();
+    }
+
+    public void SetBaseDamage(int amount)
+    {
+        damage = Mathf.Max(0, amount);
+        Debug.Log($"Player base damage set to {damage}. Total damage: {Damage}");
     }
 
     public void IncreaseDamage(int amount)
@@ -147,10 +162,11 @@ public class PlayerCombat : MonoBehaviour
         }
 
         float distanceToTarget = Vector3.Distance(transform.position, currentTarget.transform.position);
+        float currentRange = GetCurrentAttackRange();
 
         FaceTarget(currentTarget.transform);
 
-        if (distanceToTarget > attackRange)
+        if (distanceToTarget > currentRange)
         {
             return;
         }
@@ -162,13 +178,43 @@ public class PlayerCombat : MonoBehaviour
 
         lastAttackTime = Time.time;
 
-        Debug.Log($"Player auto-attacks {currentTarget.name} for {Damage}");
+        string attackType = GetCurrentAutoAttackIsMelee() ? "melee attacks" : "ranged attacks";
+
+        Debug.Log($"Player {attackType} {currentTarget.name} for {Damage}");
         currentTarget.TakeDamage(Damage, gameObject);
 
         if (currentEnemyTarget != null)
         {
             currentEnemyTarget.SetTarget(transform);
         }
+    }
+
+    private float GetCurrentAttackRange()
+    {
+        ItemData equippedWeapon = playerEquipment != null
+            ? playerEquipment.GetEquippedWeapon()
+            : null;
+
+        if (equippedWeapon != null && equippedWeapon.IsWeapon)
+        {
+            return equippedWeapon.WeaponAttackRange;
+        }
+
+        return Mathf.Max(0.5f, attackRange);
+    }
+
+    private bool GetCurrentAutoAttackIsMelee()
+    {
+        ItemData equippedWeapon = playerEquipment != null
+            ? playerEquipment.GetEquippedWeapon()
+            : null;
+
+        if (equippedWeapon != null && equippedWeapon.IsWeapon)
+        {
+            return equippedWeapon.IsMeleeWeapon;
+        }
+
+        return true;
     }
 
     private void FaceTarget(Transform target)

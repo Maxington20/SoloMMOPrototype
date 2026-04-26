@@ -185,6 +185,11 @@ public class ItemTooltipUI : MonoBehaviour
 
         if (item.IsEquippable)
         {
+            if (item.WeaponType != WeaponType.None)
+            {
+                return $"{rarityName} {item.WeaponType} - {GetEquipmentSlotName(item.EquipmentSlot)}";
+            }
+
             return $"{rarityName} Equipment - {GetEquipmentSlotName(item.EquipmentSlot)}";
         }
 
@@ -208,6 +213,18 @@ public class ItemTooltipUI : MonoBehaviour
             }
 
             result += $"+{item.HealthBonus} Health";
+        }
+
+        if (item.IsWeapon)
+        {
+            if (!string.IsNullOrEmpty(result))
+            {
+                result += "\n";
+            }
+
+            string rangeType = item.IsMeleeWeapon ? "Melee" : "Ranged";
+            result += $"{rangeType} weapon";
+            result += $"\nAttack Range: {item.WeaponAttackRange:0.#}";
         }
 
         if (item.IsUsable && item.HealthRestoreAmount > 0)
@@ -258,48 +275,21 @@ public class ItemTooltipUI : MonoBehaviour
             {
                 finalPosition.x -= panelSize.x;
             }
-
-            if (finalPosition.y - panelSize.y < screenPadding.y)
-            {
-                finalPosition.y += panelSize.y;
-            }
         }
 
-        finalPosition.x = Mathf.Clamp(
-            finalPosition.x,
-            screenPadding.x,
-            screenWidth - panelSize.x - screenPadding.x);
-
-        finalPosition.y = Mathf.Clamp(
-            finalPosition.y,
-            panelSize.y + screenPadding.y,
-            screenHeight - screenPadding.y);
-
-        SetPanelScreenPosition(finalPosition);
-    }
-
-    private void SetPanelScreenPosition(Vector2 screenPosition)
-    {
-        if (tooltipPanel == null)
+        if (finalPosition.x + panelSize.x > screenWidth - screenPadding.x)
         {
-            return;
+            finalPosition.x = screenWidth - screenPadding.x - panelSize.x;
         }
 
-        if (rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+        if (finalPosition.y - panelSize.y < screenPadding.y)
         {
-            RectTransform canvasRect = rootCanvas.transform as RectTransform;
-            if (canvasRect != null &&
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvasRect,
-                    screenPosition,
-                    rootCanvas.worldCamera,
-                    out Vector2 localPoint))
-            {
-                tooltipPanel.localPosition = localPoint;
-                return;
-            }
+            finalPosition.y = screenPadding.y + panelSize.y;
         }
 
-        tooltipPanel.position = screenPosition;
+        finalPosition.x = Mathf.Max(screenPadding.x, finalPosition.x);
+        finalPosition.y = Mathf.Min(screenHeight - screenPadding.y, finalPosition.y);
+
+        tooltipPanel.position = finalPosition;
     }
 }

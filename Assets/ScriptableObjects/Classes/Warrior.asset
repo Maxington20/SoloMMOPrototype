@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63bb6cefb9eeafc4a9a16bf652ede59b, type: 3}
+  m_Name: Warrior
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterClassData
+  className: Warrior
+  role: 1
+  description: A durable melee fighter who relies on direct attacks and self-sustain.
+  icon: {fileID: 21300000, guid: 6bf42695095e5cd4b879215ea50c47d3, type: 3}
+  startingMaxHealth: 140
+  startingBaseDamage: 20
+  allowedWeaponTypes: 01000000020000000300000009000000
+  startingAbilities:
+  - {fileID: 11400000, guid: bf672076b8de83340b816c7d067a2383, type: 2}
+  - {fileID: 11400000, guid: f39a9a74fbd28a04d8e86543bb52c233, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}

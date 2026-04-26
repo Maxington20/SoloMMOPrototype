@@ -21,6 +21,11 @@ public class ItemData : ScriptableObject
     [SerializeField] private int damageBonus = 0;
     [SerializeField] private int healthBonus = 0;
 
+    [Header("Weapon")]
+    [SerializeField] private WeaponType weaponType = WeaponType.None;
+    [SerializeField] private float weaponAttackRange = 2.5f;
+    [SerializeField] private bool isMeleeWeapon = true;
+
     [Header("Usable / Consumable")]
     [SerializeField] private bool isUsable = false;
     [SerializeField] private int healthRestoreAmount = 0;
@@ -31,12 +36,20 @@ public class ItemData : ScriptableObject
     public Sprite Icon => icon;
     public int SellValue => Mathf.Max(0, sellValue);
     public int BuyValue => Mathf.Max(0, buyValue);
+
     public bool IsStackable => isStackable;
     public int MaxStack => Mathf.Max(1, maxStack);
+
     public bool IsEquippable => isEquippable;
     public EquipmentSlotType EquipmentSlot => equipmentSlot;
     public int DamageBonus => damageBonus;
     public int HealthBonus => healthBonus;
+
+    public WeaponType WeaponType => weaponType;
+    public float WeaponAttackRange => Mathf.Max(0.5f, weaponAttackRange);
+    public bool IsMeleeWeapon => isMeleeWeapon;
+    public bool IsWeapon => isEquippable && equipmentSlot == EquipmentSlotType.Weapon && weaponType != WeaponType.None;
+
     public bool IsUsable => isUsable;
     public int HealthRestoreAmount => Mathf.Max(0, healthRestoreAmount);
 }

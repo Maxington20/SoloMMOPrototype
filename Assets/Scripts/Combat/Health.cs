@@ -74,6 +74,30 @@ public class Health : MonoBehaviour
         OnHealthChanged?.Invoke();
     }
 
+    public void SetBaseMaxHealth(int amount, bool fullyHeal)
+    {
+        int oldMaxHealth = MaxHealth;
+
+        maxHealth = Mathf.Max(1, amount);
+
+        int newMaxHealth = MaxHealth;
+        int delta = newMaxHealth - oldMaxHealth;
+
+        if (fullyHeal)
+        {
+            currentHealth = newMaxHealth;
+        }
+        else
+        {
+            currentHealth += delta;
+            currentHealth = Mathf.Clamp(currentHealth, 0, newMaxHealth);
+        }
+
+        OnHealthChanged?.Invoke();
+
+        Debug.Log($"{gameObject.name} base max health set to {maxHealth}. Total max health: {MaxHealth}");
+    }
+
     public void IncreaseMaxHealth(int amount, bool fullyHeal)
     {
         maxHealth += amount;

@@ -7,6 +7,7 @@ public class PlayerEquipment : MonoBehaviour
 {
     private Health health;
     private PlayerCombat combat;
+    private PlayerClassController classController;
 
     private ItemData head;
     private ItemData chest;
@@ -21,6 +22,8 @@ public class PlayerEquipment : MonoBehaviour
     {
         health = GetComponent<Health>();
         combat = GetComponent<PlayerCombat>();
+        classController = GetComponent<PlayerClassController>();
+
         ApplyStatBonuses();
     }
 
@@ -38,11 +41,21 @@ public class PlayerEquipment : MonoBehaviour
         };
     }
 
+    public ItemData GetEquippedWeapon()
+    {
+        return weapon;
+    }
+
     public bool Equip(ItemData item, out ItemData previousItem)
     {
         previousItem = null;
 
         if (item == null || !item.IsEquippable || item.EquipmentSlot == EquipmentSlotType.None)
+        {
+            return false;
+        }
+
+        if (!CanEquipForCurrentClass(item))
         {
             return false;
         }
@@ -132,6 +145,36 @@ public class PlayerEquipment : MonoBehaviour
         return true;
     }
 
+    private bool CanEquipForCurrentClass(ItemData item)
+    {
+        if (item == null)
+        {
+            return false;
+        }
+
+        if (item.WeaponType == WeaponType.None)
+        {
+            return true;
+        }
+
+        CharacterClassData selectedClass = classController != null
+            ? classController.SelectedClass
+            : null;
+
+        if (selectedClass == null)
+        {
+            return true;
+        }
+
+        if (selectedClass.CanUseWeaponType(item.WeaponType))
+        {
+            return true;
+        }
+
+        PostSystem($"{selectedClass.ClassName} cannot equip {item.WeaponType} weapons.");
+        return false;
+    }
+
     private void ApplyStatBonuses()
     {
         int totalHealthBonus = 0;
@@ -164,5 +207,13 @@ public class PlayerEquipment : MonoBehaviour
 
         totalHealthBonus += item.HealthBonus;
         totalDamageBonus += item.DamageBonus;
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
+        }
     }
 }
