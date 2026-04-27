@@ -24,6 +24,12 @@ MonoBehaviour:
   equipmentSlot: 5
   damageBonus: 3
   healthBonus: 0
+  statBonuses:
+    strength: 0
+    agility: 1
+    intellect: 0
+    stamina: 1
+    armor: 0
   weaponType: 10
   handRequirement: 4
   canEquipInOffhand: 0

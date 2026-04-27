@@ -24,7 +24,6 @@ public class ItemTooltipUI : MonoBehaviour
     [SerializeField] private Vector2 cursorOffset = new Vector2(18f, -18f);
     [SerializeField] private Vector2 screenPadding = new Vector2(16f, 16f);
 
-    private Canvas rootCanvas;
     private bool followMouse = true;
     private PlayerEquipment playerEquipment;
 
@@ -37,7 +36,6 @@ public class ItemTooltipUI : MonoBehaviour
         }
 
         Instance = this;
-        rootCanvas = GetComponentInParent<Canvas>();
         playerEquipment = FindFirstObjectByType<PlayerEquipment>();
 
         if (closeButton != null)
@@ -143,20 +141,20 @@ public class ItemTooltipUI : MonoBehaviour
 
         if (bonusText != null)
         {
-            string bonuses = BuildBonusText(item);
+            string tooltipBody = BuildBonusText(item);
             string equipWarning = BuildEquipWarningText(item);
 
-            if (string.IsNullOrWhiteSpace(bonuses))
+            if (string.IsNullOrWhiteSpace(tooltipBody))
             {
-                bonuses = "No bonuses";
+                tooltipBody = "No bonuses";
             }
 
             if (!string.IsNullOrWhiteSpace(equipWarning))
             {
-                bonuses += $"\n\n<color=#FF5555>{equipWarning}</color>";
+                tooltipBody += $"\n\n<color=#FF5555>{equipWarning}</color>";
             }
 
-            bonusText.text = bonuses;
+            bonusText.text = tooltipBody;
         }
 
         if (sellValueText != null)
@@ -186,45 +184,69 @@ public class ItemTooltipUI : MonoBehaviour
     {
         string result = string.Empty;
 
+        result = AppendStatBonus(result, "Strength", item.StatBonuses.Strength);
+        result = AppendStatBonus(result, "Agility", item.StatBonuses.Agility);
+        result = AppendStatBonus(result, "Intellect", item.StatBonuses.Intellect);
+        result = AppendStatBonus(result, "Stamina", item.StatBonuses.Stamina);
+        result = AppendStatBonus(result, "Armour", item.StatBonuses.Armor);
+
         if (item.DamageBonus > 0)
         {
-            result += $"+{item.DamageBonus} Damage";
+            result = AppendLine(result, $"+{item.DamageBonus} Damage");
         }
 
         if (item.HealthBonus > 0)
         {
-            if (!string.IsNullOrEmpty(result))
-            {
-                result += "\n";
-            }
-
-            result += $"+{item.HealthBonus} Health";
+            result = AppendLine(result, $"+{item.HealthBonus} Health");
         }
 
         if (item.IsWeapon)
         {
-            if (!string.IsNullOrEmpty(result))
+            if (!string.IsNullOrWhiteSpace(result))
             {
                 result += "\n";
             }
 
             string rangeType = item.IsMeleeWeapon ? "Melee" : "Ranged";
-            result += $"{rangeType} weapon";
-            result += $"\nHand: {FormatHandRequirement(item.HandRequirement)}";
-            result += $"\nAttack Range: {item.WeaponAttackRange:0.#}";
+            result = AppendLine(result, $"{rangeType} weapon");
+            result = AppendLine(result, $"Hand: {FormatHandRequirement(item.HandRequirement)}");
+            result = AppendLine(result, $"Attack Range: {item.WeaponAttackRange:0.#}");
         }
 
         if (item.IsUsable && item.HealthRestoreAmount > 0)
         {
-            if (!string.IsNullOrEmpty(result))
+            if (!string.IsNullOrWhiteSpace(result))
             {
                 result += "\n";
             }
 
-            result += $"Restores {item.HealthRestoreAmount} Health";
+            result = AppendLine(result, $"Restores {item.HealthRestoreAmount} Health");
         }
 
         return result;
+    }
+
+    private string AppendStatBonus(string currentText, string statName, int amount)
+    {
+        if (amount == 0)
+        {
+            return currentText;
+        }
+
+        string sign = amount > 0 ? "+" : "";
+        string color = amount > 0 ? "#55FF55" : "#FF5555";
+
+        return AppendLine(currentText, $"<color={color}>{sign}{amount} {statName}</color>");
+    }
+
+    private string AppendLine(string currentText, string line)
+    {
+        if (string.IsNullOrWhiteSpace(currentText))
+        {
+            return line;
+        }
+
+        return currentText + "\n" + line;
     }
 
     private string BuildEquipWarningText(ItemData item)
@@ -245,7 +267,6 @@ public class ItemTooltipUI : MonoBehaviour
         }
 
         EquipmentSlotType targetSlot = item.EquipmentSlot;
-
         string reason = playerEquipment.GetCannotEquipReason(item, targetSlot);
 
         if (string.IsNullOrWhiteSpace(reason))
