@@ -18,8 +18,14 @@ public class ItemData : ScriptableObject
     [Header("Equipment")]
     [SerializeField] private bool isEquippable = false;
     [SerializeField] private EquipmentSlotType equipmentSlot = EquipmentSlotType.None;
+
+    [Tooltip("Legacy flat damage bonus. Keep for now while stats are being phased in.")]
     [SerializeField] private int damageBonus = 0;
+
+    [Tooltip("Legacy flat health bonus. Keep for now while stats are being phased in.")]
     [SerializeField] private int healthBonus = 0;
+
+    [SerializeField] private StatBlock statBonuses = StatBlock.Zero;
 
     [Header("Weapon / Hand Rules")]
     [SerializeField] private WeaponType weaponType = WeaponType.None;
@@ -46,6 +52,7 @@ public class ItemData : ScriptableObject
     public EquipmentSlotType EquipmentSlot => equipmentSlot;
     public int DamageBonus => damageBonus;
     public int HealthBonus => healthBonus;
+    public StatBlock StatBonuses => statBonuses ?? StatBlock.Zero;
 
     public WeaponType WeaponType => weaponType;
     public WeaponHandRequirement HandRequirement => handRequirement;

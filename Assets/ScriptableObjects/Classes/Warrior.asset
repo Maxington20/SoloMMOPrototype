@@ -14,10 +14,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterClassData
   className: Warrior
   role: 1
+  primaryStat: 0
   description: A durable melee fighter who relies on direct attacks and self-sustain.
   icon: {fileID: 21300000, guid: 6bf42695095e5cd4b879215ea50c47d3, type: 3}
   startingMaxHealth: 140
   startingBaseDamage: 20
+  startingStats:
+    strength: 10
+    agility: 4
+    intellect: 1
+    stamina: 12
+    armor: 8
+  statsGainedPerLevel:
+    strength: 2
+    agility: 1
+    intellect: 0
+    stamina: 2
+    armor: 1
   allowedMainHandTypes: 010000000200000003000000040000000500000006000000
   allowedOffhandTypes: 0100000003000000050000000c000000
   canDualWieldWeapons: 1

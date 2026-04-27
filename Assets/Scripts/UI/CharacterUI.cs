@@ -9,11 +9,20 @@ public class CharacterUI : MonoBehaviour
     [Header("Window")]
     [SerializeField] private GameObject characterWindow;
 
-    [Header("Text")]
-    [SerializeField] private TMP_Text nameText;
-    [SerializeField] private TMP_Text levelText;
+    [Header("Header")]
+    [SerializeField] private TMP_Text headerText;
+
+    [Header("Stats Text")]
+    [SerializeField] private TMP_Text roleText;
     [SerializeField] private TMP_Text healthText;
     [SerializeField] private TMP_Text damageText;
+    [SerializeField] private TMP_Text armorText;
+    [SerializeField] private TMP_Text dodgeText;
+    [SerializeField] private TMP_Text primaryStatText;
+    [SerializeField] private TMP_Text strengthText;
+    [SerializeField] private TMP_Text agilityText;
+    [SerializeField] private TMP_Text intellectText;
+    [SerializeField] private TMP_Text staminaText;
     [SerializeField] private TMP_Text goldText;
 
     [Header("Equipment Slots")]
@@ -31,6 +40,8 @@ public class CharacterUI : MonoBehaviour
     [SerializeField] private PlayerCombat combat;
     [SerializeField] private PlayerInventory inventory;
     [SerializeField] private PlayerEquipment equipment;
+    [SerializeField] private PlayerClassController classController;
+    [SerializeField] private PlayerStats playerStats;
 
     [Header("Controls")]
     [SerializeField] private KeyCode toggleKey = KeyCode.C;
@@ -159,14 +170,22 @@ public class CharacterUI : MonoBehaviour
 
     private void Refresh()
     {
-        if (nameText != null)
+        CharacterClassData selectedClass = classController != null
+            ? classController.SelectedClass
+            : null;
+
+        string playerName = displayName != null ? displayName.Display : "Unknown";
+        string className = selectedClass != null ? selectedClass.ClassName : "No Class";
+        int level = progression != null ? progression.Level : 1;
+
+        if (headerText != null)
         {
-            nameText.text = displayName != null ? displayName.Display : "Unknown";
+            headerText.text = $"{playerName} — Level {level} {className}";
         }
 
-        if (levelText != null)
+        if (roleText != null)
         {
-            levelText.text = progression != null ? $"Level: {progression.Level}" : "Level: ?";
+            roleText.text = selectedClass != null ? $"Role: {selectedClass.Role}" : "Role: None";
         }
 
         if (healthText != null)
@@ -184,7 +203,70 @@ public class CharacterUI : MonoBehaviour
             goldText.text = inventory != null ? $"Gold: {inventory.Gold}" : "Gold: 0";
         }
 
+        RefreshStatsText();
         RefreshEquipmentSlots();
+    }
+
+    private void RefreshStatsText()
+    {
+        if (playerStats == null)
+        {
+            SetStatTextsToUnknown();
+            return;
+        }
+
+        StatBlock stats = playerStats.TotalStats;
+        CharacterClassData selectedClass = classController != null
+            ? classController.SelectedClass
+            : null;
+
+        if (armorText != null)
+        {
+            armorText.text = $"Armour: {stats.Armor}";
+        }
+
+        if (dodgeText != null)
+        {
+            dodgeText.text = $"Dodge: {playerStats.DodgeChancePercent:0.#}%";
+        }
+
+        if (primaryStatText != null)
+        {
+            primaryStatText.text = selectedClass != null
+                ? $"Primary Stat: {selectedClass.PrimaryStat}"
+                : "Primary Stat: None";
+        }
+
+        if (strengthText != null)
+        {
+            strengthText.text = $"Strength: {stats.Strength}";
+        }
+
+        if (agilityText != null)
+        {
+            agilityText.text = $"Agility: {stats.Agility}";
+        }
+
+        if (intellectText != null)
+        {
+            intellectText.text = $"Intellect: {stats.Intellect}";
+        }
+
+        if (staminaText != null)
+        {
+            staminaText.text = $"Stamina: {stats.Stamina}";
+        }
+    }
+
+    private void SetStatTextsToUnknown()
+    {
+        if (armorText != null) armorText.text = "Armour: ?";
+        if (dodgeText != null) dodgeText.text = "Dodge: ?";
+        if (primaryStatText != null) primaryStatText.text = "Primary Stat: ?";
+        if (strengthText != null) strengthText.text = "Strength: ?";
+        if (agilityText != null) agilityText.text = "Agility: ?";
+        if (intellectText != null) intellectText.text = "Intellect: ?";
+        if (staminaText != null) staminaText.text = "Stamina: ?";
     }
 
     private void RefreshEquipmentSlots()
@@ -217,8 +299,7 @@ public class CharacterUI : MonoBehaviour
 
     private void HandleEquipmentSlotLeftClicked(EquipmentSlotType slotType)
     {
-        // Intentionally empty.
-        // Left mouse is reserved for drag-and-drop for equipped items.
+        // Left click is reserved for drag-and-drop.
     }
 
     private void HandleEquipmentSlotRightClicked(EquipmentSlotType slotType, Vector2 screenPosition)

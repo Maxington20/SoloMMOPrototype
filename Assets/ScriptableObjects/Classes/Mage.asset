@@ -14,11 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterClassData
   className: Mage
   role: 0
+  primaryStat: 2
   description: A fragile spellcaster who deals strong damage from range and relies
     on magic to survice.
   icon: {fileID: 21300000, guid: a0a1d349d708a8849ae66bba032fd638, type: 3}
   startingMaxHealth: 90
   startingBaseDamage: 8
+  startingStats:
+    strength: 1
+    agility: 4
+    intellect: 12
+    stamina: 7
+    armor: 1
+  statsGainedPerLevel:
+    strength: 0
+    agility: 1
+    intellect: 3
+    stamina: 1
+    armor: 0
   allowedMainHandTypes: 0800000009000000
   allowedOffhandTypes: 0d000000
   canDualWieldWeapons: 0
