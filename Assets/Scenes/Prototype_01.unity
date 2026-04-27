@@ -8907,7 +8907,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 619484213}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.44444445
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -26072,6 +26072,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisplayName
   displayName: Maxington
+  defaultColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &1861179885
 MonoBehaviour:
   m_ObjectHideFlags: 0

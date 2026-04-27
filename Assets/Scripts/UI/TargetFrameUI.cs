@@ -10,6 +10,7 @@ public class TargetFrameUI : MonoBehaviour
     [SerializeField] private GameObject visualRoot;
 
     private Health currentTargetHealth;
+    private DisplayName currentDisplayName;
     private Transform lastTarget;
 
     private void Awake()
@@ -21,9 +22,7 @@ public class TargetFrameUI : MonoBehaviour
     {
         if (playerCombat == null)
         {
-            SetVisible(false);
-            currentTargetHealth = null;
-            lastTarget = null;
+            ClearTargetFrame();
             return;
         }
 
@@ -31,9 +30,7 @@ public class TargetFrameUI : MonoBehaviour
 
         if (target == null)
         {
-            SetVisible(false);
-            currentTargetHealth = null;
-            lastTarget = null;
+            ClearTargetFrame();
             return;
         }
 
@@ -43,17 +40,8 @@ public class TargetFrameUI : MonoBehaviour
         {
             lastTarget = target;
             currentTargetHealth = target.GetComponent<Health>();
-
-            DisplayName displayName = target.GetComponent<DisplayName>();
-
-            if (displayName != null)
-            {
-                nameText.text = displayName.Display;
-            }
-            else
-            {
-                nameText.text = target.name;
-            }
+            currentDisplayName = target.GetComponent<DisplayName>();
+            RefreshName(target);
         }
 
         if (currentTargetHealth != null && healthFill != null)
@@ -62,11 +50,35 @@ public class TargetFrameUI : MonoBehaviour
 
             if (currentTargetHealth.IsDead)
             {
-                SetVisible(false);
-                currentTargetHealth = null;
-                lastTarget = null;
+                ClearTargetFrame();
             }
         }
+    }
+
+    private void RefreshName(Transform target)
+    {
+        if (nameText == null)
+        {
+            return;
+        }
+
+        if (currentDisplayName != null)
+        {
+            nameText.text = currentDisplayName.Display;
+            nameText.color = currentDisplayName.DisplayColor;
+            return;
+        }
+
+        nameText.text = target != null ? target.name : string.Empty;
+        nameText.color = Color.white;
+    }
+
+    private void ClearTargetFrame()
+    {
+        SetVisible(false);
+        currentTargetHealth = null;
+        currentDisplayName = null;
+        lastTarget = null;
     }
 
     private void SetVisible(bool visible)
