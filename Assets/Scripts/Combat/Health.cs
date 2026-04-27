@@ -9,7 +9,7 @@ public class Health : MonoBehaviour
     private int equipmentBonusMaxHealth;
     private int statBonusMaxHealth;
     private GameObject lastDamageSource;
-    private PlayerStats playerStats;
+    private ICombatStatsProvider combatStatsProvider;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth + equipmentBonusMaxHealth + statBonusMaxHealth;
@@ -26,7 +26,7 @@ public class Health : MonoBehaviour
 
     private void Awake()
     {
-        playerStats = GetComponent<PlayerStats>();
+        combatStatsProvider = GetComponent<ICombatStatsProvider>();
         ResetHealth();
     }
 
@@ -39,20 +39,20 @@ public class Health : MonoBehaviour
 
         lastDamageSource = source;
 
-        if (!PlayerStats.RollAttackHits(source))
+        if (!AttackHits(source))
         {
             OnMissed?.Invoke(source);
             return;
         }
 
-        if (playerStats != null && playerStats.RollDodge())
+        if (combatStatsProvider != null && combatStatsProvider.RollDodge())
         {
             OnDodged?.Invoke(source);
             return;
         }
 
-        int finalDamage = playerStats != null
-            ? playerStats.ReduceIncomingDamageByArmour(amount)
+        int finalDamage = combatStatsProvider != null
+            ? combatStatsProvider.ReduceIncomingDamageByArmour(amount)
             : Mathf.Max(1, amount);
 
         currentHealth -= finalDamage;
@@ -124,6 +124,23 @@ public class Health : MonoBehaviour
         int oldMaxHealth = MaxHealth;
         statBonusMaxHealth = Mathf.Max(0, amount);
         ApplyMaxHealthChange(oldMaxHealth, false);
+    }
+
+    private bool AttackHits(GameObject source)
+    {
+        float hitChance = ClassCombatTuning.FallbackHitChance;
+
+        if (source != null)
+        {
+            ICombatStatsProvider sourceStats = source.GetComponent<ICombatStatsProvider>();
+            if (sourceStats != null)
+            {
+                hitChance = sourceStats.HitChancePercent;
+            }
+        }
+
+        float roll = UnityEngine.Random.Range(0f, 100f);
+        return roll <= hitChance;
     }
 
     private void ApplyMaxHealthChange(int oldMaxHealth, bool fullyHeal)

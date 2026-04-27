@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerEquipment))]
 [RequireComponent(typeof(PlayerProgression))]
 [RequireComponent(typeof(Health))]
-public class PlayerStats : MonoBehaviour
+public class PlayerStats : MonoBehaviour, ICombatStatsProvider
 {
     private PlayerClassController classController;
     private PlayerEquipment equipment;
@@ -154,23 +154,6 @@ public class PlayerStats : MonoBehaviour
     {
         float roll = UnityEngine.Random.Range(0f, 100f);
         return roll < DodgeChancePercent;
-    }
-
-    public static bool RollAttackHits(GameObject attacker)
-    {
-        float hitChance = ClassCombatTuning.FallbackHitChance;
-
-        if (attacker != null)
-        {
-            PlayerStats attackerStats = attacker.GetComponent<PlayerStats>();
-            if (attackerStats != null)
-            {
-                hitChance = attackerStats.HitChancePercent;
-            }
-        }
-
-        float roll = UnityEngine.Random.Range(0f, 100f);
-        return roll <= hitChance;
     }
 
     public StatBlock CalculateTotalStats()

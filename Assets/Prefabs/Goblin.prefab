@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 732027118408212616}
   - component: {fileID: 2998863200717848812}
   - component: {fileID: 5448741595172155239}
+  - component: {fileID: 1554170247968502267}
   m_Layer: 0
   m_Name: Goblin
   m_TagString: Untagged
@@ -232,6 +233,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyType: 1
   xpReward: 40
+  baseMaxHealth: 65
+  baseDamage: 7
+  primaryStat: 0
+  stats:
+    strength: 6
+    agility: 4
+    intellect: 1
+    stamina: 4
+    armor: 3
+    hitChance: 0
+  combatTuning:
+    healthPerStamina: 10
+    primaryStatDamageMultiplier: 0.8
+    primaryStatHealingMultiplier: 0
+    baseHitChance: 94
+    maxHitChance: 100
+    dodgeChancePerAgility: 0.25
+    maxDodgeChance: 15
+    armourMitigationBase: 100
   goldDropChance: 1
   minGold: 3
   maxGold: 9
@@ -275,6 +295,18 @@ MonoBehaviour:
   lootIndicatorPrefab: {fileID: 436041221666796684}
   lootIndicatorLocalPosition: {x: 0, y: 2.4, z: 0}
   defaultLootSlotCount: 6
+--- !u!114 &1554170247968502267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5f91d1d58b57f040874d2533c565389, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
 --- !u!1 &1105335585389521241
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,13 +2,18 @@ using UnityEngine;
 
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(EnemyData))]
+[RequireComponent(typeof(EnemyStats))]
 public class EnemyController : MonoBehaviour
 {
     [SerializeField] private float aggroRange = 8f;
     [SerializeField] private float leashRange = 14f;
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private float moveSpeed = 3f;
+
+    [Tooltip("Legacy fallback damage. EnemyData Base Damage is used when EnemyStats is present.")]
     [SerializeField] private int damage = 10;
+
     [SerializeField] private float attackCooldown = 1.5f;
     [SerializeField] private float gravity = -20f;
     [SerializeField] private float returnStopDistance = 0.2f;
@@ -34,6 +39,7 @@ public class EnemyController : MonoBehaviour
 
     private Health health;
     private CharacterController characterController;
+    private EnemyStats enemyStats;
 
     private Vector3 homePosition;
     private Quaternion homeRotation;
@@ -50,6 +56,7 @@ public class EnemyController : MonoBehaviour
     {
         health = GetComponent<Health>();
         characterController = GetComponent<CharacterController>();
+        enemyStats = GetComponent<EnemyStats>();
 
         homePosition = transform.position;
         homeRotation = transform.rotation;
@@ -271,8 +278,12 @@ public class EnemyController : MonoBehaviour
         Health targetHealth = target.GetComponent<Health>();
         if (targetHealth != null && !targetHealth.IsDead)
         {
-            Debug.Log($"{gameObject.name} attacks {target.name} for {damage}");
-            targetHealth.TakeDamage(damage, gameObject);
+            int finalDamage = enemyStats != null
+                ? enemyStats.GetScaledDamage()
+                : damage;
+
+            Debug.Log($"{gameObject.name} attacks {target.name} for {finalDamage}");
+            targetHealth.TakeDamage(finalDamage, gameObject);
         }
     }
 
@@ -366,7 +377,15 @@ public class EnemyController : MonoBehaviour
 
         ReenableCollisionAfterRespawn();
 
-        health.ResetHealth();
+        if (enemyStats != null)
+        {
+            enemyStats.RecalculateAndApplyStats(true);
+        }
+        else
+        {
+            health.ResetHealth();
+        }
+
         SetVisible(true);
 
         characterController.enabled = true;

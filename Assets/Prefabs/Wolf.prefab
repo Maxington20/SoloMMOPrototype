@@ -56,6 +56,7 @@ GameObject:
   - component: {fileID: 8634603557529143385}
   - component: {fileID: 4269588256471811823}
   - component: {fileID: 3575367152950135953}
+  - component: {fileID: 1085462353989161724}
   m_Layer: 0
   m_Name: Wolf
   m_TagString: Untagged
@@ -269,6 +270,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyType: 0
   xpReward: 25
+  baseMaxHealth: 45
+  baseDamage: 5
+  primaryStat: 1
+  stats:
+    strength: 3
+    agility: 8
+    intellect: 0
+    stamina: 3
+    armor: 1
+    hitChance: 0
+  combatTuning:
+    healthPerStamina: 8
+    primaryStatDamageMultiplier: 0.75
+    primaryStatHealingMultiplier: 0
+    baseHitChance: 92
+    maxHitChance: 100
+    dodgeChancePerAgility: 0.4
+    maxDodgeChance: 20
+    armourMitigationBase: 100
   goldDropChance: 1
   minGold: 1
   maxGold: 5
@@ -307,6 +327,18 @@ MonoBehaviour:
   lootIndicatorPrefab: {fileID: 1382458731154545871}
   lootIndicatorLocalPosition: {x: 0, y: 2.4, z: 0}
   defaultLootSlotCount: 6
+--- !u!114 &1085462353989161724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895793233579756450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5f91d1d58b57f040874d2533c565389, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
 --- !u!1 &4193225523691303986
 GameObject:
   m_ObjectHideFlags: 0
