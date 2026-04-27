@@ -5,12 +5,6 @@ public class Health : MonoBehaviour
 {
     [SerializeField] private int maxHealth = 100;
 
-    [Header("Stat Scaling")]
-    [SerializeField] private int healthPerStamina = 10;
-
-    [Header("Combat Resolution")]
-    [SerializeField] private float defaultHitChanceForNonPlayerAttackers = 95f;
-
     private int currentHealth;
     private int equipmentBonusMaxHealth;
     private int statBonusMaxHealth;
@@ -45,21 +39,21 @@ public class Health : MonoBehaviour
 
         lastDamageSource = source;
 
-        if (AttackMisses(source))
+        if (!PlayerStats.RollAttackHits(source))
         {
-            Debug.Log($"{GetDisplayName(source)} missed {gameObject.name}.");
             OnMissed?.Invoke(source);
             return;
         }
 
-        if (DodgesAttack())
+        if (playerStats != null && playerStats.RollDodge())
         {
-            Debug.Log($"{gameObject.name} dodged the attack.");
             OnDodged?.Invoke(source);
             return;
         }
 
-        int finalDamage = CalculateFinalIncomingDamage(amount);
+        int finalDamage = playerStats != null
+            ? playerStats.ReduceIncomingDamageByArmour(amount)
+            : Mathf.Max(1, amount);
 
         currentHealth -= finalDamage;
         currentHealth = Mathf.Max(currentHealth, 0);
@@ -125,59 +119,11 @@ public class Health : MonoBehaviour
         ApplyMaxHealthChange(oldMaxHealth, false);
     }
 
-    public void SetStatBonusHealthFromStamina(int stamina)
+    public void SetStatBonusHealth(int amount)
     {
         int oldMaxHealth = MaxHealth;
-        statBonusMaxHealth = Mathf.Max(0, stamina * healthPerStamina);
+        statBonusMaxHealth = Mathf.Max(0, amount);
         ApplyMaxHealthChange(oldMaxHealth, false);
-    }
-
-    private bool AttackMisses(GameObject source)
-    {
-        float hitChance = defaultHitChanceForNonPlayerAttackers;
-
-        if (source != null)
-        {
-            PlayerStats sourceStats = source.GetComponent<PlayerStats>();
-            if (sourceStats != null)
-            {
-                hitChance = sourceStats.HitChancePercent;
-            }
-        }
-
-        float roll = UnityEngine.Random.Range(0f, 100f);
-        return roll > hitChance;
-    }
-
-    private bool DodgesAttack()
-    {
-        if (playerStats == null)
-        {
-            return false;
-        }
-
-        float dodgeRoll = UnityEngine.Random.Range(0f, 100f);
-        return dodgeRoll < playerStats.DodgeChancePercent;
-    }
-
-    private int CalculateFinalIncomingDamage(int incomingDamage)
-    {
-        int damage = Mathf.Max(0, incomingDamage);
-
-        if (damage <= 0)
-        {
-            return 0;
-        }
-
-        if (playerStats == null)
-        {
-            return damage;
-        }
-
-        int armour = Mathf.Max(0, playerStats.Armor);
-        float damageMultiplier = 100f / (100f + armour);
-
-        return Mathf.Max(1, Mathf.RoundToInt(damage * damageMultiplier));
     }
 
     private void ApplyMaxHealthChange(int oldMaxHealth, bool fullyHeal)
@@ -202,16 +148,5 @@ public class Health : MonoBehaviour
     {
         Debug.Log($"{gameObject.name} died.");
         OnDied?.Invoke();
-    }
-
-    private string GetDisplayName(GameObject source)
-    {
-        if (source == null)
-        {
-            return "Attacker";
-        }
-
-        DisplayName displayName = source.GetComponent<DisplayName>();
-        return displayName != null ? displayName.Display : source.name;
     }
 }

@@ -13,13 +13,16 @@ public class CharacterClassData : ScriptableObject
 
     [SerializeField] private Sprite icon;
 
-    [Header("Starting Stats")]
+    [Header("Starting Values")]
     [SerializeField] private int startingMaxHealth = 100;
     [SerializeField] private int startingBaseDamage = 20;
-    [SerializeField] private StatBlock startingStats = new StatBlock(5, 5, 5, 5, 0, 95);
 
-    [Header("Stats Gained Per Level")]
+    [Header("Stats")]
+    [SerializeField] private StatBlock startingStats = new StatBlock(5, 5, 5, 5, 0, 0);
     [SerializeField] private StatBlock statsGainedPerLevel = new StatBlock(1, 1, 1, 1, 0, 0);
+
+    [Header("Combat Tuning")]
+    [SerializeField] private ClassCombatTuning combatTuning = new ClassCombatTuning();
 
     [Header("Weapon Rules")]
     [SerializeField] private WeaponType[] allowedMainHandTypes = new WeaponType[0];
@@ -34,10 +37,14 @@ public class CharacterClassData : ScriptableObject
     public PrimaryStatType PrimaryStat => primaryStat;
     public string Description => description;
     public Sprite Icon => icon;
+
     public int StartingMaxHealth => Mathf.Max(1, startingMaxHealth);
     public int StartingBaseDamage => Mathf.Max(0, startingBaseDamage);
+
     public StatBlock StartingStats => startingStats ?? StatBlock.Zero;
     public StatBlock StatsGainedPerLevel => statsGainedPerLevel ?? StatBlock.Zero;
+    public ClassCombatTuning CombatTuning => combatTuning ?? new ClassCombatTuning();
+
     public AbilityData[] StartingAbilities => startingAbilities;
     public bool CanDualWieldWeapons => canDualWieldWeapons;
 

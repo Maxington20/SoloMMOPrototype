@@ -10,9 +10,6 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private float chaseStopDistance = 1.5f;
 
-    [Header("Stat Scaling")]
-    [SerializeField] private float primaryStatDamageMultiplier = 1f;
-
     private float lastAttackTime;
     private int equipmentBonusDamage;
     private Health currentTarget;
@@ -57,11 +54,12 @@ public class PlayerCombat : MonoBehaviour
 
     public int GetScaledAbilityDamage(int baseAbilityDamage)
     {
-        int statBonus = playerStats != null
-            ? Mathf.RoundToInt(playerStats.PrimaryStatValue * primaryStatDamageMultiplier)
-            : 0;
+        if (playerStats == null)
+        {
+            return Mathf.Max(0, baseAbilityDamage);
+        }
 
-        return Mathf.Max(0, baseAbilityDamage + statBonus);
+        return playerStats.ApplyPrimaryStatDamageScaling(baseAbilityDamage);
     }
 
     public bool TryUseAbilityOnCurrentTarget(string abilityName, int amount, float range)
@@ -89,7 +87,6 @@ public class PlayerCombat : MonoBehaviour
         FaceTarget(currentTarget.transform);
 
         int finalDamage = GetScaledAbilityDamage(amount);
-
         currentTarget.TakeDamage(finalDamage, gameObject);
 
         if (currentEnemyTarget != null)
@@ -100,7 +97,6 @@ public class PlayerCombat : MonoBehaviour
         string targetName = GetTargetDisplayName(currentTarget.gameObject);
 
         Debug.Log($"Player uses {abilityName} on {targetName} for {finalDamage}");
-
         PostSystem($"You use {abilityName} on {targetName} for {finalDamage} damage.");
 
         return true;
@@ -208,11 +204,14 @@ public class PlayerCombat : MonoBehaviour
 
     private int CalculateAutoAttackDamage()
     {
-        int statBonus = playerStats != null
-            ? Mathf.RoundToInt(playerStats.PrimaryStatValue * primaryStatDamageMultiplier)
-            : 0;
+        int baseDamage = damage + equipmentBonusDamage;
 
-        return Mathf.Max(0, damage + equipmentBonusDamage + statBonus);
+        if (playerStats == null)
+        {
+            return Mathf.Max(0, baseDamage);
+        }
+
+        return playerStats.ApplyPrimaryStatDamageScaling(baseDamage);
     }
 
     private float GetCurrentAttackRange()

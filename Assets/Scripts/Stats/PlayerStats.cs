@@ -7,15 +7,6 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 public class PlayerStats : MonoBehaviour
 {
-    [Header("Derived Stat Settings")]
-    [SerializeField] private float dodgeChancePerAgility = 0.25f;
-    [SerializeField] private float maxDodgeChance = 25f;
-    [SerializeField] private float baseHitChance = 95f;
-    [SerializeField] private float maxHitChance = 100f;
-
-    [Header("Health Scaling")]
-    [SerializeField] private int healthPerStamina = 10;
-
     private PlayerClassController classController;
     private PlayerEquipment equipment;
     private PlayerProgression progression;
@@ -28,23 +19,41 @@ public class PlayerStats : MonoBehaviour
     public StatBlock LevelBonusStats => CalculateLevelBonusStats();
     public StatBlock GearStats => GetEquipmentStats();
 
+    public CharacterClassData SelectedClass => classController != null ? classController.SelectedClass : null;
+
+    public ClassCombatTuning CombatTuning
+    {
+        get
+        {
+            if (SelectedClass != null)
+            {
+                return SelectedClass.CombatTuning;
+            }
+
+            return new ClassCombatTuning();
+        }
+    }
+
     public PrimaryStatType PrimaryStat
     {
         get
         {
-            CharacterClassData selectedClass = GetSelectedClass();
-            return selectedClass != null ? selectedClass.PrimaryStat : PrimaryStatType.Strength;
+            return SelectedClass != null
+                ? SelectedClass.PrimaryStat
+                : PrimaryStatType.Strength;
         }
     }
 
     public int PrimaryStatValue => TotalStats.GetPrimaryValue(PrimaryStat);
+    public int Armour => TotalStats.Armor;
+    public int Armor => TotalStats.Armor;
 
     public float DodgeChancePercent
     {
         get
         {
-            float chance = TotalStats.Agility * dodgeChancePerAgility;
-            return Mathf.Clamp(chance, 0f, maxDodgeChance);
+            float chance = TotalStats.Agility * CombatTuning.DodgeChancePerAgility;
+            return Mathf.Clamp(chance, 0f, CombatTuning.MaxDodgeChance);
         }
     }
 
@@ -52,12 +61,18 @@ public class PlayerStats : MonoBehaviour
     {
         get
         {
-            float chance = baseHitChance + TotalStats.HitChance;
-            return Mathf.Clamp(chance, 0f, maxHitChance);
+            float chance = CombatTuning.BaseHitChance + TotalStats.HitChance;
+            return Mathf.Clamp(chance, 0f, CombatTuning.MaxHitChance);
         }
     }
 
-    public int Armor => TotalStats.Armor;
+    public int MaxHealthFromStamina
+    {
+        get
+        {
+            return Mathf.Max(0, TotalStats.Stamina * CombatTuning.HealthPerStamina);
+        }
+    }
 
     private void Awake()
     {
@@ -100,14 +115,62 @@ public class PlayerStats : MonoBehaviour
 
     public void RecalculateAndApplyStats()
     {
-        StatBlock stats = TotalStats;
-
         if (health != null)
         {
-            health.SetStatBonusHealthFromStamina(stats.Stamina);
+            health.SetStatBonusHealth(MaxHealthFromStamina);
         }
 
         OnStatsChanged?.Invoke();
+    }
+
+    public int ApplyPrimaryStatDamageScaling(int baseAmount)
+    {
+        int statBonus = Mathf.RoundToInt(PrimaryStatValue * CombatTuning.PrimaryStatDamageMultiplier);
+        return Mathf.Max(0, baseAmount + statBonus);
+    }
+
+    public int ApplyPrimaryStatHealingScaling(int baseAmount)
+    {
+        int statBonus = Mathf.RoundToInt(PrimaryStatValue * CombatTuning.PrimaryStatHealingMultiplier);
+        return Mathf.Max(0, baseAmount + statBonus);
+    }
+
+    public int ReduceIncomingDamageByArmour(int incomingDamage)
+    {
+        int damage = Mathf.Max(0, incomingDamage);
+
+        if (damage <= 0)
+        {
+            return 0;
+        }
+
+        float mitigationBase = CombatTuning.ArmourMitigationBase;
+        float multiplier = mitigationBase / (mitigationBase + Mathf.Max(0, Armour));
+
+        return Mathf.Max(1, Mathf.RoundToInt(damage * multiplier));
+    }
+
+    public bool RollDodge()
+    {
+        float roll = UnityEngine.Random.Range(0f, 100f);
+        return roll < DodgeChancePercent;
+    }
+
+    public static bool RollAttackHits(GameObject attacker)
+    {
+        float hitChance = ClassCombatTuning.FallbackHitChance;
+
+        if (attacker != null)
+        {
+            PlayerStats attackerStats = attacker.GetComponent<PlayerStats>();
+            if (attackerStats != null)
+            {
+                hitChance = attackerStats.HitChancePercent;
+            }
+        }
+
+        float roll = UnityEngine.Random.Range(0f, 100f);
+        return roll <= hitChance;
     }
 
     public StatBlock CalculateTotalStats()
@@ -119,27 +182,23 @@ public class PlayerStats : MonoBehaviour
 
     public StatBlock CalculateBaseStats()
     {
-        CharacterClassData selectedClass = GetSelectedClass();
-
-        if (selectedClass == null)
+        if (SelectedClass == null)
         {
             return StatBlock.Zero;
         }
 
-        return selectedClass.StartingStats;
+        return SelectedClass.StartingStats;
     }
 
     public StatBlock CalculateLevelBonusStats()
     {
-        CharacterClassData selectedClass = GetSelectedClass();
-
-        if (selectedClass == null)
+        if (SelectedClass == null)
         {
             return StatBlock.Zero;
         }
 
         int level = progression != null ? progression.Level : 1;
-        return selectedClass.GetLevelBonusStats(level);
+        return SelectedClass.GetLevelBonusStats(level);
     }
 
     public StatBlock GetEquipmentStats()
@@ -165,10 +224,5 @@ public class PlayerStats : MonoBehaviour
     {
         ItemData item = equipment.GetEquippedItem(slotType);
         return item != null ? item.StatBonuses : StatBlock.Zero;
-    }
-
-    private CharacterClassData GetSelectedClass()
-    {
-        return classController != null ? classController.SelectedClass : null;
     }
 }

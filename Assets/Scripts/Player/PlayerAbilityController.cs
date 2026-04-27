@@ -5,9 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 public class PlayerAbilityController : MonoBehaviour
 {
-    [Header("Stat Scaling")]
-    [SerializeField] private float primaryStatHealingMultiplier = 1f;
-
     private PlayerCombat playerCombat;
     private Health playerHealth;
     private PlayerStats playerStats;
@@ -106,7 +103,10 @@ public class PlayerAbilityController : MonoBehaviour
                 return false;
             }
 
-            int finalHealingAmount = CalculateHealingAmount(ability.HealthRestoreAmount);
+            int finalHealingAmount = playerStats != null
+                ? playerStats.ApplyPrimaryStatHealingScaling(ability.HealthRestoreAmount)
+                : ability.HealthRestoreAmount;
+
             int restored = playerHealth.RestoreHealth(finalHealingAmount);
 
             if (restored > 0)
@@ -117,15 +117,6 @@ public class PlayerAbilityController : MonoBehaviour
         }
 
         return didSomething;
-    }
-
-    private int CalculateHealingAmount(int baseHealingAmount)
-    {
-        int statBonus = playerStats != null
-            ? Mathf.RoundToInt(playerStats.PrimaryStatValue * primaryStatHealingMultiplier)
-            : 0;
-
-        return Mathf.Max(0, baseHealingAmount + statBonus);
     }
 
     private void PostSystem(string message)

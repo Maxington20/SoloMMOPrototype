@@ -34,6 +34,15 @@ MonoBehaviour:
     stamina: 1
     armor: 0
     hitChance: 0
+  combatTuning:
+    healthPerStamina: 10
+    primaryStatDamageMultiplier: 1
+    primaryStatHealingMultiplier: 0.8
+    baseHitChance: 95
+    maxHitChance: 100
+    dodgeChancePerAgility: 0.35
+    maxDodgeChance: 30
+    armourMitigationBase: 100
   allowedMainHandTypes: 0a0000000b0000000700000001000000
   allowedOffhandTypes: 0700000001000000
   canDualWieldWeapons: 1
