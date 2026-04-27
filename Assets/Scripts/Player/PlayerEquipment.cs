@@ -53,7 +53,7 @@ public class PlayerEquipment : MonoBehaviour
 
     public bool CanEquipItemInSlot(ItemData item, EquipmentSlotType targetSlotType)
     {
-        return GetCannotEquipReason(item, targetSlotType) == string.Empty;
+        return string.IsNullOrWhiteSpace(GetCannotEquipReason(item, targetSlotType));
     }
 
     public string GetCannotEquipReason(ItemData item, EquipmentSlotType targetSlotType)
@@ -83,9 +83,7 @@ public class PlayerEquipment : MonoBehaviour
             return $"Unequip your offhand item before equipping {item.DisplayName}.";
         }
 
-        CharacterClassData selectedClass = classController != null
-            ? classController.SelectedClass
-            : null;
+        CharacterClassData selectedClass = classController != null ? classController.SelectedClass : null;
 
         if (selectedClass == null || item.WeaponType == WeaponType.None)
         {
@@ -133,44 +131,55 @@ public class PlayerEquipment : MonoBehaviour
             return false;
         }
 
-        switch (targetSlotType)
-        {
-            case EquipmentSlotType.Head:
-                previousItem = head;
-                head = item;
-                break;
-
-            case EquipmentSlotType.Chest:
-                previousItem = chest;
-                chest = item;
-                break;
-
-            case EquipmentSlotType.Legs:
-                previousItem = legs;
-                legs = item;
-                break;
-
-            case EquipmentSlotType.Feet:
-                previousItem = feet;
-                feet = item;
-                break;
-
-            case EquipmentSlotType.Weapon:
-                previousItem = weapon;
-                weapon = item;
-                break;
-
-            case EquipmentSlotType.Offhand:
-                previousItem = offhand;
-                offhand = item;
-                break;
-
-            default:
-                return false;
-        }
+        previousItem = GetEquippedItem(targetSlotType);
+        SetEquippedItem(targetSlotType, item);
 
         ApplyStatBonuses();
         OnEquipmentChanged?.Invoke();
+
+        return true;
+    }
+
+    public bool MoveEquippedItemToSlot(EquipmentSlotType sourceSlotType, EquipmentSlotType targetSlotType)
+    {
+        if (sourceSlotType == targetSlotType)
+        {
+            return false;
+        }
+
+        ItemData sourceItem = GetEquippedItem(sourceSlotType);
+        if (sourceItem == null)
+        {
+            return false;
+        }
+
+        string reason = GetCannotEquipReason(sourceItem, targetSlotType);
+        if (!string.IsNullOrWhiteSpace(reason))
+        {
+            PostSystem(reason);
+            return false;
+        }
+
+        ItemData targetItem = GetEquippedItem(targetSlotType);
+
+        if (targetItem != null)
+        {
+            string reverseReason = GetCannotEquipReason(targetItem, sourceSlotType);
+            if (!string.IsNullOrWhiteSpace(reverseReason))
+            {
+                PostSystem(reverseReason);
+                return false;
+            }
+        }
+
+        SetEquippedItem(sourceSlotType, targetItem);
+        SetEquippedItem(targetSlotType, sourceItem);
+
+        ApplyStatBonuses();
+        OnEquipmentChanged?.Invoke();
+
+        PostSystem($"You move {sourceItem.DisplayName} to {GetSlotDisplayName(targetSlotType)}.");
+
         return true;
     }
 
@@ -191,39 +200,37 @@ public class PlayerEquipment : MonoBehaviour
             return false;
         }
 
-        switch (slotType)
-        {
-            case EquipmentSlotType.Head:
-                head = null;
-                break;
-
-            case EquipmentSlotType.Chest:
-                chest = null;
-                break;
-
-            case EquipmentSlotType.Legs:
-                legs = null;
-                break;
-
-            case EquipmentSlotType.Feet:
-                feet = null;
-                break;
-
-            case EquipmentSlotType.Weapon:
-                weapon = null;
-                break;
-
-            case EquipmentSlotType.Offhand:
-                offhand = null;
-                break;
-
-            default:
-                return false;
-        }
+        SetEquippedItem(slotType, null);
 
         ApplyStatBonuses();
         OnEquipmentChanged?.Invoke();
+
         return true;
+    }
+
+    private void SetEquippedItem(EquipmentSlotType slotType, ItemData item)
+    {
+        switch (slotType)
+        {
+            case EquipmentSlotType.Head:
+                head = item;
+                break;
+            case EquipmentSlotType.Chest:
+                chest = item;
+                break;
+            case EquipmentSlotType.Legs:
+                legs = item;
+                break;
+            case EquipmentSlotType.Feet:
+                feet = item;
+                break;
+            case EquipmentSlotType.Weapon:
+                weapon = item;
+                break;
+            case EquipmentSlotType.Offhand:
+                offhand = item;
+                break;
+        }
     }
 
     private void ApplyStatBonuses()
@@ -260,12 +267,39 @@ public class PlayerEquipment : MonoBehaviour
         totalDamageBonus += item.DamageBonus;
     }
 
+    private string GetSlotDisplayName(EquipmentSlotType slotType)
+    {
+        return slotType switch
+        {
+            EquipmentSlotType.Head => "Head",
+            EquipmentSlotType.Chest => "Chest",
+            EquipmentSlotType.Legs => "Legs",
+            EquipmentSlotType.Feet => "Feet",
+            EquipmentSlotType.Weapon => "Weapon",
+            EquipmentSlotType.Offhand => "Offhand",
+            _ => "Unknown"
+        };
+    }
+
     private string FormatWeaponType(WeaponType weaponType)
     {
-        return weaponType.ToString()
-            .Replace("OneHanded", "one-handed ")
-            .Replace("TwoHanded", "two-handed ")
-            .ToLower();
+        return weaponType switch
+        {
+            WeaponType.OneHandedSword => "one-handed sword",
+            WeaponType.TwoHandedSword => "two-handed sword",
+            WeaponType.OneHandedAxe => "one-handed axe",
+            WeaponType.TwoHandedAxe => "two-handed axe",
+            WeaponType.OneHandedMace => "one-handed mace",
+            WeaponType.TwoHandedMace => "two-handed mace",
+            WeaponType.Dagger => "dagger",
+            WeaponType.Staff => "staff",
+            WeaponType.Wand => "wand",
+            WeaponType.Bow => "bow",
+            WeaponType.Crossbow => "crossbow",
+            WeaponType.Shield => "shield",
+            WeaponType.Grimoire => "grimoire",
+            _ => "weapon"
+        };
     }
 
     private void PostSystem(string message)

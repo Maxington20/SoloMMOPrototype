@@ -20,7 +20,7 @@ MonoBehaviour:
   buyValue: 5
   isStackable: 0
   maxStack: 1
-  isEquippable: 0
+  isEquippable: 1
   equipmentSlot: 5
   damageBonus: 5
   healthBonus: 0

@@ -83,19 +83,7 @@ public class CharacterUI : MonoBehaviour
         if (legsSlot != null) legsSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
         if (feetSlot != null) feetSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
         if (weaponSlot != null) weaponSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
-        if (offhandSlot != null)
-        {
-            ItemData equippedWeapon = equipment.GetEquippedItem(EquipmentSlotType.Weapon);
-
-            if (equipment.IsOffhandBlockedByTwoHandedWeapon())
-            {
-                offhandSlot.RefreshBlockedByTwoHandedWeapon(equippedWeapon);
-            }
-            else
-            {
-                offhandSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Offhand));
-            }
-        }            
+        if (offhandSlot != null) offhandSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
     }
 
     private void Update()
@@ -211,7 +199,20 @@ public class CharacterUI : MonoBehaviour
         if (legsSlot != null) legsSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Legs));
         if (feetSlot != null) feetSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Feet));
         if (weaponSlot != null) weaponSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Weapon));
-        if (offhandSlot != null) offhandSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Offhand));
+
+        if (offhandSlot != null)
+        {
+            ItemData equippedWeapon = equipment.GetEquippedItem(EquipmentSlotType.Weapon);
+
+            if (equipment.IsOffhandBlockedByTwoHandedWeapon())
+            {
+                offhandSlot.RefreshBlockedByTwoHandedWeapon(equippedWeapon);
+            }
+            else
+            {
+                offhandSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Offhand));
+            }
+        }
     }
 
     private void HandleEquipmentSlotLeftClicked(EquipmentSlotType slotType)
@@ -223,6 +224,11 @@ public class CharacterUI : MonoBehaviour
     private void HandleEquipmentSlotRightClicked(EquipmentSlotType slotType, Vector2 screenPosition)
     {
         if (!isOpen || isDraggingEquipment || equipment == null || ItemContextMenuUI.Instance == null)
+        {
+            return;
+        }
+
+        if (slotType == EquipmentSlotType.Offhand && equipment.IsOffhandBlockedByTwoHandedWeapon())
         {
             return;
         }
@@ -245,6 +251,11 @@ public class CharacterUI : MonoBehaviour
     private void HandleEquipmentSlotBeginDrag(EquipmentSlotType slotType, PointerEventData eventData)
     {
         if (!isOpen || equipment == null || rootCanvas == null)
+        {
+            return;
+        }
+
+        if (slotType == EquipmentSlotType.Offhand && equipment.IsOffhandBlockedByTwoHandedWeapon())
         {
             return;
         }
@@ -313,7 +324,7 @@ public class CharacterUI : MonoBehaviour
 
     private void HandleEquipmentSlotDrop(EquipmentSlotType targetSlotType, PointerEventData eventData)
     {
-        if (PlayerInventory.Instance == null)
+        if (equipment == null)
         {
             return;
         }
@@ -330,6 +341,26 @@ public class CharacterUI : MonoBehaviour
             {
                 Refresh();
             }
+
+            return;
+        }
+
+        if (isDraggingEquipment)
+        {
+            bool moved = equipment.MoveEquippedItemToSlot(
+                draggedEquipmentSlotType,
+                targetSlotType);
+
+            dropHandledThisDrag = true;
+
+            RestoreDraggedSlotVisual();
+
+            if (moved)
+            {
+                Refresh();
+            }
+
+            ClearDragState();
         }
     }
 

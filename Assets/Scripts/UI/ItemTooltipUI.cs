@@ -26,6 +26,7 @@ public class ItemTooltipUI : MonoBehaviour
 
     private Canvas rootCanvas;
     private bool followMouse = true;
+    private PlayerEquipment playerEquipment;
 
     private void Awake()
     {
@@ -37,6 +38,7 @@ public class ItemTooltipUI : MonoBehaviour
 
         Instance = this;
         rootCanvas = GetComponentInParent<Canvas>();
+        playerEquipment = FindFirstObjectByType<PlayerEquipment>();
 
         if (closeButton != null)
         {
@@ -57,7 +59,7 @@ public class ItemTooltipUI : MonoBehaviour
         if (followMouse)
         {
             Vector2 screenPosition = (Vector2)Input.mousePosition + cursorOffset;
-            PositionTooltipClamped(screenPosition, preferLeftWhenNeeded: false);
+            PositionTooltipClamped(screenPosition, false);
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -83,8 +85,9 @@ public class ItemTooltipUI : MonoBehaviour
         }
 
         transform.SetAsLastSibling();
+
         Vector2 screenPosition = (Vector2)Input.mousePosition + cursorOffset;
-        PositionTooltipClamped(screenPosition, preferLeftWhenNeeded: false);
+        PositionTooltipClamped(screenPosition, false);
     }
 
     public void ShowAtScreenPosition(ItemData item, Vector2 screenPosition)
@@ -104,7 +107,8 @@ public class ItemTooltipUI : MonoBehaviour
         }
 
         transform.SetAsLastSibling();
-        PositionTooltipClamped(screenPosition, preferLeftWhenNeeded: true);
+
+        PositionTooltipClamped(screenPosition, true);
     }
 
     public void Hide()
@@ -140,42 +144,24 @@ public class ItemTooltipUI : MonoBehaviour
         if (bonusText != null)
         {
             string bonuses = BuildBonusText(item);
-            bonusText.text = string.IsNullOrWhiteSpace(bonuses) ? "No bonuses" : bonuses;
+            string equipWarning = BuildEquipWarningText(item);
+
+            if (string.IsNullOrWhiteSpace(bonuses))
+            {
+                bonuses = "No bonuses";
+            }
+
+            if (!string.IsNullOrWhiteSpace(equipWarning))
+            {
+                bonuses += $"\n\n<color=#FF5555>{equipWarning}</color>";
+            }
+
+            bonusText.text = bonuses;
         }
 
         if (sellValueText != null)
         {
             sellValueText.text = $"Sell Value: {item.SellValue} Gold";
-        }
-    }
-
-    private void DisableTooltipRaycasts()
-    {
-        Graphic[] graphics = GetComponentsInChildren<Graphic>(true);
-        for (int i = 0; i < graphics.Length; i++)
-        {
-            graphics[i].raycastTarget = false;
-        }
-
-        if (closeButton != null)
-        {
-            Image closeImage = closeButton.GetComponent<Image>();
-            if (closeImage != null)
-            {
-                closeImage.raycastTarget = true;
-            }
-
-            TMP_Text closeText = closeButton.GetComponentInChildren<TMP_Text>(true);
-            if (closeText != null)
-            {
-                closeText.raycastTarget = false;
-            }
-        }
-
-        if (canvasGroup != null)
-        {
-            canvasGroup.blocksRaycasts = true;
-            canvasGroup.interactable = true;
         }
     }
 
@@ -187,7 +173,7 @@ public class ItemTooltipUI : MonoBehaviour
         {
             if (item.WeaponType != WeaponType.None)
             {
-                return $"{rarityName} {item.WeaponType} - {GetEquipmentSlotName(item.EquipmentSlot)}";
+                return $"{rarityName} {FormatWeaponType(item.WeaponType)} - {GetEquipmentSlotName(item.EquipmentSlot)}";
             }
 
             return $"{rarityName} Equipment - {GetEquipmentSlotName(item.EquipmentSlot)}";
@@ -224,6 +210,7 @@ public class ItemTooltipUI : MonoBehaviour
 
             string rangeType = item.IsMeleeWeapon ? "Melee" : "Ranged";
             result += $"{rangeType} weapon";
+            result += $"\nHand: {FormatHandRequirement(item.HandRequirement)}";
             result += $"\nAttack Range: {item.WeaponAttackRange:0.#}";
         }
 
@@ -240,6 +227,68 @@ public class ItemTooltipUI : MonoBehaviour
         return result;
     }
 
+    private string BuildEquipWarningText(ItemData item)
+    {
+        if (item == null || !item.IsEquippable)
+        {
+            return string.Empty;
+        }
+
+        if (playerEquipment == null)
+        {
+            playerEquipment = FindFirstObjectByType<PlayerEquipment>();
+        }
+
+        if (playerEquipment == null)
+        {
+            return string.Empty;
+        }
+
+        EquipmentSlotType targetSlot = item.EquipmentSlot;
+
+        string reason = playerEquipment.GetCannotEquipReason(item, targetSlot);
+
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            return string.Empty;
+        }
+
+        return $"Cannot equip: {reason}";
+    }
+
+    private string FormatWeaponType(WeaponType weaponType)
+    {
+        return weaponType switch
+        {
+            WeaponType.OneHandedSword => "One-Handed Sword",
+            WeaponType.TwoHandedSword => "Two-Handed Sword",
+            WeaponType.OneHandedAxe => "One-Handed Axe",
+            WeaponType.TwoHandedAxe => "Two-Handed Axe",
+            WeaponType.OneHandedMace => "One-Handed Mace",
+            WeaponType.TwoHandedMace => "Two-Handed Mace",
+            WeaponType.Dagger => "Dagger",
+            WeaponType.Staff => "Staff",
+            WeaponType.Wand => "Wand",
+            WeaponType.Bow => "Bow",
+            WeaponType.Crossbow => "Crossbow",
+            WeaponType.Shield => "Shield",
+            WeaponType.Grimoire => "Grimoire",
+            _ => "Unknown Weapon"
+        };
+    }
+
+    private string FormatHandRequirement(WeaponHandRequirement handRequirement)
+    {
+        return handRequirement switch
+        {
+            WeaponHandRequirement.MainHandOnly => "Main Hand",
+            WeaponHandRequirement.OffhandOnly => "Offhand",
+            WeaponHandRequirement.OneHand => "One-Handed",
+            WeaponHandRequirement.TwoHand => "Two-Handed",
+            _ => "None"
+        };
+    }
+
     private string GetEquipmentSlotName(EquipmentSlotType slotType)
     {
         return slotType switch
@@ -252,6 +301,37 @@ public class ItemTooltipUI : MonoBehaviour
             EquipmentSlotType.Offhand => "Offhand",
             _ => "Unknown"
         };
+    }
+
+    private void DisableTooltipRaycasts()
+    {
+        Graphic[] graphics = GetComponentsInChildren<Graphic>(true);
+
+        for (int i = 0; i < graphics.Length; i++)
+        {
+            graphics[i].raycastTarget = false;
+        }
+
+        if (closeButton != null)
+        {
+            Image closeImage = closeButton.GetComponent<Image>();
+            if (closeImage != null)
+            {
+                closeImage.raycastTarget = true;
+            }
+
+            TMP_Text closeText = closeButton.GetComponentInChildren<TMP_Text>(true);
+            if (closeText != null)
+            {
+                closeText.raycastTarget = false;
+            }
+        }
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.blocksRaycasts = true;
+            canvasGroup.interactable = true;
+        }
     }
 
     private void PositionTooltipClamped(Vector2 desiredScreenPosition, bool preferLeftWhenNeeded)
