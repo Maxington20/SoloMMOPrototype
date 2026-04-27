@@ -22,6 +22,9 @@ public class PlayerStats : MonoBehaviour
     public event Action OnStatsChanged;
 
     public StatBlock TotalStats => CalculateTotalStats();
+    public StatBlock BaseStats => CalculateBaseStats();
+    public StatBlock LevelBonusStats => CalculateLevelBonusStats();
+    public StatBlock GearStats => GetEquipmentStats();
 
     public PrimaryStatType PrimaryStat
     {
@@ -98,6 +101,25 @@ public class PlayerStats : MonoBehaviour
 
     public StatBlock CalculateTotalStats()
     {
+        return CalculateBaseStats()
+            .Add(CalculateLevelBonusStats())
+            .Add(GetEquipmentStats());
+    }
+
+    public StatBlock CalculateBaseStats()
+    {
+        CharacterClassData selectedClass = GetSelectedClass();
+
+        if (selectedClass == null)
+        {
+            return StatBlock.Zero;
+        }
+
+        return selectedClass.StartingStats;
+    }
+
+    public StatBlock CalculateLevelBonusStats()
+    {
         CharacterClassData selectedClass = GetSelectedClass();
 
         if (selectedClass == null)
@@ -106,12 +128,7 @@ public class PlayerStats : MonoBehaviour
         }
 
         int level = progression != null ? progression.Level : 1;
-
-        StatBlock total = selectedClass.StartingStats
-            .Add(selectedClass.GetLevelBonusStats(level))
-            .Add(GetEquipmentStats());
-
-        return total;
+        return selectedClass.GetLevelBonusStats(level);
     }
 
     public StatBlock GetEquipmentStats()

@@ -215,14 +215,23 @@ public class CharacterUI : MonoBehaviour
             return;
         }
 
-        StatBlock stats = playerStats.TotalStats;
+        StatBlock total = playerStats.TotalStats;
+        StatBlock baseStats = playerStats.BaseStats;
+        StatBlock levelStats = playerStats.LevelBonusStats;
+        StatBlock gearStats = playerStats.GearStats;
+
         CharacterClassData selectedClass = classController != null
             ? classController.SelectedClass
             : null;
 
         if (armorText != null)
         {
-            armorText.text = $"Armour: {stats.Armor}";
+            armorText.text = BuildStatBreakdownLine(
+                "Armour",
+                total.Armor,
+                baseStats.Armor,
+                levelStats.Armor,
+                gearStats.Armor);
         }
 
         if (dodgeText != null)
@@ -239,23 +248,48 @@ public class CharacterUI : MonoBehaviour
 
         if (strengthText != null)
         {
-            strengthText.text = $"Strength: {stats.Strength}";
+            strengthText.text = BuildStatBreakdownLine(
+                "Strength",
+                total.Strength,
+                baseStats.Strength,
+                levelStats.Strength,
+                gearStats.Strength);
         }
 
         if (agilityText != null)
         {
-            agilityText.text = $"Agility: {stats.Agility}";
+            agilityText.text = BuildStatBreakdownLine(
+                "Agility",
+                total.Agility,
+                baseStats.Agility,
+                levelStats.Agility,
+                gearStats.Agility);
         }
 
         if (intellectText != null)
         {
-            intellectText.text = $"Intellect: {stats.Intellect}";
+            intellectText.text = BuildStatBreakdownLine(
+                "Intellect",
+                total.Intellect,
+                baseStats.Intellect,
+                levelStats.Intellect,
+                gearStats.Intellect);
         }
 
         if (staminaText != null)
         {
-            staminaText.text = $"Stamina: {stats.Stamina}";
+            staminaText.text = BuildStatBreakdownLine(
+                "Stamina",
+                total.Stamina,
+                baseStats.Stamina,
+                levelStats.Stamina,
+                gearStats.Stamina);
         }
+    }
+
+    private string BuildStatBreakdownLine(string label, int total, int baseValue, int levelValue, int gearValue)
+    {
+        return $"{label}: {total}  <size=75%><color=#BDBDBD>(Base {baseValue} + Level {levelValue} + Gear {gearValue})</color></size>";
     }
 
     private void SetStatTextsToUnknown()
