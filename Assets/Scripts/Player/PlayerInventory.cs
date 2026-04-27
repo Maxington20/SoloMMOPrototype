@@ -429,9 +429,10 @@ public class PlayerInventory : MonoBehaviour
 
         ItemData item = sourceSlot.Item;
 
-        if (!item.IsEquippable || item.EquipmentSlot != targetSlotType)
+        if (!item.IsEquippable || !playerEquipment.CanEquipItemInSlot(item, targetSlotType))
         {
-            PostSystem($"{item.DisplayName} cannot be equipped there.");
+            string reason = playerEquipment.GetCannotEquipReason(item, targetSlotType);
+            PostSystem(string.IsNullOrWhiteSpace(reason) ? $"{item.DisplayName} cannot be equipped there." : reason);
             return false;
         }
 
@@ -447,8 +448,8 @@ public class PlayerInventory : MonoBehaviour
 
         RemoveFromSlotInternal(slotIndex, 1, false);
 
-        bool equipped = playerEquipment.Equip(item, out ItemData replacedItem);
-
+        bool equipped = playerEquipment.Equip(item, targetSlotType, out ItemData replacedItem);
+        
         if (!equipped)
         {
             AddItemInternal(item, 1, false);

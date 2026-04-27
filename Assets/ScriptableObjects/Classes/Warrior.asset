@@ -18,7 +18,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 6bf42695095e5cd4b879215ea50c47d3, type: 3}
   startingMaxHealth: 140
   startingBaseDamage: 20
-  allowedWeaponTypes: 01000000020000000300000009000000
+  allowedMainHandTypes: 010000000200000003000000040000000500000006000000
+  allowedOffhandTypes: 0100000003000000050000000c000000
+  canDualWieldWeapons: 1
   startingAbilities:
   - {fileID: 11400000, guid: bf672076b8de83340b816c7d067a2383, type: 2}
   - {fileID: 11400000, guid: f39a9a74fbd28a04d8e86543bb52c233, type: 2}

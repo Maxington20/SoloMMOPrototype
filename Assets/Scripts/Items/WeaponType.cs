@@ -1,13 +1,21 @@
 public enum WeaponType
 {
     None,
-    Sword,
-    Axe,
-    Mace,
+
+    OneHandedSword,
+    TwoHandedSword,
+
+    OneHandedAxe,
+    TwoHandedAxe,
+
+    OneHandedMace,
+    TwoHandedMace,
+
     Dagger,
     Staff,
     Wand,
     Bow,
     Crossbow,
-    Shield
+    Shield,
+    Grimoire
 }

@@ -23,6 +23,7 @@ public class EquipmentSlotUI : MonoBehaviour,
     private Action<EquipmentSlotType, PointerEventData> onDropAction;
 
     private ItemData currentItem;
+    private bool isBlockedPreview;
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
     private LayoutElement layoutElement;
@@ -30,25 +31,17 @@ public class EquipmentSlotUI : MonoBehaviour,
     public EquipmentSlotType SlotType => slotType;
     public RectTransform RectTransform => rectTransform;
     public ItemData CurrentItem => currentItem;
+    public bool IsBlockedPreview => isBlockedPreview;
 
     public void Initialize(Action<EquipmentSlotType> leftClickHandler)
     {
         onLeftClicked = leftClickHandler;
-        onRightClicked = null;
-        onBeginDragAction = null;
-        onDragAction = null;
-        onEndDragAction = null;
-        onDropAction = null;
     }
 
     public void Initialize(Action<EquipmentSlotType> leftClickHandler, Action<EquipmentSlotType, Vector2> rightClickHandler)
     {
         onLeftClicked = leftClickHandler;
         onRightClicked = rightClickHandler;
-        onBeginDragAction = null;
-        onDragAction = null;
-        onEndDragAction = null;
-        onDropAction = null;
     }
 
     public void Initialize(
@@ -88,7 +81,19 @@ public class EquipmentSlotUI : MonoBehaviour,
 
     public void Refresh(ItemData item)
     {
+        RefreshInternal(item, false);
+    }
+
+    public void RefreshBlockedByTwoHandedWeapon(ItemData twoHandedWeapon)
+    {
+        RefreshInternal(twoHandedWeapon, true);
+    }
+
+    private void RefreshInternal(ItemData item, bool blockedPreview)
+    {
         currentItem = item;
+        isBlockedPreview = blockedPreview;
+
         bool isEmpty = item == null;
 
         if (emptyStateObject != null)
@@ -108,9 +113,9 @@ public class EquipmentSlotUI : MonoBehaviour,
             {
                 iconImage.enabled = true;
                 iconImage.sprite = item.Icon;
-                iconImage.color = item.Icon != null
-                    ? Color.white
-                    : new Color(0.18f, 0.18f, 0.18f, 0.9f);
+                iconImage.color = blockedPreview
+                    ? new Color(1f, 1f, 1f, 0.35f)
+                    : Color.white;
             }
         }
 
@@ -120,6 +125,13 @@ public class EquipmentSlotUI : MonoBehaviour,
             rarityBorderImage.color = !isEmpty
                 ? ItemRarityUtility.GetColor(item.Rarity)
                 : Color.clear;
+
+            if (blockedPreview)
+            {
+                Color borderColor = rarityBorderImage.color;
+                borderColor.a = 0.35f;
+                rarityBorderImage.color = borderColor;
+            }
         }
     }
 
@@ -138,6 +150,11 @@ public class EquipmentSlotUI : MonoBehaviour,
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (isBlockedPreview)
+        {
+            return;
+        }
+
         if (eventData.button == PointerEventData.InputButton.Left)
         {
             onLeftClicked?.Invoke(slotType);
@@ -148,16 +165,8 @@ public class EquipmentSlotUI : MonoBehaviour,
         {
             if (currentItem == null)
             {
-                if (ItemContextMenuUI.Instance != null)
-                {
-                    ItemContextMenuUI.Instance.Hide();
-                }
-
-                if (ItemTooltipUI.Instance != null)
-                {
-                    ItemTooltipUI.Instance.Hide();
-                }
-
+                ItemContextMenuUI.Instance?.Hide();
+                ItemTooltipUI.Instance?.Hide();
                 return;
             }
 
@@ -167,7 +176,7 @@ public class EquipmentSlotUI : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || currentItem == null)
+        if (isBlockedPreview || eventData.button != PointerEventData.InputButton.Left || currentItem == null)
         {
             return;
         }

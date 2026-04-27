@@ -46,21 +46,94 @@ public class PlayerEquipment : MonoBehaviour
         return weapon;
     }
 
+    public bool IsOffhandBlockedByTwoHandedWeapon()
+    {
+        return weapon != null && weapon.IsTwoHanded;
+    }
+
+    public bool CanEquipItemInSlot(ItemData item, EquipmentSlotType targetSlotType)
+    {
+        return GetCannotEquipReason(item, targetSlotType) == string.Empty;
+    }
+
+    public string GetCannotEquipReason(ItemData item, EquipmentSlotType targetSlotType)
+    {
+        if (item == null)
+        {
+            return "No item selected.";
+        }
+
+        if (!item.IsEquippable)
+        {
+            return $"{item.DisplayName} cannot be equipped.";
+        }
+
+        if (!item.CanEquipInSlot(targetSlotType))
+        {
+            return $"{item.DisplayName} cannot be equipped there.";
+        }
+
+        if (targetSlotType == EquipmentSlotType.Offhand && IsOffhandBlockedByTwoHandedWeapon())
+        {
+            return $"You cannot equip an offhand item while using {weapon.DisplayName}.";
+        }
+
+        if (targetSlotType == EquipmentSlotType.Weapon && item.IsTwoHanded && offhand != null)
+        {
+            return $"Unequip your offhand item before equipping {item.DisplayName}.";
+        }
+
+        CharacterClassData selectedClass = classController != null
+            ? classController.SelectedClass
+            : null;
+
+        if (selectedClass == null || item.WeaponType == WeaponType.None)
+        {
+            return string.Empty;
+        }
+
+        if (targetSlotType == EquipmentSlotType.Weapon)
+        {
+            if (!selectedClass.CanUseMainHandWeaponType(item.WeaponType))
+            {
+                return $"{selectedClass.ClassName} cannot equip {FormatWeaponType(item.WeaponType)}.";
+            }
+        }
+
+        if (targetSlotType == EquipmentSlotType.Offhand)
+        {
+            if (item.IsWeapon && !item.IsOffhandOnly && !selectedClass.CanDualWieldWeapons)
+            {
+                return $"{selectedClass.ClassName} cannot dual wield weapons.";
+            }
+
+            if (!selectedClass.CanUseOffhandWeaponType(item.WeaponType))
+            {
+                return $"{selectedClass.ClassName} cannot equip {FormatWeaponType(item.WeaponType)} in the offhand.";
+            }
+        }
+
+        return string.Empty;
+    }
+
     public bool Equip(ItemData item, out ItemData previousItem)
+    {
+        EquipmentSlotType targetSlot = item != null ? item.EquipmentSlot : EquipmentSlotType.None;
+        return Equip(item, targetSlot, out previousItem);
+    }
+
+    public bool Equip(ItemData item, EquipmentSlotType targetSlotType, out ItemData previousItem)
     {
         previousItem = null;
 
-        if (item == null || !item.IsEquippable || item.EquipmentSlot == EquipmentSlotType.None)
+        string reason = GetCannotEquipReason(item, targetSlotType);
+        if (!string.IsNullOrWhiteSpace(reason))
         {
+            PostSystem(reason);
             return false;
         }
 
-        if (!CanEquipForCurrentClass(item))
-        {
-            return false;
-        }
-
-        switch (item.EquipmentSlot)
+        switch (targetSlotType)
         {
             case EquipmentSlotType.Head:
                 previousItem = head;
@@ -103,6 +176,14 @@ public class PlayerEquipment : MonoBehaviour
 
     public bool Unequip(EquipmentSlotType slotType, out ItemData removedItem)
     {
+        removedItem = null;
+
+        if (slotType == EquipmentSlotType.Offhand && IsOffhandBlockedByTwoHandedWeapon())
+        {
+            PostSystem("The offhand slot is occupied by your two-handed weapon.");
+            return false;
+        }
+
         removedItem = GetEquippedItem(slotType);
 
         if (removedItem == null)
@@ -145,36 +226,6 @@ public class PlayerEquipment : MonoBehaviour
         return true;
     }
 
-    private bool CanEquipForCurrentClass(ItemData item)
-    {
-        if (item == null)
-        {
-            return false;
-        }
-
-        if (item.WeaponType == WeaponType.None)
-        {
-            return true;
-        }
-
-        CharacterClassData selectedClass = classController != null
-            ? classController.SelectedClass
-            : null;
-
-        if (selectedClass == null)
-        {
-            return true;
-        }
-
-        if (selectedClass.CanUseWeaponType(item.WeaponType))
-        {
-            return true;
-        }
-
-        PostSystem($"{selectedClass.ClassName} cannot equip {item.WeaponType} weapons.");
-        return false;
-    }
-
     private void ApplyStatBonuses()
     {
         int totalHealthBonus = 0;
@@ -207,6 +258,14 @@ public class PlayerEquipment : MonoBehaviour
 
         totalHealthBonus += item.HealthBonus;
         totalDamageBonus += item.DamageBonus;
+    }
+
+    private string FormatWeaponType(WeaponType weaponType)
+    {
+        return weaponType.ToString()
+            .Replace("OneHanded", "one-handed ")
+            .Replace("TwoHanded", "two-handed ")
+            .ToLower();
     }
 
     private void PostSystem(string message)

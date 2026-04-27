@@ -83,7 +83,19 @@ public class CharacterUI : MonoBehaviour
         if (legsSlot != null) legsSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
         if (feetSlot != null) feetSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
         if (weaponSlot != null) weaponSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
-        if (offhandSlot != null) offhandSlot.Initialize(HandleEquipmentSlotLeftClicked, HandleEquipmentSlotRightClicked, HandleEquipmentSlotBeginDrag, HandleEquipmentSlotDrag, HandleEquipmentSlotEndDrag, HandleEquipmentSlotDrop);
+        if (offhandSlot != null)
+        {
+            ItemData equippedWeapon = equipment.GetEquippedItem(EquipmentSlotType.Weapon);
+
+            if (equipment.IsOffhandBlockedByTwoHandedWeapon())
+            {
+                offhandSlot.RefreshBlockedByTwoHandedWeapon(equippedWeapon);
+            }
+            else
+            {
+                offhandSlot.Refresh(equipment.GetEquippedItem(EquipmentSlotType.Offhand));
+            }
+        }            
     }
 
     private void Update()

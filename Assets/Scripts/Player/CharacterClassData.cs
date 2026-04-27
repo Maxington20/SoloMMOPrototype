@@ -17,7 +17,9 @@ public class CharacterClassData : ScriptableObject
     [SerializeField] private int startingBaseDamage = 20;
 
     [Header("Weapon Rules")]
-    [SerializeField] private WeaponType[] allowedWeaponTypes = new WeaponType[0];
+    [SerializeField] private WeaponType[] allowedMainHandTypes = new WeaponType[0];
+    [SerializeField] private WeaponType[] allowedOffhandTypes = new WeaponType[0];
+    [SerializeField] private bool canDualWieldWeapons = false;
 
     [Header("Starting Abilities")]
     [SerializeField] private AbilityData[] startingAbilities = new AbilityData[6];
@@ -29,22 +31,33 @@ public class CharacterClassData : ScriptableObject
     public int StartingMaxHealth => Mathf.Max(1, startingMaxHealth);
     public int StartingBaseDamage => Mathf.Max(0, startingBaseDamage);
     public AbilityData[] StartingAbilities => startingAbilities;
+    public bool CanDualWieldWeapons => canDualWieldWeapons;
 
-    public bool CanUseWeaponType(WeaponType weaponType)
+    public bool CanUseMainHandWeaponType(WeaponType weaponType)
+    {
+        return ContainsWeaponType(allowedMainHandTypes, weaponType);
+    }
+
+    public bool CanUseOffhandWeaponType(WeaponType weaponType)
+    {
+        return ContainsWeaponType(allowedOffhandTypes, weaponType);
+    }
+
+    private bool ContainsWeaponType(WeaponType[] allowedTypes, WeaponType weaponType)
     {
         if (weaponType == WeaponType.None)
         {
             return true;
         }
 
-        if (allowedWeaponTypes == null || allowedWeaponTypes.Length == 0)
+        if (allowedTypes == null || allowedTypes.Length == 0)
         {
             return true;
         }
 
-        for (int i = 0; i < allowedWeaponTypes.Length; i++)
+        for (int i = 0; i < allowedTypes.Length; i++)
         {
-            if (allowedWeaponTypes[i] == weaponType)
+            if (allowedTypes[i] == weaponType)
             {
                 return true;
             }

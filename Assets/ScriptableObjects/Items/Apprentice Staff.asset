@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Apprentice Staff
   itemType: 1
   rarity: 1
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8a92dc63068cda842a08e074abe14ae9, type: 3}
   sellValue: 1
   buyValue: 5
   isStackable: 0
@@ -24,7 +24,9 @@ MonoBehaviour:
   equipmentSlot: 5
   damageBonus: 2
   healthBonus: 0
-  weaponType: 5
+  weaponType: 8
+  handRequirement: 4
+  canEquipInOffhand: 0
   weaponAttackRange: 2.5
   isMeleeWeapon: 1
   isUsable: 0
