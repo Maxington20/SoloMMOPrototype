@@ -3,17 +3,17 @@ using UnityEngine;
 public class DamageNumberSpawner : MonoBehaviour
 {
     [SerializeField] private Health targetHealth;
-    [SerializeField] private FloatingDamageText floatingDamageTextPrefab;
+    [SerializeField] private FloatingDamageText floatingTextPrefab;
     [SerializeField] private Vector3 spawnOffset = Vector3.zero;
 
     private void OnEnable()
     {
         if (targetHealth != null)
         {
-            targetHealth.OnDamaged += SpawnDamageNumber;
-            targetHealth.OnHealed += SpawnHealingNumber;
-            targetHealth.OnMissed += SpawnMissText;
-            targetHealth.OnDodged += SpawnDodgeText;
+            targetHealth.OnDamaged += OnDamaged;
+            targetHealth.OnHealed += OnHealed;
+            targetHealth.OnMissed += OnMissed;
+            targetHealth.OnDodged += OnDodged;
         }
     }
 
@@ -21,77 +21,61 @@ public class DamageNumberSpawner : MonoBehaviour
     {
         if (targetHealth != null)
         {
-            targetHealth.OnDamaged -= SpawnDamageNumber;
-            targetHealth.OnHealed -= SpawnHealingNumber;
-            targetHealth.OnMissed -= SpawnMissText;
-            targetHealth.OnDodged -= SpawnDodgeText;
+            targetHealth.OnDamaged -= OnDamaged;
+            targetHealth.OnHealed -= OnHealed;
+            targetHealth.OnMissed -= OnMissed;
+            targetHealth.OnDodged -= OnDodged;
         }
     }
 
-    private void SpawnDamageNumber(int damageAmount, GameObject source)
+    private void OnDamaged(int amount, GameObject source)
     {
-        FloatingDamageText textInstance = SpawnTextInstance();
+        var text = Spawn();
+        if (text == null) return;
 
-        if (textInstance == null)
-        {
-            return;
-        }
+        bool isPlayerTarget = targetHealth.CompareTag("Player");
 
-        bool isPlayerTarget = targetHealth.CompareTag("Player") || targetHealth.CompareTag("Adventurer");
-
-        textInstance.InitializeDamage(
-            damageAmount,
+        text.InitializeDamage(
+            amount,
             targetHealth.transform.position + spawnOffset,
             isPlayerTarget);
     }
 
-    private void SpawnHealingNumber(int healingAmount, GameObject source)
+    private void OnHealed(int amount, GameObject source)
     {
-        FloatingDamageText textInstance = SpawnTextInstance();
+        var text = Spawn();
+        if (text == null) return;
 
-        if (textInstance == null)
-        {
-            return;
-        }
-
-        textInstance.InitializeHealing(
-            healingAmount,
+        text.InitializeHealing(
+            amount,
             targetHealth.transform.position + spawnOffset);
     }
 
-    private void SpawnMissText(GameObject source)
+    private void OnMissed(GameObject source)
     {
-        FloatingDamageText textInstance = SpawnTextInstance();
+        var text = Spawn();
+        if (text == null) return;
 
-        if (textInstance == null)
-        {
-            return;
-        }
-
-        textInstance.InitializeMiss(targetHealth.transform.position + spawnOffset);
+        text.InitializeMiss(targetHealth.transform.position + spawnOffset);
     }
 
-    private void SpawnDodgeText(GameObject source)
+    private void OnDodged(GameObject source)
     {
-        FloatingDamageText textInstance = SpawnTextInstance();
+        var text = Spawn();
+        if (text == null) return;
 
-        if (textInstance == null)
-        {
-            return;
-        }
-
-        textInstance.InitializeDodge(targetHealth.transform.position + spawnOffset);
+        text.InitializeDodge(targetHealth.transform.position + spawnOffset);
     }
 
-    private FloatingDamageText SpawnTextInstance()
+    private FloatingDamageText Spawn()
     {
-        if (floatingDamageTextPrefab == null || targetHealth == null)
+        if (floatingTextPrefab == null || targetHealth == null)
         {
             return null;
         }
 
         return Instantiate(
-            floatingDamageTextPrefab,
+            floatingTextPrefab,
             targetHealth.transform.position + spawnOffset,
             Quaternion.identity);
     }

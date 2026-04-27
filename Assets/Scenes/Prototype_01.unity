@@ -497,8 +497,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   maxHealth: 100
-  healthPerStamina: 10
-  defaultHitChanceForNonPlayerAttackers: 95
 --- !u!143 &60584078
 CharacterController:
   m_ObjectHideFlags: 0
@@ -633,7 +631,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageNumberSpawner
   targetHealth: {fileID: 60584077}
-  floatingDamageTextPrefab: {fileID: 5415538954195379559, guid: b09a6c3ae1b89cc4db6f70ec871416da, type: 3}
+  floatingTextPrefab: {fileID: 0}
   spawnOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &61017296
 GameObject:
@@ -1915,8 +1913,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   maxHealth: 100
-  healthPerStamina: 10
-  defaultHitChanceForNonPlayerAttackers: 95
 --- !u!143 &166010256
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1985,7 +1981,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageNumberSpawner
   targetHealth: {fileID: 166010255}
-  floatingDamageTextPrefab: {fileID: 5415538954195379559, guid: b09a6c3ae1b89cc4db6f70ec871416da, type: 3}
+  floatingTextPrefab: {fileID: 0}
   spawnOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &169298773
 GameObject:
@@ -17605,8 +17601,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   maxHealth: 100
-  healthPerStamina: 10
-  defaultHitChanceForNonPlayerAttackers: 95
 --- !u!143 &1219461862
 CharacterController:
   m_ObjectHideFlags: 0
@@ -17741,7 +17735,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageNumberSpawner
   targetHealth: {fileID: 1219461861}
-  floatingDamageTextPrefab: {fileID: 5415538954195379559, guid: b09a6c3ae1b89cc4db6f70ec871416da, type: 3}
+  floatingTextPrefab: {fileID: 0}
   spawnOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &1228062447
 GameObject:
@@ -26021,7 +26015,6 @@ MonoBehaviour:
   damage: 20
   attackCooldown: 1
   chaseStopDistance: 1.5
-  primaryStatDamageMultiplier: 1
 --- !u!114 &1861179881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26035,8 +26028,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   maxHealth: 100
-  healthPerStamina: 10
-  defaultHitChanceForNonPlayerAttackers: 95
 --- !u!114 &1861179882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26050,7 +26041,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageNumberSpawner
   targetHealth: {fileID: 1861179881}
-  floatingDamageTextPrefab: {fileID: 5415538954195379559, guid: b09a6c3ae1b89cc4db6f70ec871416da, type: 3}
+  floatingTextPrefab: {fileID: 5415538954195379559, guid: b09a6c3ae1b89cc4db6f70ec871416da, type: 3}
   spawnOffset: {x: 0, y: 0, z: 0}
 --- !u!114 &1861179883
 MonoBehaviour:
@@ -26163,7 +26154,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e94268ba3995648b97fcca4ffa2854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAbilityController
-  primaryStatHealingMultiplier: 1
 --- !u!114 &1861179890
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26191,11 +26181,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0eab4aebc5269e47a4672dc80c82628, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
-  dodgeChancePerAgility: 0.25
-  maxDodgeChance: 25
-  baseHitChance: 95
-  maxHitChance: 100
-  healthPerStamina: 10
 --- !u!1 &1861185946
 GameObject:
   m_ObjectHideFlags: 0

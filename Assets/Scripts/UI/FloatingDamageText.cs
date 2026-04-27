@@ -6,22 +6,27 @@ public enum FloatingCombatTextType
     Damage,
     Healing,
     Miss,
-    Dodge
+    Dodge,
+    Crit
 }
 
 public class FloatingDamageText : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI textComponent;
-    [SerializeField] private float floatSpeed = 1.5f;
-    [SerializeField] private float lifetime = 1f;
+
+    [Header("Motion")]
+    [SerializeField] private float floatSpeed = 1.8f;
+    [SerializeField] private float lifetime = 1.1f;
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, 2f, 0f);
+    [SerializeField] private float randomSpread = 0.5f;
 
     [Header("Colours")]
-    [SerializeField] private Color enemyDamageColor = Color.yellow;
-    [SerializeField] private Color playerDamageColor = Color.red;
-    [SerializeField] private Color healingColor = Color.green;
+    [SerializeField] private Color enemyDamageColor = new Color(1f, 0.8f, 0.2f);
+    [SerializeField] private Color playerDamageColor = new Color(1f, 0.3f, 0.3f);
+    [SerializeField] private Color healingColor = new Color(0.3f, 1f, 0.3f);
     [SerializeField] private Color missColor = Color.gray;
-    [SerializeField] private Color dodgeColor = Color.cyan;
+    [SerializeField] private Color dodgeColor = new Color(0.3f, 0.8f, 1f);
+    [SerializeField] private Color critColor = new Color(1f, 0.5f, 0f);
 
     private Camera mainCamera;
     private float timer;
@@ -36,47 +41,54 @@ public class FloatingDamageText : MonoBehaviour
         }
     }
 
-    public void InitializeDamage(int damageAmount, Vector3 worldPosition, bool isPlayerTarget)
+    public void InitializeDamage(int amount, Vector3 position, bool isPlayerTarget)
     {
-        Initialize(
-            damageAmount.ToString(),
-            worldPosition,
-            isPlayerTarget ? playerDamageColor : enemyDamageColor);
+        bool isCrit = Random.value < 0.15f; // 15% fake crit for now
+
+        if (isCrit)
+        {
+            Initialize($"CRIT {amount}", position, critColor, 1.4f);
+        }
+        else
+        {
+            Initialize(
+                amount.ToString(),
+                position,
+                isPlayerTarget ? playerDamageColor : enemyDamageColor,
+                1f);
+        }
     }
 
-    public void InitializeHealing(int healingAmount, Vector3 worldPosition)
+    public void InitializeHealing(int amount, Vector3 position)
     {
-        Initialize(
-            $"+{healingAmount}",
-            worldPosition,
-            healingColor);
+        Initialize($"+{amount}", position, healingColor, 1.1f);
     }
 
-    public void InitializeMiss(Vector3 worldPosition)
+    public void InitializeMiss(Vector3 position)
     {
-        Initialize(
-            "Miss",
-            worldPosition,
-            missColor);
+        Initialize("MISS", position, missColor, 1f);
     }
 
-    public void InitializeDodge(Vector3 worldPosition)
+    public void InitializeDodge(Vector3 position)
     {
-        Initialize(
-            "Dodge",
-            worldPosition,
-            dodgeColor);
+        Initialize("DODGE", position, dodgeColor, 1f);
     }
 
-    private void Initialize(string text, Vector3 worldPosition, Color color)
+    private void Initialize(string text, Vector3 position, Color color, float scaleMultiplier)
     {
-        transform.position = worldPosition + worldOffset;
+        Vector3 randomOffset = new Vector3(
+            Random.Range(-randomSpread, randomSpread),
+            Random.Range(0f, randomSpread),
+            0f);
+
+        transform.position = position + worldOffset + randomOffset;
         timer = lifetime;
 
         if (textComponent != null)
         {
             textComponent.text = text;
             textComponent.color = color;
+            textComponent.fontSize *= scaleMultiplier;
         }
     }
 

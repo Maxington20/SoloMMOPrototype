@@ -253,7 +253,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageNumberSpawner
   targetHealth: {fileID: 2164793704588907602}
-  floatingDamageTextPrefab: {fileID: 5415538954195379559, guid: b09a6c3ae1b89cc4db6f70ec871416da, type: 3}
+  floatingTextPrefab: {fileID: 5415538954195379559, guid: b09a6c3ae1b89cc4db6f70ec871416da, type: 3}
   spawnOffset: {x: 0, y: 0, z: 0}
 --- !u!114 &4269588256471811823
 MonoBehaviour:
