@@ -10,6 +10,8 @@ public class PlayerStats : MonoBehaviour
     [Header("Derived Stat Settings")]
     [SerializeField] private float dodgeChancePerAgility = 0.25f;
     [SerializeField] private float maxDodgeChance = 25f;
+    [SerializeField] private float baseHitChance = 95f;
+    [SerializeField] private float maxHitChance = 100f;
 
     [Header("Health Scaling")]
     [SerializeField] private int healthPerStamina = 10;
@@ -43,6 +45,15 @@ public class PlayerStats : MonoBehaviour
         {
             float chance = TotalStats.Agility * dodgeChancePerAgility;
             return Mathf.Clamp(chance, 0f, maxDodgeChance);
+        }
+    }
+
+    public float HitChancePercent
+    {
+        get
+        {
+            float chance = baseHitChance + TotalStats.HitChance;
+            return Mathf.Clamp(chance, 0f, maxHitChance);
         }
     }
 

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   displayName: Worn Helm
   itemType: 1
+  rarity: 1
   icon: {fileID: 21300000, guid: 409643be886852047a6e5cdf9d517570, type: 3}
   sellValue: 3
   buyValue: 10
@@ -23,5 +24,16 @@ MonoBehaviour:
   equipmentSlot: 1
   damageBonus: 0
   healthBonus: 10
+  statBonuses:
+    strength: 0
+    agility: 0
+    intellect: 0
+    stamina: 0
+    armor: 5
+  weaponType: 0
+  handRequirement: 0
+  canEquipInOffhand: 0
+  weaponAttackRange: 2.5
+  isMeleeWeapon: 1
   isUsable: 0
   healthRestoreAmount: 0

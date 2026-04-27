@@ -24,6 +24,7 @@ public class CharacterUI : MonoBehaviour
     [SerializeField] private TMP_Text intellectText;
     [SerializeField] private TMP_Text staminaText;
     [SerializeField] private TMP_Text goldText;
+    [SerializeField] private TMP_Text hitText;
 
     [Header("Equipment Slots")]
     [SerializeField] private EquipmentSlotUI headSlot;
@@ -203,6 +204,11 @@ public class CharacterUI : MonoBehaviour
             goldText.text = inventory != null ? $"Gold: {inventory.Gold}" : "Gold: 0";
         }
 
+        if (hitText != null)
+        {
+            hitText.text = $"Hit: {playerStats.HitChancePercent:0.#}%";
+        }
+
         RefreshStatsText();
         RefreshEquipmentSlots();
     }
@@ -301,6 +307,7 @@ public class CharacterUI : MonoBehaviour
         if (agilityText != null) agilityText.text = "Agility: ?";
         if (intellectText != null) intellectText.text = "Intellect: ?";
         if (staminaText != null) staminaText.text = "Stamina: ?";
+        if (hitText != null) hitText.text = "Hit: ?";
     }
 
     private void RefreshEquipmentSlots()

@@ -8,6 +8,9 @@ public class Health : MonoBehaviour
     [Header("Stat Scaling")]
     [SerializeField] private int healthPerStamina = 10;
 
+    [Header("Combat Resolution")]
+    [SerializeField] private float defaultHitChanceForNonPlayerAttackers = 95f;
+
     private int currentHealth;
     private int equipmentBonusMaxHealth;
     private int statBonusMaxHealth;
@@ -23,6 +26,9 @@ public class Health : MonoBehaviour
     public event Action OnHealthChanged;
     public event Action OnDied;
     public event Action<int, GameObject> OnDamaged;
+    public event Action<int, GameObject> OnHealed;
+    public event Action<GameObject> OnDodged;
+    public event Action<GameObject> OnMissed;
 
     private void Awake()
     {
@@ -39,14 +45,21 @@ public class Health : MonoBehaviour
 
         lastDamageSource = source;
 
-        int finalDamage = CalculateFinalIncomingDamage(amount);
-
-        if (finalDamage <= 0)
+        if (AttackMisses(source))
         {
-            Debug.Log($"{gameObject.name} dodged the attack.");
-            PostSystem($"{gameObject.name} dodged the attack.");
+            Debug.Log($"{GetDisplayName(source)} missed {gameObject.name}.");
+            OnMissed?.Invoke(source);
             return;
         }
+
+        if (DodgesAttack())
+        {
+            Debug.Log($"{gameObject.name} dodged the attack.");
+            OnDodged?.Invoke(source);
+            return;
+        }
+
+        int finalDamage = CalculateFinalIncomingDamage(amount);
 
         currentHealth -= finalDamage;
         currentHealth = Mathf.Max(currentHealth, 0);
@@ -76,6 +89,7 @@ public class Health : MonoBehaviour
 
         if (restored > 0)
         {
+            OnHealed?.Invoke(restored, gameObject);
             OnHealthChanged?.Invoke();
         }
 
@@ -92,38 +106,58 @@ public class Health : MonoBehaviour
     public void SetBaseMaxHealth(int amount, bool fullyHeal)
     {
         int oldMaxHealth = MaxHealth;
-
         maxHealth = Mathf.Max(1, amount);
-
         ApplyMaxHealthChange(oldMaxHealth, fullyHeal);
     }
 
     public void IncreaseMaxHealth(int amount, bool fullyHeal)
     {
         int oldMaxHealth = MaxHealth;
-
         maxHealth += amount;
         maxHealth = Mathf.Max(1, maxHealth);
-
         ApplyMaxHealthChange(oldMaxHealth, fullyHeal);
     }
 
     public void SetEquipmentBonusHealth(int amount)
     {
         int oldMaxHealth = MaxHealth;
-
         equipmentBonusMaxHealth = Mathf.Max(0, amount);
-
         ApplyMaxHealthChange(oldMaxHealth, false);
     }
 
     public void SetStatBonusHealthFromStamina(int stamina)
     {
         int oldMaxHealth = MaxHealth;
-
         statBonusMaxHealth = Mathf.Max(0, stamina * healthPerStamina);
-
         ApplyMaxHealthChange(oldMaxHealth, false);
+    }
+
+    private bool AttackMisses(GameObject source)
+    {
+        float hitChance = defaultHitChanceForNonPlayerAttackers;
+
+        if (source != null)
+        {
+            PlayerStats sourceStats = source.GetComponent<PlayerStats>();
+            if (sourceStats != null)
+            {
+                hitChance = sourceStats.HitChancePercent;
+            }
+        }
+
+        float roll = UnityEngine.Random.Range(0f, 100f);
+        return roll > hitChance;
+    }
+
+    private bool DodgesAttack()
+    {
+        if (playerStats == null)
+        {
+            return false;
+        }
+
+        float dodgeRoll = UnityEngine.Random.Range(0f, 100f);
+        return dodgeRoll < playerStats.DodgeChancePercent;
     }
 
     private int CalculateFinalIncomingDamage(int incomingDamage)
@@ -138,12 +172,6 @@ public class Health : MonoBehaviour
         if (playerStats == null)
         {
             return damage;
-        }
-
-        float dodgeRoll = UnityEngine.Random.Range(0f, 100f);
-        if (dodgeRoll < playerStats.DodgeChancePercent)
-        {
-            return 0;
         }
 
         int armour = Mathf.Max(0, playerStats.Armor);
@@ -176,11 +204,14 @@ public class Health : MonoBehaviour
         OnDied?.Invoke();
     }
 
-    private void PostSystem(string message)
+    private string GetDisplayName(GameObject source)
     {
-        if (ChatManager.Instance != null && gameObject.CompareTag("Player"))
+        if (source == null)
         {
-            ChatManager.Instance.PostSystem(message);
+            return "Attacker";
         }
+
+        DisplayName displayName = source.GetComponent<DisplayName>();
+        return displayName != null ? displayName.Display : source.name;
     }
 }

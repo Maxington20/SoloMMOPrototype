@@ -26,12 +26,14 @@ MonoBehaviour:
     intellect: 12
     stamina: 7
     armor: 1
+    hitChance: 0
   statsGainedPerLevel:
     strength: 0
     agility: 1
     intellect: 3
     stamina: 1
     armor: 0
+    hitChance: 0
   allowedMainHandTypes: 0800000009000000
   allowedOffhandTypes: 0d000000
   canDualWieldWeapons: 0

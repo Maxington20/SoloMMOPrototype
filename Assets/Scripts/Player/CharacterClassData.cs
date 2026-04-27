@@ -16,10 +16,10 @@ public class CharacterClassData : ScriptableObject
     [Header("Starting Stats")]
     [SerializeField] private int startingMaxHealth = 100;
     [SerializeField] private int startingBaseDamage = 20;
-    [SerializeField] private StatBlock startingStats = new StatBlock(5, 5, 5, 5, 0);
+    [SerializeField] private StatBlock startingStats = new StatBlock(5, 5, 5, 5, 0, 95);
 
     [Header("Stats Gained Per Level")]
-    [SerializeField] private StatBlock statsGainedPerLevel = new StatBlock(1, 1, 1, 1, 0);
+    [SerializeField] private StatBlock statsGainedPerLevel = new StatBlock(1, 1, 1, 1, 0, 0);
 
     [Header("Weapon Rules")]
     [SerializeField] private WeaponType[] allowedMainHandTypes = new WeaponType[0];
