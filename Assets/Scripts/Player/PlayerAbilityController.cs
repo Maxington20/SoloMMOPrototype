@@ -5,8 +5,12 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 public class PlayerAbilityController : MonoBehaviour
 {
+    [Header("Stat Scaling")]
+    [SerializeField] private float primaryStatHealingMultiplier = 1f;
+
     private PlayerCombat playerCombat;
     private Health playerHealth;
+    private PlayerStats playerStats;
 
     private readonly Dictionary<AbilityData, float> cooldownEndTimes = new Dictionary<AbilityData, float>();
 
@@ -14,6 +18,7 @@ public class PlayerAbilityController : MonoBehaviour
     {
         playerCombat = GetComponent<PlayerCombat>();
         playerHealth = GetComponent<Health>();
+        playerStats = GetComponent<PlayerStats>();
     }
 
     public float GetRemainingCooldown(AbilityData ability)
@@ -101,7 +106,9 @@ public class PlayerAbilityController : MonoBehaviour
                 return false;
             }
 
-            int restored = playerHealth.RestoreHealth(ability.HealthRestoreAmount);
+            int finalHealingAmount = CalculateHealingAmount(ability.HealthRestoreAmount);
+            int restored = playerHealth.RestoreHealth(finalHealingAmount);
+
             if (restored > 0)
             {
                 didSomething = true;
@@ -110,6 +117,15 @@ public class PlayerAbilityController : MonoBehaviour
         }
 
         return didSomething;
+    }
+
+    private int CalculateHealingAmount(int baseHealingAmount)
+    {
+        int statBonus = playerStats != null
+            ? Mathf.RoundToInt(playerStats.PrimaryStatValue * primaryStatHealingMultiplier)
+            : 0;
+
+        return Mathf.Max(0, baseHealingAmount + statBonus);
     }
 
     private void PostSystem(string message)

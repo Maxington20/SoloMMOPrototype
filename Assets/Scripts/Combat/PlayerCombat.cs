@@ -10,20 +10,25 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private float chaseStopDistance = 1.5f;
 
+    [Header("Stat Scaling")]
+    [SerializeField] private float primaryStatDamageMultiplier = 1f;
+
     private float lastAttackTime;
     private int equipmentBonusDamage;
     private Health currentTarget;
     private EnemyController currentEnemyTarget;
     private PlayerEquipment playerEquipment;
+    private PlayerStats playerStats;
 
     public Transform CurrentTargetTransform => currentTarget != null ? currentTarget.transform : null;
-    public int Damage => damage + equipmentBonusDamage;
+    public int Damage => CalculateAutoAttackDamage();
     public float CurrentAttackRange => GetCurrentAttackRange();
     public bool CurrentAutoAttackIsMelee => GetCurrentAutoAttackIsMelee();
 
     private void Awake()
     {
         playerEquipment = GetComponent<PlayerEquipment>();
+        playerStats = GetComponent<PlayerStats>();
     }
 
     private void Update()
@@ -50,6 +55,15 @@ public class PlayerCombat : MonoBehaviour
         Debug.Log($"Player damage updated to {Damage}");
     }
 
+    public int GetScaledAbilityDamage(int baseAbilityDamage)
+    {
+        int statBonus = playerStats != null
+            ? Mathf.RoundToInt(playerStats.PrimaryStatValue * primaryStatDamageMultiplier)
+            : 0;
+
+        return Mathf.Max(0, baseAbilityDamage + statBonus);
+    }
+
     public bool TryUseAbilityOnCurrentTarget(string abilityName, int amount, float range)
     {
         if (currentTarget == null)
@@ -74,7 +88,9 @@ public class PlayerCombat : MonoBehaviour
 
         FaceTarget(currentTarget.transform);
 
-        currentTarget.TakeDamage(amount, gameObject);
+        int finalDamage = GetScaledAbilityDamage(amount);
+
+        currentTarget.TakeDamage(finalDamage, gameObject);
 
         if (currentEnemyTarget != null)
         {
@@ -83,9 +99,9 @@ public class PlayerCombat : MonoBehaviour
 
         string targetName = GetTargetDisplayName(currentTarget.gameObject);
 
-        Debug.Log($"Player uses {abilityName} on {targetName} for {amount}");
+        Debug.Log($"Player uses {abilityName} on {targetName} for {finalDamage}");
 
-        PostSystem($"You use {abilityName} on {targetName} for {amount} damage.");
+        PostSystem($"You use {abilityName} on {targetName} for {finalDamage} damage.");
 
         return true;
     }
@@ -179,14 +195,24 @@ public class PlayerCombat : MonoBehaviour
         lastAttackTime = Time.time;
 
         string attackType = GetCurrentAutoAttackIsMelee() ? "melee attacks" : "ranged attacks";
+        int finalDamage = CalculateAutoAttackDamage();
 
-        Debug.Log($"Player {attackType} {currentTarget.name} for {Damage}");
-        currentTarget.TakeDamage(Damage, gameObject);
+        Debug.Log($"Player {attackType} {currentTarget.name} for {finalDamage}");
+        currentTarget.TakeDamage(finalDamage, gameObject);
 
         if (currentEnemyTarget != null)
         {
             currentEnemyTarget.SetTarget(transform);
         }
+    }
+
+    private int CalculateAutoAttackDamage()
+    {
+        int statBonus = playerStats != null
+            ? Mathf.RoundToInt(playerStats.PrimaryStatValue * primaryStatDamageMultiplier)
+            : 0;
+
+        return Mathf.Max(0, damage + equipmentBonusDamage + statBonus);
     }
 
     private float GetCurrentAttackRange()

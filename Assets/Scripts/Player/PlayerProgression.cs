@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Health))]
@@ -9,23 +10,19 @@ public class PlayerProgression : MonoBehaviour
     [SerializeField] private int baseXpToNextLevel = 100;
     [SerializeField] private int xpGrowthPerLevel = 50;
 
-    [Header("Level Rewards")]
-    [SerializeField] private int healthGainPerLevel = 20;
-    [SerializeField] private int damageGainPerLevel = 5;
-
-    private Health playerHealth;
-    private PlayerCombat playerCombat;
-
     public int Level { get; private set; }
     public int CurrentXp { get; private set; }
     public int XpToNextLevel { get; private set; }
 
     public float XpPercent => XpToNextLevel <= 0 ? 0f : (float)CurrentXp / XpToNextLevel;
 
+    public event Action OnLevelChanged;
+
+    private Health playerHealth;
+
     private void Awake()
     {
         playerHealth = GetComponent<Health>();
-        playerCombat = GetComponent<PlayerCombat>();
 
         Level = startingLevel;
         CurrentXp = startingXp;
@@ -57,10 +54,14 @@ public class PlayerProgression : MonoBehaviour
     {
         Level++;
 
-        playerHealth.IncreaseMaxHealth(healthGainPerLevel, true);
-        playerCombat.IncreaseDamage(damageGainPerLevel);
-
         XpToNextLevel = CalculateXpNeededForLevel(Level);
+
+        OnLevelChanged?.Invoke();
+
+        if (playerHealth != null)
+        {
+            playerHealth.ResetHealth();
+        }
 
         if (ChatManager.Instance != null)
         {

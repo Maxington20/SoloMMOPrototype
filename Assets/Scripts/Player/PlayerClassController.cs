@@ -14,6 +14,7 @@ public class PlayerClassController : MonoBehaviour
     private Health health;
     private PlayerCombat combat;
     private PlayerHotbar hotbar;
+    private PlayerStats playerStats;
 
     public CharacterClassData SelectedClass => selectedClass;
     public string ClassName => selectedClass != null ? selectedClass.ClassName : "No Class";
@@ -23,6 +24,7 @@ public class PlayerClassController : MonoBehaviour
         health = GetComponent<Health>();
         combat = GetComponent<PlayerCombat>();
         hotbar = GetComponent<PlayerHotbar>();
+        playerStats = GetComponent<PlayerStats>();
     }
 
     private void Start()
@@ -40,7 +42,7 @@ public class PlayerClassController : MonoBehaviour
 
         if (applyClassStatsOnStart)
         {
-            ApplyClassStats();
+            ApplyClassBaseValues();
         }
 
         if (assignClassAbilitiesToHotbar)
@@ -48,10 +50,15 @@ public class PlayerClassController : MonoBehaviour
             AssignClassAbilities();
         }
 
+        if (playerStats != null)
+        {
+            playerStats.RecalculateAndApplyStats();
+        }
+
         PostSystem($"Class selected: {selectedClass.ClassName}.");
     }
 
-    private void ApplyClassStats()
+    private void ApplyClassBaseValues()
     {
         if (health != null)
         {

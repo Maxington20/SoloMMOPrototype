@@ -4,15 +4,20 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerClassController))]
 [RequireComponent(typeof(PlayerEquipment))]
 [RequireComponent(typeof(PlayerProgression))]
+[RequireComponent(typeof(Health))]
 public class PlayerStats : MonoBehaviour
 {
     [Header("Derived Stat Settings")]
     [SerializeField] private float dodgeChancePerAgility = 0.25f;
     [SerializeField] private float maxDodgeChance = 25f;
 
+    [Header("Health Scaling")]
+    [SerializeField] private int healthPerStamina = 10;
+
     private PlayerClassController classController;
     private PlayerEquipment equipment;
     private PlayerProgression progression;
+    private Health health;
 
     public event Action OnStatsChanged;
 
@@ -45,13 +50,19 @@ public class PlayerStats : MonoBehaviour
         classController = GetComponent<PlayerClassController>();
         equipment = GetComponent<PlayerEquipment>();
         progression = GetComponent<PlayerProgression>();
+        health = GetComponent<Health>();
     }
 
     private void OnEnable()
     {
         if (equipment != null)
         {
-            equipment.OnEquipmentChanged += NotifyStatsChanged;
+            equipment.OnEquipmentChanged += RecalculateAndApplyStats;
+        }
+
+        if (progression != null)
+        {
+            progression.OnLevelChanged += RecalculateAndApplyStats;
         }
     }
 
@@ -59,12 +70,29 @@ public class PlayerStats : MonoBehaviour
     {
         if (equipment != null)
         {
-            equipment.OnEquipmentChanged -= NotifyStatsChanged;
+            equipment.OnEquipmentChanged -= RecalculateAndApplyStats;
+        }
+
+        if (progression != null)
+        {
+            progression.OnLevelChanged -= RecalculateAndApplyStats;
         }
     }
 
-    public void NotifyStatsChanged()
+    private void Start()
     {
+        RecalculateAndApplyStats();
+    }
+
+    public void RecalculateAndApplyStats()
+    {
+        StatBlock stats = TotalStats;
+
+        if (health != null)
+        {
+            health.SetStatBonusHealthFromStamina(stats.Stamina);
+        }
+
         OnStatsChanged?.Invoke();
     }
 

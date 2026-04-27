@@ -5,12 +5,17 @@ public class Health : MonoBehaviour
 {
     [SerializeField] private int maxHealth = 100;
 
+    [Header("Stat Scaling")]
+    [SerializeField] private int healthPerStamina = 10;
+
     private int currentHealth;
     private int equipmentBonusMaxHealth;
+    private int statBonusMaxHealth;
     private GameObject lastDamageSource;
+    private PlayerStats playerStats;
 
     public int CurrentHealth => currentHealth;
-    public int MaxHealth => maxHealth + equipmentBonusMaxHealth;
+    public int MaxHealth => maxHealth + equipmentBonusMaxHealth + statBonusMaxHealth;
     public bool IsDead => currentHealth <= 0;
     public float HealthPercent => MaxHealth <= 0 ? 0f : (float)currentHealth / MaxHealth;
     public GameObject LastDamageSource => lastDamageSource;
@@ -21,6 +26,7 @@ public class Health : MonoBehaviour
 
     private void Awake()
     {
+        playerStats = GetComponent<PlayerStats>();
         ResetHealth();
     }
 
@@ -33,12 +39,21 @@ public class Health : MonoBehaviour
 
         lastDamageSource = source;
 
-        currentHealth -= amount;
+        int finalDamage = CalculateFinalIncomingDamage(amount);
+
+        if (finalDamage <= 0)
+        {
+            Debug.Log($"{gameObject.name} dodged the attack.");
+            PostSystem($"{gameObject.name} dodged the attack.");
+            return;
+        }
+
+        currentHealth -= finalDamage;
         currentHealth = Mathf.Max(currentHealth, 0);
 
-        Debug.Log($"{gameObject.name} took {amount} damage. Health: {currentHealth}/{MaxHealth}");
+        Debug.Log($"{gameObject.name} took {finalDamage} damage. Health: {currentHealth}/{MaxHealth}");
 
-        OnDamaged?.Invoke(amount, source);
+        OnDamaged?.Invoke(finalDamage, source);
         OnHealthChanged?.Invoke();
 
         if (currentHealth <= 0)
@@ -80,38 +95,17 @@ public class Health : MonoBehaviour
 
         maxHealth = Mathf.Max(1, amount);
 
-        int newMaxHealth = MaxHealth;
-        int delta = newMaxHealth - oldMaxHealth;
-
-        if (fullyHeal)
-        {
-            currentHealth = newMaxHealth;
-        }
-        else
-        {
-            currentHealth += delta;
-            currentHealth = Mathf.Clamp(currentHealth, 0, newMaxHealth);
-        }
-
-        OnHealthChanged?.Invoke();
-
-        Debug.Log($"{gameObject.name} base max health set to {maxHealth}. Total max health: {MaxHealth}");
+        ApplyMaxHealthChange(oldMaxHealth, fullyHeal);
     }
 
     public void IncreaseMaxHealth(int amount, bool fullyHeal)
     {
+        int oldMaxHealth = MaxHealth;
+
         maxHealth += amount;
+        maxHealth = Mathf.Max(1, maxHealth);
 
-        if (fullyHeal)
-        {
-            currentHealth = MaxHealth;
-        }
-        else
-        {
-            currentHealth = Mathf.Min(currentHealth + amount, MaxHealth);
-        }
-
-        OnHealthChanged?.Invoke();
+        ApplyMaxHealthChange(oldMaxHealth, fullyHeal);
     }
 
     public void SetEquipmentBonusHealth(int amount)
@@ -120,11 +114,58 @@ public class Health : MonoBehaviour
 
         equipmentBonusMaxHealth = Mathf.Max(0, amount);
 
-        int newMaxHealth = MaxHealth;
-        int delta = newMaxHealth - oldMaxHealth;
+        ApplyMaxHealthChange(oldMaxHealth, false);
+    }
 
-        currentHealth += delta;
-        currentHealth = Mathf.Clamp(currentHealth, 0, newMaxHealth);
+    public void SetStatBonusHealthFromStamina(int stamina)
+    {
+        int oldMaxHealth = MaxHealth;
+
+        statBonusMaxHealth = Mathf.Max(0, stamina * healthPerStamina);
+
+        ApplyMaxHealthChange(oldMaxHealth, false);
+    }
+
+    private int CalculateFinalIncomingDamage(int incomingDamage)
+    {
+        int damage = Mathf.Max(0, incomingDamage);
+
+        if (damage <= 0)
+        {
+            return 0;
+        }
+
+        if (playerStats == null)
+        {
+            return damage;
+        }
+
+        float dodgeRoll = UnityEngine.Random.Range(0f, 100f);
+        if (dodgeRoll < playerStats.DodgeChancePercent)
+        {
+            return 0;
+        }
+
+        int armour = Mathf.Max(0, playerStats.Armor);
+        float damageMultiplier = 100f / (100f + armour);
+
+        return Mathf.Max(1, Mathf.RoundToInt(damage * damageMultiplier));
+    }
+
+    private void ApplyMaxHealthChange(int oldMaxHealth, bool fullyHeal)
+    {
+        int newMaxHealth = MaxHealth;
+
+        if (fullyHeal)
+        {
+            currentHealth = newMaxHealth;
+        }
+        else
+        {
+            int delta = newMaxHealth - oldMaxHealth;
+            currentHealth += delta;
+            currentHealth = Mathf.Clamp(currentHealth, 0, newMaxHealth);
+        }
 
         OnHealthChanged?.Invoke();
     }
@@ -133,5 +174,13 @@ public class Health : MonoBehaviour
     {
         Debug.Log($"{gameObject.name} died.");
         OnDied?.Invoke();
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null && gameObject.CompareTag("Player"))
+        {
+            ChatManager.Instance.PostSystem(message);
+        }
     }
 }
