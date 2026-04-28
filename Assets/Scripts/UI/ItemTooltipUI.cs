@@ -142,11 +142,17 @@ public class ItemTooltipUI : MonoBehaviour
         if (bonusText != null)
         {
             string tooltipBody = BuildBonusText(item);
+            string comparisonText = BuildComparisonText(item);
             string equipWarning = BuildEquipWarningText(item);
 
             if (string.IsNullOrWhiteSpace(tooltipBody))
             {
                 tooltipBody = "No bonuses";
+            }
+
+            if (!string.IsNullOrWhiteSpace(comparisonText))
+            {
+                tooltipBody += $"\n\n{comparisonText}";
             }
 
             if (!string.IsNullOrWhiteSpace(equipWarning))
@@ -189,6 +195,7 @@ public class ItemTooltipUI : MonoBehaviour
         result = AppendStatBonus(result, "Intellect", item.StatBonuses.Intellect);
         result = AppendStatBonus(result, "Stamina", item.StatBonuses.Stamina);
         result = AppendStatBonus(result, "Armour", item.StatBonuses.Armor);
+        result = AppendStatBonus(result, "Hit", item.StatBonuses.HitChance);
 
         if (item.DamageBonus > 0)
         {
@@ -224,6 +231,84 @@ public class ItemTooltipUI : MonoBehaviour
         }
 
         return result;
+    }
+
+    private string BuildComparisonText(ItemData hoveredItem)
+    {
+        if (hoveredItem == null || !hoveredItem.IsEquippable)
+        {
+            return string.Empty;
+        }
+
+        if (playerEquipment == null)
+        {
+            playerEquipment = FindFirstObjectByType<PlayerEquipment>();
+        }
+
+        if (playerEquipment == null)
+        {
+            return string.Empty;
+        }
+
+        EquipmentSlotType comparisonSlot = hoveredItem.EquipmentSlot;
+
+        ItemData equippedItem = playerEquipment.GetEquippedItem(comparisonSlot);
+
+        if (equippedItem == null && hoveredItem.CanEquipInOffhand)
+        {
+            ItemData offhandItem = playerEquipment.GetEquippedItem(EquipmentSlotType.Offhand);
+
+            if (offhandItem != null)
+            {
+                comparisonSlot = EquipmentSlotType.Offhand;
+                equippedItem = offhandItem;
+            }
+        }
+
+        if (equippedItem == null || equippedItem == hoveredItem)
+        {
+            return string.Empty;
+        }
+
+        string result = $"<color=#BDBDBD>Compared to {equippedItem.DisplayName}</color>";
+
+        result = AppendComparisonLine(result, "Strength", hoveredItem.StatBonuses.Strength, equippedItem.StatBonuses.Strength);
+        result = AppendComparisonLine(result, "Agility", hoveredItem.StatBonuses.Agility, equippedItem.StatBonuses.Agility);
+        result = AppendComparisonLine(result, "Intellect", hoveredItem.StatBonuses.Intellect, equippedItem.StatBonuses.Intellect);
+        result = AppendComparisonLine(result, "Stamina", hoveredItem.StatBonuses.Stamina, equippedItem.StatBonuses.Stamina);
+        result = AppendComparisonLine(result, "Armour", hoveredItem.StatBonuses.Armor, equippedItem.StatBonuses.Armor);
+        result = AppendComparisonLine(result, "Hit", hoveredItem.StatBonuses.HitChance, equippedItem.StatBonuses.HitChance);
+        result = AppendComparisonLine(result, "Damage", hoveredItem.DamageBonus, equippedItem.DamageBonus);
+        result = AppendComparisonLine(result, "Health", hoveredItem.HealthBonus, equippedItem.HealthBonus);
+
+        if (hoveredItem.IsWeapon || equippedItem.IsWeapon)
+        {
+            float rangeDifference = hoveredItem.WeaponAttackRange - equippedItem.WeaponAttackRange;
+
+            if (Mathf.Abs(rangeDifference) > 0.05f)
+            {
+                string sign = rangeDifference > 0 ? "+" : "";
+                string color = rangeDifference > 0 ? "#55FF55" : "#FF5555";
+                result = AppendLine(result, $"<color={color}>{sign}{rangeDifference:0.#} Attack Range</color>");
+            }
+        }
+
+        return result;
+    }
+
+    private string AppendComparisonLine(string currentText, string label, int hoveredValue, int equippedValue)
+    {
+        int difference = hoveredValue - equippedValue;
+
+        if (difference == 0)
+        {
+            return currentText;
+        }
+
+        string sign = difference > 0 ? "+" : "";
+        string color = difference > 0 ? "#55FF55" : "#FF5555";
+
+        return AppendLine(currentText, $"<color={color}>{sign}{difference} {label}</color>");
     }
 
     private string AppendStatBonus(string currentText, string statName, int amount)
