@@ -8,6 +8,7 @@ public class PlayerClassController : MonoBehaviour
     [SerializeField] private CharacterClassData selectedClass;
 
     [Header("Startup")]
+    [SerializeField] private bool applyClassOnStart = false;
     [SerializeField] private bool applyClassStatsOnStart = true;
     [SerializeField] private bool assignClassAbilitiesToHotbar = true;
 
@@ -18,6 +19,7 @@ public class PlayerClassController : MonoBehaviour
 
     public CharacterClassData SelectedClass => selectedClass;
     public string ClassName => selectedClass != null ? selectedClass.ClassName : "No Class";
+    public bool HasSelectedClass => selectedClass != null;
 
     private void Awake()
     {
@@ -29,7 +31,26 @@ public class PlayerClassController : MonoBehaviour
 
     private void Start()
     {
-        ApplyClass();
+        if (applyClassOnStart && selectedClass != null)
+        {
+            ApplyClass();
+        }
+    }
+
+    public void SetSelectedClass(CharacterClassData newClass, bool applyImmediately)
+    {
+        if (newClass == null)
+        {
+            Debug.LogWarning("Cannot set selected class because newClass is null.");
+            return;
+        }
+
+        selectedClass = newClass;
+
+        if (applyImmediately)
+        {
+            ApplyClass();
+        }
     }
 
     public void ApplyClass()
