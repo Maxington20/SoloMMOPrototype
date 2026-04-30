@@ -8,6 +8,7 @@ public class PlayerAbilityController : MonoBehaviour
     private PlayerCombat playerCombat;
     private Health playerHealth;
     private PlayerStats playerStats;
+    private PlayerResource playerResource;
 
     private readonly Dictionary<AbilityData, float> cooldownEndTimes = new Dictionary<AbilityData, float>();
 
@@ -16,6 +17,7 @@ public class PlayerAbilityController : MonoBehaviour
         playerCombat = GetComponent<PlayerCombat>();
         playerHealth = GetComponent<Health>();
         playerStats = GetComponent<PlayerStats>();
+        playerResource = GetComponent<PlayerResource>();
     }
 
     public float GetRemainingCooldown(AbilityData ability)
@@ -52,6 +54,12 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
+        if (!CanPayManaCost(ability))
+        {
+            PostSystem($"Not enough mana for {ability.DisplayName}.");
+            return false;
+        }
+
         bool used = false;
 
         if (ability.RequiresTarget)
@@ -71,6 +79,8 @@ public class PlayerAbilityController : MonoBehaviour
         {
             return false;
         }
+
+        SpendManaCost(ability);
 
         if (ability.CooldownSeconds > 0f)
         {
@@ -117,6 +127,34 @@ public class PlayerAbilityController : MonoBehaviour
         }
 
         return didSomething;
+    }
+
+    private bool CanPayManaCost(AbilityData ability)
+    {
+        if (ability.ManaCost <= 0)
+        {
+            return true;
+        }
+
+        if (playerResource == null || !playerResource.HasManaResource)
+        {
+            return false;
+        }
+
+        return playerResource.HasEnoughMana(ability.ManaCost);
+    }
+
+    private void SpendManaCost(AbilityData ability)
+    {
+        if (ability.ManaCost <= 0)
+        {
+            return;
+        }
+
+        if (playerResource != null)
+        {
+            playerResource.TrySpendMana(ability.ManaCost);
+        }
     }
 
     private void PostSystem(string message)

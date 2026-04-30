@@ -15,16 +15,17 @@ public class CharacterUI : MonoBehaviour
     [Header("Stats Text")]
     [SerializeField] private TMP_Text roleText;
     [SerializeField] private TMP_Text healthText;
+    [SerializeField] private TMP_Text manaText;
     [SerializeField] private TMP_Text damageText;
     [SerializeField] private TMP_Text armorText;
     [SerializeField] private TMP_Text dodgeText;
+    [SerializeField] private TMP_Text hitText;
     [SerializeField] private TMP_Text primaryStatText;
     [SerializeField] private TMP_Text strengthText;
     [SerializeField] private TMP_Text agilityText;
     [SerializeField] private TMP_Text intellectText;
     [SerializeField] private TMP_Text staminaText;
     [SerializeField] private TMP_Text goldText;
-    [SerializeField] private TMP_Text hitText;
 
     [Header("Equipment Slots")]
     [SerializeField] private EquipmentSlotUI headSlot;
@@ -38,6 +39,7 @@ public class CharacterUI : MonoBehaviour
     [SerializeField] private DisplayName displayName;
     [SerializeField] private PlayerProgression progression;
     [SerializeField] private Health health;
+    [SerializeField] private PlayerResource playerResource;
     [SerializeField] private PlayerCombat combat;
     [SerializeField] private PlayerInventory inventory;
     [SerializeField] private PlayerEquipment equipment;
@@ -194,6 +196,18 @@ public class CharacterUI : MonoBehaviour
             healthText.text = health != null ? $"Health: {health.CurrentHealth}/{health.MaxHealth}" : "Health: ?";
         }
 
+        if (manaText != null)
+        {
+            if (playerResource != null && playerResource.HasManaResource)
+            {
+                manaText.text = $"Mana: {playerResource.CurrentMana}/{playerResource.MaxMana}";
+            }
+            else
+            {
+                manaText.text = "Mana: None";
+            }
+        }
+
         if (damageText != null)
         {
             damageText.text = combat != null ? $"Damage: {combat.Damage}" : "Damage: ?";
@@ -202,11 +216,6 @@ public class CharacterUI : MonoBehaviour
         if (goldText != null)
         {
             goldText.text = inventory != null ? $"Gold: {inventory.Gold}" : "Gold: 0";
-        }
-
-        if (hitText != null)
-        {
-            hitText.text = $"Hit: {playerStats.HitChancePercent:0.#}%";
         }
 
         RefreshStatsText();
@@ -243,6 +252,11 @@ public class CharacterUI : MonoBehaviour
         if (dodgeText != null)
         {
             dodgeText.text = $"Dodge: {playerStats.DodgeChancePercent:0.#}%";
+        }
+
+        if (hitText != null)
+        {
+            hitText.text = $"Hit: {playerStats.HitChancePercent:0.#}%";
         }
 
         if (primaryStatText != null)
@@ -302,12 +316,12 @@ public class CharacterUI : MonoBehaviour
     {
         if (armorText != null) armorText.text = "Armour: ?";
         if (dodgeText != null) dodgeText.text = "Dodge: ?";
+        if (hitText != null) hitText.text = "Hit: ?";
         if (primaryStatText != null) primaryStatText.text = "Primary Stat: ?";
         if (strengthText != null) strengthText.text = "Strength: ?";
         if (agilityText != null) agilityText.text = "Agility: ?";
         if (intellectText != null) intellectText.text = "Intellect: ?";
         if (staminaText != null) staminaText.text = "Stamina: ?";
-        if (hitText != null) hitText.text = "Hit: ?";
     }
 
     private void RefreshEquipmentSlots()

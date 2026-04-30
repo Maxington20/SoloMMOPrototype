@@ -36,6 +36,9 @@ MonoBehaviour:
     hitChance: 0
   combatTuning:
     healthPerStamina: 8
+    baseMana: 100
+    manaPerIntellect: 10
+    manaRegenPerSecond: 3
     primaryStatDamageMultiplier: 1.2
     primaryStatHealingMultiplier: 1.2
     baseHitChance: 95

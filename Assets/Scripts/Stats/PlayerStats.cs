@@ -11,6 +11,7 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
     private PlayerEquipment equipment;
     private PlayerProgression progression;
     private Health health;
+    private PlayerResource playerResource;
 
     public event Action OnStatsChanged;
 
@@ -74,12 +75,23 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
         }
     }
 
+    public int MaxMana
+    {
+        get
+        {
+            return Mathf.Max(0, CombatTuning.BaseMana + (TotalStats.Intellect * CombatTuning.ManaPerIntellect));
+        }
+    }
+
+    public float ManaRegenPerSecond => CombatTuning.ManaRegenPerSecond;
+
     private void Awake()
     {
         classController = GetComponent<PlayerClassController>();
         equipment = GetComponent<PlayerEquipment>();
         progression = GetComponent<PlayerProgression>();
         health = GetComponent<Health>();
+        playerResource = GetComponent<PlayerResource>();
     }
 
     private void OnEnable()
@@ -118,6 +130,11 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
         if (health != null)
         {
             health.SetStatBonusHealth(MaxHealthFromStamina);
+        }
+
+        if (playerResource != null)
+        {
+            playerResource.ApplyManaStats(MaxMana, ManaRegenPerSecond);
         }
 
         OnStatsChanged?.Invoke();

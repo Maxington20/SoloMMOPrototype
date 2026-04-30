@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: Arcane Recovery
   m_EditorClassIdentifier: Assembly-CSharp::AbilityData
   displayName: Arcane Recovery
+  description: 
   icon: {fileID: 21300000, guid: 5a187b57437cc284b91b748a0e98facb, type: 3}
-  cooldownSeconds: 12
   requiresTarget: 0
   range: 2.5
+  cooldownSeconds: 12
+  manaCost: 30
   damageAmount: 0
   healthRestoreAmount: 35

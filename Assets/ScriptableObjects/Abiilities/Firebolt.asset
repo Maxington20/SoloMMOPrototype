@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: Firebolt
   m_EditorClassIdentifier: Assembly-CSharp::AbilityData
   displayName: Firebolt
+  description: 
   icon: {fileID: 21300000, guid: d2f7f2bcaae873d4fb3eec74d30810d6, type: 3}
-  cooldownSeconds: 2
   requiresTarget: 1
   range: 8
+  cooldownSeconds: 2
+  manaCost: 20
   damageAmount: 28
   healthRestoreAmount: 0
