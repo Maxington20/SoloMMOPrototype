@@ -87,7 +87,26 @@ public class HotbarUI : MonoBehaviour
 
     private void HandleSlotDrop(int slotIndex, PointerEventData eventData)
     {
-        if (PlayerHotbar.Instance == null || PlayerInventory.Instance == null || InventoryUI.Instance == null)
+        if (PlayerHotbar.Instance == null)
+        {
+            return;
+        }
+
+        if (ClassAbilityBookUI.Instance != null && ClassAbilityBookUI.Instance.IsDraggingAbility)
+        {
+            AbilityData ability = ClassAbilityBookUI.Instance.DraggedAbility;
+
+            if (ability != null)
+            {
+                PlayerHotbar.Instance.AssignAbilityToSlot(slotIndex, ability);
+                ClassAbilityBookUI.Instance.CompleteAbilityDrag(true);
+                RefreshAll();
+            }
+
+            return;
+        }
+
+        if (PlayerInventory.Instance == null || InventoryUI.Instance == null)
         {
             return;
         }
