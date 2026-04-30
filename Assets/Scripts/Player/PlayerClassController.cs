@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Health))]
@@ -16,6 +17,9 @@ public class PlayerClassController : MonoBehaviour
     private PlayerCombat combat;
     private PlayerHotbar hotbar;
     private PlayerStats playerStats;
+    private PlayerProgression progression;
+
+    private readonly HashSet<AbilityData> learnedAbilities = new HashSet<AbilityData>();
 
     public CharacterClassData SelectedClass => selectedClass;
     public string ClassName => selectedClass != null ? selectedClass.ClassName : "No Class";
@@ -27,6 +31,23 @@ public class PlayerClassController : MonoBehaviour
         combat = GetComponent<PlayerCombat>();
         hotbar = GetComponent<PlayerHotbar>();
         playerStats = GetComponent<PlayerStats>();
+        progression = GetComponent<PlayerProgression>();
+    }
+
+    private void OnEnable()
+    {
+        if (progression != null)
+        {
+            progression.OnLevelChanged += HandleLevelChanged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (progression != null)
+        {
+            progression.OnLevelChanged -= HandleLevelChanged;
+        }
     }
 
     private void Start()
@@ -46,6 +67,7 @@ public class PlayerClassController : MonoBehaviour
         }
 
         selectedClass = newClass;
+        learnedAbilities.Clear();
 
         if (applyImmediately)
         {
@@ -68,8 +90,10 @@ public class PlayerClassController : MonoBehaviour
 
         if (assignClassAbilitiesToHotbar)
         {
-            AssignClassAbilities();
+            AssignStartingClassAbilities();
         }
+
+        LearnAvailableAbilitiesForCurrentLevel(false);
 
         if (playerStats != null)
         {
@@ -77,6 +101,16 @@ public class PlayerClassController : MonoBehaviour
         }
 
         PostSystem($"Class selected: {selectedClass.ClassName}.");
+    }
+
+    public bool HasLearnedAbility(AbilityData ability)
+    {
+        return ability != null && learnedAbilities.Contains(ability);
+    }
+
+    public IReadOnlyCollection<AbilityData> GetLearnedAbilities()
+    {
+        return learnedAbilities;
     }
 
     private void ApplyClassBaseValues()
@@ -92,7 +126,7 @@ public class PlayerClassController : MonoBehaviour
         }
     }
 
-    private void AssignClassAbilities()
+    private void AssignStartingClassAbilities()
     {
         if (hotbar == null || selectedClass.StartingAbilities == null)
         {
@@ -105,9 +139,88 @@ public class PlayerClassController : MonoBehaviour
         {
             AbilityData ability = selectedClass.StartingAbilities[i];
 
-            if (ability != null)
+            if (ability == null)
+            {
+                continue;
+            }
+
+            LearnAbility(ability, false);
+
+            hotbar.AssignAbilityToSlot(i, ability);
+        }
+    }
+
+    private void HandleLevelChanged()
+    {
+        LearnAvailableAbilitiesForCurrentLevel(true);
+    }
+
+    private void LearnAvailableAbilitiesForCurrentLevel(bool announceNewAbilities)
+    {
+        if (selectedClass == null || selectedClass.AbilityUnlocks == null)
+        {
+            return;
+        }
+
+        int currentLevel = progression != null ? progression.Level : 1;
+
+        foreach (ClassAbilityUnlock unlock in selectedClass.AbilityUnlocks)
+        {
+            if (unlock == null || unlock.Ability == null)
+            {
+                continue;
+            }
+
+            if (unlock.UnlockLevel > currentLevel)
+            {
+                continue;
+            }
+
+            if (HasLearnedAbility(unlock.Ability))
+            {
+                continue;
+            }
+
+            LearnAbility(unlock.Ability, announceNewAbilities);
+
+            if (unlock.AutoAssignToHotbar)
+            {
+                TryAssignAbilityToFirstEmptyHotbarSlot(unlock.Ability);
+            }
+        }
+    }
+
+    private void LearnAbility(AbilityData ability, bool announce)
+    {
+        if (ability == null)
+        {
+            return;
+        }
+
+        if (!learnedAbilities.Add(ability))
+        {
+            return;
+        }
+
+        if (announce)
+        {
+            PostSystem($"You learned {ability.DisplayName}.");
+        }
+    }
+
+    private void TryAssignAbilityToFirstEmptyHotbarSlot(AbilityData ability)
+    {
+        if (hotbar == null || ability == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < hotbar.SlotCount; i++)
+        {
+            if (hotbar.IsSlotEmpty(i))
             {
                 hotbar.AssignAbilityToSlot(i, ability);
+                return;
             }
         }
     }

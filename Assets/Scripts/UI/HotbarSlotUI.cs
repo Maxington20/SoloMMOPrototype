@@ -18,7 +18,11 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
     private Action<int> onRightClicked;
     private Action<int, PointerEventData> onDropAction;
 
-    public void Initialize(int index, Action<int> leftClickHandler, Action<int> rightClickHandler, Action<int, PointerEventData> dropHandler)
+    public void Initialize(
+        int index,
+        Action<int> leftClickHandler,
+        Action<int> rightClickHandler,
+        Action<int, PointerEventData> dropHandler)
     {
         slotIndex = index;
         onLeftClicked = leftClickHandler;
@@ -101,6 +105,7 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
         if (rarityBorderImage != null)
         {
             rarityBorderImage.enabled = item != null;
+
             Color rarityColor = item != null
                 ? ItemRarityUtility.GetColor(item.Rarity)
                 : Color.clear;
@@ -162,7 +167,9 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
 
         if (quantityText != null)
         {
-            quantityText.text = string.Empty;
+            quantityText.text = ability != null && ability.ManaCost > 0
+                ? ability.ManaCost.ToString()
+                : string.Empty;
         }
 
         if (cooldownText != null)
@@ -178,8 +185,10 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
         if (eventData.button == PointerEventData.InputButton.Left)
         {
             onLeftClicked?.Invoke(slotIndex);
+            return;
         }
-        else if (eventData.button == PointerEventData.InputButton.Right)
+
+        if (eventData.button == PointerEventData.InputButton.Right)
         {
             onRightClicked?.Invoke(slotIndex);
         }
@@ -201,6 +210,7 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
         if (emptyStateObject != null)
         {
             Graphic[] graphics = emptyStateObject.GetComponentsInChildren<Graphic>(true);
+
             for (int i = 0; i < graphics.Length; i++)
             {
                 graphics[i].raycastTarget = false;

@@ -32,6 +32,9 @@ public class CharacterClassData : ScriptableObject
     [Header("Starting Abilities")]
     [SerializeField] private AbilityData[] startingAbilities = new AbilityData[6];
 
+    [Header("Ability Unlocks")]
+    [SerializeField] private ClassAbilityUnlock[] abilityUnlocks = new ClassAbilityUnlock[0];
+
     public string ClassName => className;
     public CharacterRole Role => role;
     public PrimaryStatType PrimaryStat => primaryStat;
@@ -46,6 +49,7 @@ public class CharacterClassData : ScriptableObject
     public ClassCombatTuning CombatTuning => combatTuning ?? new ClassCombatTuning();
 
     public AbilityData[] StartingAbilities => startingAbilities;
+    public ClassAbilityUnlock[] AbilityUnlocks => abilityUnlocks;
     public bool CanDualWieldWeapons => canDualWieldWeapons;
 
     public bool CanUseMainHandWeaponType(WeaponType weaponType)

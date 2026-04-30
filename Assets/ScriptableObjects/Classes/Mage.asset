@@ -51,8 +51,12 @@ MonoBehaviour:
   canDualWieldWeapons: 0
   startingAbilities:
   - {fileID: 11400000, guid: 9bc5469e5309b024485ea408fae486a6, type: 2}
-  - {fileID: 11400000, guid: 18f7f17fb476a084691e9acd6c3d410d, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
+  abilityUnlocks:
+  - unlockLevel: 2
+    ability: {fileID: 11400000, guid: 18f7f17fb476a084691e9acd6c3d410d, type: 2}
+    autoAssignToHotbar: 1

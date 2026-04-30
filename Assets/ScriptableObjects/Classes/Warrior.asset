@@ -35,6 +35,9 @@ MonoBehaviour:
     hitChance: 0
   combatTuning:
     healthPerStamina: 12
+    baseMana: 0
+    manaPerIntellect: 0
+    manaRegenPerSecond: 0
     primaryStatDamageMultiplier: 1
     primaryStatHealingMultiplier: 0.6
     baseHitChance: 95
@@ -47,8 +50,12 @@ MonoBehaviour:
   canDualWieldWeapons: 1
   startingAbilities:
   - {fileID: 11400000, guid: bf672076b8de83340b816c7d067a2383, type: 2}
-  - {fileID: 11400000, guid: f39a9a74fbd28a04d8e86543bb52c233, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
+  abilityUnlocks:
+  - unlockLevel: 2
+    ability: {fileID: 11400000, guid: f39a9a74fbd28a04d8e86543bb52c233, type: 2}
+    autoAssignToHotbar: 1

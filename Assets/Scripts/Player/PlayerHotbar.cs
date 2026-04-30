@@ -64,11 +64,22 @@ public class PlayerHotbar : MonoBehaviour
         for (int i = 0; i < SlotCount; i++)
         {
             KeyCode key = GetKeyForSlot(i);
+
             if (key != KeyCode.None && Input.GetKeyDown(key))
             {
                 TryUseSlot(i);
             }
         }
+    }
+
+    public bool IsSlotEmpty(int slotIndex)
+    {
+        if (!IsValidSlot(slotIndex))
+        {
+            return false;
+        }
+
+        return slotTypes[slotIndex] == HotbarSlotContentType.Empty;
     }
 
     public HotbarSlotContentType GetSlotContentType(int slotIndex)
@@ -162,6 +173,7 @@ public class PlayerHotbar : MonoBehaviour
         }
 
         ItemData item = assignedItems[slotIndex];
+
         if (item == null)
         {
             return 0;
@@ -183,6 +195,7 @@ public class PlayerHotbar : MonoBehaviour
         }
 
         AbilityData ability = assignedAbilities[slotIndex];
+
         if (ability == null)
         {
             return 0f;
@@ -204,41 +217,53 @@ public class PlayerHotbar : MonoBehaviour
                 return false;
 
             case HotbarSlotContentType.Item:
-                if (playerInventory == null)
-                {
-                    return false;
-                }
-
-                ItemData item = assignedItems[slotIndex];
-                if (item == null)
-                {
-                    return false;
-                }
-
-                if (playerInventory.GetTotalQuantityOfItem(item) <= 0)
-                {
-                    PostSystem($"You do not have any {item.DisplayName}.");
-                    return false;
-                }
-
-                return playerInventory.TryUseFirstMatchingItem(item);
+                return TryUseItemSlot(slotIndex);
 
             case HotbarSlotContentType.Ability:
-                if (playerAbilityController == null)
-                {
-                    return false;
-                }
-
-                AbilityData ability = assignedAbilities[slotIndex];
-                if (ability == null)
-                {
-                    return false;
-                }
-
-                return playerAbilityController.TryUseAbility(ability);
+                return TryUseAbilitySlot(slotIndex);
         }
 
         return false;
+    }
+
+    private bool TryUseItemSlot(int slotIndex)
+    {
+        if (playerInventory == null)
+        {
+            return false;
+        }
+
+        ItemData item = assignedItems[slotIndex];
+
+        if (item == null)
+        {
+            return false;
+        }
+
+        if (playerInventory.GetTotalQuantityOfItem(item) <= 0)
+        {
+            PostSystem($"You do not have any {item.DisplayName}.");
+            return false;
+        }
+
+        return playerInventory.TryUseFirstMatchingItem(item);
+    }
+
+    private bool TryUseAbilitySlot(int slotIndex)
+    {
+        if (playerAbilityController == null)
+        {
+            return false;
+        }
+
+        AbilityData ability = assignedAbilities[slotIndex];
+
+        if (ability == null)
+        {
+            return false;
+        }
+
+        return playerAbilityController.TryUseAbility(ability);
     }
 
     private bool IsValidSlot(int slotIndex)
