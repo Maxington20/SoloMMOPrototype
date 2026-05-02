@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37349a76b5b5fa24b8a50dfec94bc6a7, type: 3}
+  m_Name: Frostbolt
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityData
+  displayName: Frostbolt
+  description: 
+  icon: {fileID: 21300000, guid: 2699540b8c8d28a4999944dc7833e52d, type: 3}
+  requiresTarget: 1
+  range: 8
+  cooldownSeconds: 4
+  manaCost: 25
+  damageAmount: 32
+  healthRestoreAmount: 0

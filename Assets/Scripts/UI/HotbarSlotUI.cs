@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
+public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private Image rarityBorderImage;
@@ -17,6 +17,7 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
     private Action<int> onLeftClicked;
     private Action<int> onRightClicked;
     private Action<int, PointerEventData> onDropAction;
+    private AbilityData currentAbility;
 
     public void Initialize(
         int index,
@@ -38,6 +39,8 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
 
     public void RefreshEmpty()
     {
+        currentAbility = null;
+
         if (keybindText != null)
         {
             keybindText.text = (slotIndex + 1).ToString();
@@ -71,7 +74,6 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
             cooldownText.text = string.Empty;
         }
     }
-
     public void RefreshItem(ItemData item, int quantity)
     {
         if (keybindText != null)
@@ -131,6 +133,8 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
 
     public void RefreshAbility(AbilityData ability, float cooldownRemaining)
     {
+        currentAbility = ability;
+
         if (keybindText != null)
         {
             keybindText.text = (slotIndex + 1).ToString();
@@ -216,5 +220,18 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler
                 graphics[i].raycastTarget = false;
             }
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentAbility != null)
+        {
+            AbilityTooltipUI.Instance?.Show(currentAbility);
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        AbilityTooltipUI.Instance?.Hide();
     }
 }

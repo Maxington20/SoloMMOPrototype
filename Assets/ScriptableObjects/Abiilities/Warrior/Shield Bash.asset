@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37349a76b5b5fa24b8a50dfec94bc6a7, type: 3}
+  m_Name: Shield Bash
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityData
+  displayName: Shield Bash
+  description: Bash teh enemy with force, dealing damage. Later this will interupt
+    or briefly stun.
+  icon: {fileID: 21300000, guid: 2af93b8da80979c4eab6e8149f4dee70, type: 3}
+  requiresTarget: 1
+  range: 2.5
+  cooldownSeconds: 8
+  manaCost: 0
+  damageAmount: 18
+  healthRestoreAmount: 0

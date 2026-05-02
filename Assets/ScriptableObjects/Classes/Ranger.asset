@@ -60,3 +60,6 @@ MonoBehaviour:
   - unlockLevel: 2
     ability: {fileID: 11400000, guid: 312c9995d83812942bfe566107cc90ca, type: 2}
     autoAssignToHotbar: 1
+  - unlockLevel: 3
+    ability: {fileID: 11400000, guid: bf4bf331b0ca5e74990b53dca3334f0f, type: 2}
+    autoAssignToHotbar: 1

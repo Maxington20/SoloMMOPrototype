@@ -8,7 +8,9 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
     IPointerClickHandler,
     IBeginDragHandler,
     IDragHandler,
-    IEndDragHandler
+    IEndDragHandler,
+    IPointerEnterHandler,
+    IPointerExitHandler
 {
     [Header("UI")]
     [SerializeField] private Image iconImage;
@@ -171,5 +173,20 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
         {
             descriptionText.raycastTarget = false;
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (ability == null)
+        {
+            return;
+        }
+
+        AbilityTooltipUI.Instance?.Show(ability);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        AbilityTooltipUI.Instance?.Hide();
     }
 }
