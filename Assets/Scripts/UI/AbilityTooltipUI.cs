@@ -77,26 +77,87 @@ public class AbilityTooltipUI : MonoBehaviour
 
         if (detailsText != null)
         {
-            string damage = ability.DamageAmount > 0 ? $"Damage: {ability.DamageAmount}" : "";
-            string heal = ability.HealthRestoreAmount > 0 ? $"Heal: {ability.HealthRestoreAmount}" : "";
-            string mana = ability.ManaCost > 0 ? $"Mana: {ability.ManaCost}" : "Mana: 0";
-            string cd = $"CD: {ability.CooldownSeconds:0.#}s";
-            string range = ability.RequiresTarget ? $"Range: {ability.Range:0.#}" : "Self";
-
-            string combined = $"{damage} {heal}".Trim();
-
-            if (!string.IsNullOrEmpty(combined))
-            {
-                combined += "\n";
-            }
-
-            detailsText.text = $"{combined}{mana} | {cd} | {range}";
+            detailsText.text = BuildDetailsText(ability);
         }
 
         if (descriptionText != null)
         {
             descriptionText.text = ability.Description;
         }
+    }
+
+    private string BuildDetailsText(AbilityData ability)
+    {
+        string effectLine = string.Empty;
+
+        if (ability.DamageAmount > 0)
+        {
+            effectLine = AppendInline(effectLine, $"Damage: {ability.DamageAmount}");
+        }
+
+        if (ability.HealthRestoreAmount > 0)
+        {
+            effectLine = AppendInline(effectLine, $"Heal: {ability.HealthRestoreAmount}");
+        }
+
+        string costLine = $"Mana: {ability.ManaCost}";
+        string cooldownLine = $"Cooldown: {ability.CooldownSeconds:0.#}s";
+        string rangeLine = ability.RequiresTarget ? $"Range: {ability.Range:0.#}" : "Target: Self";
+        string castLine = BuildCastLine(ability);
+
+        string result = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(effectLine))
+        {
+            result = AppendLine(result, effectLine);
+        }
+
+        result = AppendLine(result, costLine);
+        result = AppendLine(result, cooldownLine);
+        result = AppendLine(result, rangeLine);
+        result = AppendLine(result, castLine);
+
+        if (ability.CanBeInterrupted && !ability.IsInstant)
+        {
+            result = AppendLine(result, "Interruptible");
+        }
+
+        if (ability.CanMoveWhileCasting && !ability.IsInstant)
+        {
+            result = AppendLine(result, "Can move while casting");
+        }
+
+        return result;
+    }
+
+    private string BuildCastLine(AbilityData ability)
+    {
+        return ability.CastType switch
+        {
+            AbilityCastType.CastTime => $"Cast: {ability.CastTimeSeconds:0.#}s",
+            AbilityCastType.Channel => $"Channel: {ability.ChannelDurationSeconds:0.#}s",
+            _ => "Instant"
+        };
+    }
+
+    private string AppendInline(string currentText, string value)
+    {
+        if (string.IsNullOrWhiteSpace(currentText))
+        {
+            return value;
+        }
+
+        return currentText + " | " + value;
+    }
+
+    private string AppendLine(string currentText, string line)
+    {
+        if (string.IsNullOrWhiteSpace(currentText))
+        {
+            return line;
+        }
+
+        return currentText + "\n" + line;
     }
 
     private void UpdatePosition()

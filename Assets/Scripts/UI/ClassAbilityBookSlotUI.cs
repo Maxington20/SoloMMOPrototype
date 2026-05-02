@@ -73,20 +73,7 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
 
         if (detailsText != null)
         {
-            if (ability == null)
-            {
-                detailsText.text = string.Empty;
-            }
-            else if (isLearned)
-            {
-                string manaText = ability.ManaCost > 0 ? $"Mana: {ability.ManaCost}" : "No mana cost";
-                detailsText.text = $"{manaText}  |  CD: {ability.CooldownSeconds:0.#}s";
-            }
-            else
-            {
-                detailsText.text = $"Unlocks at Level {unlockLevel}";
-            }
-
+            detailsText.text = BuildDetailsText();
             detailsText.color = isLearned ? Color.white : Color.gray;
         }
 
@@ -102,6 +89,30 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = isLearned;
         }
+    }
+
+    private string BuildDetailsText()
+    {
+        if (ability == null)
+        {
+            return string.Empty;
+        }
+
+        if (!isLearned)
+        {
+            return $"Unlocks at Level {unlockLevel}";
+        }
+
+        string manaText = ability.ManaCost > 0 ? $"Mana: {ability.ManaCost}" : "No mana cost";
+        string cooldownText = $"CD: {ability.CooldownSeconds:0.#}s";
+        string castText = ability.CastType switch
+        {
+            AbilityCastType.CastTime => $"Cast: {ability.CastTimeSeconds:0.#}s",
+            AbilityCastType.Channel => $"Channel: {ability.ChannelDurationSeconds:0.#}s",
+            _ => "Instant"
+        };
+
+        return $"{manaText}  |  {cooldownText}  |  {castText}";
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -134,7 +145,7 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
 
     public void OnDrag(PointerEventData eventData)
     {
-        // Required so Unity treats this as a proper drag operation.
+        // Required so Unity treats this as a real drag operation.
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -152,29 +163,6 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
         onDragEnded?.Invoke(ability);
     }
 
-    private void DisableChildRaycasts()
-    {
-        if (iconImage != null)
-        {
-            iconImage.raycastTarget = false;
-        }
-
-        if (nameText != null)
-        {
-            nameText.raycastTarget = false;
-        }
-
-        if (detailsText != null)
-        {
-            detailsText.raycastTarget = false;
-        }
-
-        if (descriptionText != null)
-        {
-            descriptionText.raycastTarget = false;
-        }
-    }
-
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (ability == null)
@@ -188,5 +176,13 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
     public void OnPointerExit(PointerEventData eventData)
     {
         AbilityTooltipUI.Instance?.Hide();
+    }
+
+    private void DisableChildRaycasts()
+    {
+        if (iconImage != null) iconImage.raycastTarget = false;
+        if (nameText != null) nameText.raycastTarget = false;
+        if (detailsText != null) detailsText.raycastTarget = false;
+        if (descriptionText != null) descriptionText.raycastTarget = false;
     }
 }

@@ -19,5 +19,10 @@ MonoBehaviour:
   range: 8
   cooldownSeconds: 4
   manaCost: 25
+  castType: 1
+  castTimeSeconds: 1.5
+  channelDurationSeconds: 0
+  canMoveWhileCasting: 0
+  canBeInterrupted: 1
   damageAmount: 32
   healthRestoreAmount: 0
