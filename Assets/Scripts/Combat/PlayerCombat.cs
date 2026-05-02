@@ -62,31 +62,55 @@ public class PlayerCombat : MonoBehaviour
         return playerStats.ApplyPrimaryStatDamageScaling(baseAbilityDamage);
     }
 
-    public bool TryUseAbilityOnCurrentTarget(string abilityName, int amount, float range)
+    public bool CanUseAbilityOnCurrentTarget(string abilityName, float range, bool postMessages)
     {
         if (currentTarget == null)
         {
-            PostSystem("No target.");
+            if (postMessages)
+            {
+                PostSystem("No target.");
+            }
+
             return false;
         }
 
         if (currentTarget.IsDead)
         {
             ClearTarget();
-            PostSystem("Target is dead.");
+
+            if (postMessages)
+            {
+                PostSystem("Target is dead.");
+            }
+
             return false;
         }
 
         float distanceToTarget = Vector3.Distance(transform.position, currentTarget.transform.position);
         if (distanceToTarget > range)
         {
-            PostSystem($"{abilityName} is out of range.");
+            if (postMessages)
+            {
+                PostSystem($"{abilityName} is out of range.");
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool TryUseAbilityOnCurrentTarget(string abilityName, int amount, float range)
+    {
+        if (!CanUseAbilityOnCurrentTarget(abilityName, range, true))
+        {
             return false;
         }
 
         FaceTarget(currentTarget.transform);
 
         int finalDamage = GetScaledAbilityDamage(amount);
+
         currentTarget.TakeDamage(finalDamage, gameObject);
 
         if (currentEnemyTarget != null)
