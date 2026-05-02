@@ -75,15 +75,15 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
         }
     }
 
-    public int MaxMana
+    public int MaxResource
     {
         get
         {
-            return Mathf.Max(0, CombatTuning.BaseMana + (TotalStats.Intellect * CombatTuning.ManaPerIntellect));
+            return Mathf.Max(
+                0,
+                CombatTuning.BaseResource + (PrimaryStatValue * CombatTuning.ResourcePerPrimaryStat));
         }
     }
-
-    public float ManaRegenPerSecond => CombatTuning.ManaRegenPerSecond;
 
     private void Awake()
     {
@@ -134,7 +134,12 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
 
         if (playerResource != null)
         {
-            playerResource.ApplyManaStats(MaxMana, ManaRegenPerSecond);
+            playerResource.ApplyResourceStats(
+                CombatTuning.ResourceType,
+                MaxResource,
+                CombatTuning.ResourceRegenPerSecond,
+                CombatTuning.ResourceDecayPerSecond,
+                CombatTuning.StartsFull);
         }
 
         OnStatsChanged?.Invoke();

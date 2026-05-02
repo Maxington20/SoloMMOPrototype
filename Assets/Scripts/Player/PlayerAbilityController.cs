@@ -117,9 +117,9 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        if (!CanPayManaCost(ability))
+        if (!CanPayResourceCost(ability))
         {
-            PostSystem($"Not enough mana for {ability.DisplayName}.");
+            PostSystem($"Not enough {GetResourceName()} for {ability.DisplayName}.");
             return false;
         }
 
@@ -236,9 +236,9 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        if (!CanPayManaCost(ability))
+        if (!CanPayResourceCost(ability))
         {
-            PostSystem($"Not enough mana for {ability.DisplayName}.");
+            PostSystem($"Not enough {GetResourceName()} for {ability.DisplayName}.");
             return false;
         }
 
@@ -262,7 +262,8 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        SpendManaCost(ability);
+        SpendResourceCost(ability);
+        GenerateResourceFromAbility(ability);
         StartCooldown(ability);
 
         return true;
@@ -330,31 +331,44 @@ public class PlayerAbilityController : MonoBehaviour
         return didSomething;
     }
 
-    private bool CanPayManaCost(AbilityData ability)
+    private bool CanPayResourceCost(AbilityData ability)
     {
-        if (ability.ManaCost <= 0)
+        if (ability.ResourceCost <= 0)
         {
             return true;
         }
 
-        if (playerResource == null || !playerResource.HasManaResource)
+        if (playerResource == null || !playerResource.HasResource)
         {
             return false;
         }
 
-        return playerResource.HasEnoughMana(ability.ManaCost);
+        return playerResource.HasEnoughResource(ability.ResourceCost);
     }
 
-    private void SpendManaCost(AbilityData ability)
+    private void SpendResourceCost(AbilityData ability)
     {
-        if (ability.ManaCost <= 0)
+        if (ability.ResourceCost <= 0)
         {
             return;
         }
 
         if (playerResource != null)
         {
-            playerResource.TrySpendMana(ability.ManaCost);
+            playerResource.TrySpendResource(ability.ResourceCost);
+        }
+    }
+
+    private void GenerateResourceFromAbility(AbilityData ability)
+    {
+        if (ability.ResourceGenerated <= 0)
+        {
+            return;
+        }
+
+        if (playerResource != null)
+        {
+            playerResource.GenerateResource(ability.ResourceGenerated);
         }
     }
 
@@ -364,6 +378,16 @@ public class PlayerAbilityController : MonoBehaviour
         {
             cooldownEndTimes[ability] = Time.time + ability.CooldownSeconds;
         }
+    }
+
+    private string GetResourceName()
+    {
+        if (playerResource == null || !playerResource.HasResource)
+        {
+            return "resource";
+        }
+
+        return playerResource.ResourceDisplayName.ToLower();
     }
 
     private void PostSystem(string message)

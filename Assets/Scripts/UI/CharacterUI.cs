@@ -198,13 +198,13 @@ public class CharacterUI : MonoBehaviour
 
         if (manaText != null)
         {
-            if (playerResource != null && playerResource.HasManaResource)
+            if (playerResource != null && playerResource.HasResource)
             {
-                manaText.text = $"Mana: {playerResource.CurrentMana}/{playerResource.MaxMana}";
+                manaText.text = $"{playerResource.ResourceDisplayName}: {playerResource.CurrentResource}/{playerResource.MaxResource}";
             }
             else
             {
-                manaText.text = "Mana: None";
+                manaText.text = "Resource: None";
             }
         }
 

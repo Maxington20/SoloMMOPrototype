@@ -6805,7 +6805,7 @@ GameObject:
   - component: {fileID: 354276849}
   - component: {fileID: 354276848}
   m_Layer: 5
-  m_Name: ManaText
+  m_Name: ResourceText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13482,9 +13482,12 @@ MonoBehaviour:
   classLevelText: {fileID: 1169466659}
   healthFillImage: {fileID: 404347838}
   healthText: {fileID: 527088264}
-  manaRoot: {fileID: 1164118905}
-  manaFillImage: {fileID: 2088651652}
-  manaText: {fileID: 354276848}
+  resourceRoot: {fileID: 1164118905}
+  resourceFillImage: {fileID: 2088651652}
+  resourceText: {fileID: 354276848}
+  manaColor: {r: 0.15, g: 0.35, b: 1, a: 1}
+  energyColor: {r: 1, g: 0.85, b: 0.15, a: 1}
+  angerColor: {r: 1, g: 0.1, b: 0.1, a: 1}
   xpFillImage: {fileID: 284283317}
   xpText: {fileID: 644463480}
 --- !u!1 &809605616
@@ -19554,7 +19557,7 @@ GameObject:
   - component: {fileID: 1164118908}
   - component: {fileID: 1164118907}
   m_Layer: 5
-  m_Name: ManaBarRoot
+  m_Name: ResourceRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31486,7 +31489,7 @@ GameObject:
   - component: {fileID: 2088651653}
   - component: {fileID: 2088651652}
   m_Layer: 5
-  m_Name: ManaFill
+  m_Name: ResourceFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

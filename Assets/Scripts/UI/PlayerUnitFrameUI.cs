@@ -22,10 +22,15 @@ public class PlayerUnitFrameUI : MonoBehaviour
     [SerializeField] private Image healthFillImage;
     [SerializeField] private TMP_Text healthText;
 
-    [Header("Mana")]
-    [SerializeField] private GameObject manaRoot;
-    [SerializeField] private Image manaFillImage;
-    [SerializeField] private TMP_Text manaText;
+    [Header("Resource")]
+    [SerializeField] private GameObject resourceRoot;
+    [SerializeField] private Image resourceFillImage;
+    [SerializeField] private TMP_Text resourceText;
+
+    [Header("Resource Colours")]
+    [SerializeField] private Color manaColor = new Color(0.15f, 0.35f, 1f);
+    [SerializeField] private Color energyColor = new Color(1f, 0.85f, 0.15f);
+    [SerializeField] private Color angerColor = new Color(1f, 0.1f, 0.1f);
 
     [Header("XP")]
     [SerializeField] private Image xpFillImage;
@@ -40,7 +45,7 @@ public class PlayerUnitFrameUI : MonoBehaviour
 
         if (playerResource != null)
         {
-            playerResource.OnManaChanged += Refresh;
+            playerResource.OnResourceChanged += Refresh;
         }
 
         if (progression != null)
@@ -60,7 +65,7 @@ public class PlayerUnitFrameUI : MonoBehaviour
 
         if (playerResource != null)
         {
-            playerResource.OnManaChanged -= Refresh;
+            playerResource.OnResourceChanged -= Refresh;
         }
 
         if (progression != null)
@@ -83,7 +88,7 @@ public class PlayerUnitFrameUI : MonoBehaviour
 
         RefreshHeader();
         RefreshHealth();
-        RefreshMana();
+        RefreshResource();
         RefreshXp();
     }
 
@@ -134,28 +139,29 @@ public class PlayerUnitFrameUI : MonoBehaviour
         }
     }
 
-    private void RefreshMana()
+    private void RefreshResource()
     {
-        bool hasMana = playerResource != null && playerResource.HasManaResource;
+        bool hasResource = playerResource != null && playerResource.HasResource;
 
-        if (manaRoot != null)
+        if (resourceRoot != null)
         {
-            manaRoot.SetActive(hasMana);
+            resourceRoot.SetActive(hasResource);
         }
 
-        if (!hasMana)
+        if (!hasResource)
         {
             return;
         }
 
-        if (manaFillImage != null)
+        if (resourceFillImage != null)
         {
-            manaFillImage.fillAmount = playerResource.ManaPercent;
+            resourceFillImage.fillAmount = playerResource.ResourcePercent;
+            resourceFillImage.color = GetResourceColor(playerResource.ResourceType);
         }
 
-        if (manaText != null)
+        if (resourceText != null)
         {
-            manaText.text = $"{playerResource.CurrentMana}/{playerResource.MaxMana}";
+            resourceText.text = $"{playerResource.ResourceDisplayName}: {playerResource.CurrentResource}/{playerResource.MaxResource}";
         }
     }
 
@@ -185,5 +191,16 @@ public class PlayerUnitFrameUI : MonoBehaviour
         {
             xpText.text = $"{progression.CurrentXp}/{progression.XpToNextLevel} XP";
         }
+    }
+
+    private Color GetResourceColor(PlayerResourceType type)
+    {
+        return type switch
+        {
+            PlayerResourceType.Mana => manaColor,
+            PlayerResourceType.Energy => energyColor,
+            PlayerResourceType.Anger => angerColor,
+            _ => Color.white
+        };
     }
 }

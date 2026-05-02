@@ -13,9 +13,17 @@ MonoBehaviour:
   m_Name: Second Wind
   m_EditorClassIdentifier: Assembly-CSharp::AbilityData
   displayName: Second Wind
+  description: 
   icon: {fileID: 21300000, guid: 0b8ff7ee2783de24b8bf28bd23ac292e, type: 3}
-  cooldownSeconds: 12
   requiresTarget: 0
   range: 0
+  cooldownSeconds: 12
+  resourceCost: 40
+  resourceGenerated: 0
+  castType: 0
+  castTimeSeconds: 0
+  channelDurationSeconds: 0
+  canMoveWhileCasting: 0
+  canBeInterrupted: 1
   damageAmount: 0
   healthRestoreAmount: 30

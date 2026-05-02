@@ -13,9 +13,17 @@ MonoBehaviour:
   m_Name: Mend Wounds
   m_EditorClassIdentifier: Assembly-CSharp::AbilityData
   displayName: Mend Wounds
+  description: 
   icon: {fileID: 21300000, guid: 7ee7ea25d92926c4ca2857e015461bba, type: 3}
-  cooldownSeconds: 15
   requiresTarget: 0
   range: 0
+  cooldownSeconds: 15
+  resourceCost: 40
+  resourceGenerated: 0
+  castType: 0
+  castTimeSeconds: 0
+  channelDurationSeconds: 0
+  canMoveWhileCasting: 0
+  canBeInterrupted: 1
   damageAmount: 0
   healthRestoreAmount: 25

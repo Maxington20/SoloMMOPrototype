@@ -18,6 +18,12 @@ MonoBehaviour:
   requiresTarget: 1
   range: 10
   cooldownSeconds: 6
-  manaCost: 0
+  resourceCost: 35
+  resourceGenerated: 0
+  castType: 0
+  castTimeSeconds: 0
+  channelDurationSeconds: 0
+  canMoveWhileCasting: 0
+  canBeInterrupted: 1
   damageAmount: 24
   healthRestoreAmount: 0

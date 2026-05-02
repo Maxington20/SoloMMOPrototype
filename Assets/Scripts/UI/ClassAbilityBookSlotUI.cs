@@ -103,8 +103,10 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
             return $"Unlocks at Level {unlockLevel}";
         }
 
-        string manaText = ability.ManaCost > 0 ? $"Mana: {ability.ManaCost}" : "No mana cost";
+        string costText = ability.ResourceCost > 0 ? $"Cost: {ability.ResourceCost}" : "No cost";
+        string generateText = ability.ResourceGenerated > 0 ? $"Gen: {ability.ResourceGenerated}" : string.Empty;
         string cooldownText = $"CD: {ability.CooldownSeconds:0.#}s";
+
         string castText = ability.CastType switch
         {
             AbilityCastType.CastTime => $"Cast: {ability.CastTimeSeconds:0.#}s",
@@ -112,7 +114,12 @@ public class ClassAbilityBookSlotUI : MonoBehaviour,
             _ => "Instant"
         };
 
-        return $"{manaText}  |  {cooldownText}  |  {castText}";
+        if (!string.IsNullOrWhiteSpace(generateText))
+        {
+            return $"{costText}  |  {generateText}  |  {cooldownText}  |  {castText}";
+        }
+
+        return $"{costText}  |  {cooldownText}  |  {castText}";
     }
 
     public void OnPointerClick(PointerEventData eventData)

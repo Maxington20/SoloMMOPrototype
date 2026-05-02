@@ -16,6 +16,7 @@ public class PlayerCombat : MonoBehaviour
     private EnemyController currentEnemyTarget;
     private PlayerEquipment playerEquipment;
     private PlayerStats playerStats;
+    private PlayerResource playerResource;
 
     public Transform CurrentTargetTransform => currentTarget != null ? currentTarget.transform : null;
     public int Damage => CalculateAutoAttackDamage();
@@ -26,6 +27,7 @@ public class PlayerCombat : MonoBehaviour
     {
         playerEquipment = GetComponent<PlayerEquipment>();
         playerStats = GetComponent<PlayerStats>();
+        playerResource = GetComponent<PlayerResource>();
     }
 
     private void Update()
@@ -219,6 +221,11 @@ public class PlayerCombat : MonoBehaviour
 
         Debug.Log($"Player {attackType} {currentTarget.name} for {finalDamage}");
         currentTarget.TakeDamage(finalDamage, gameObject);
+
+        if (playerResource != null)
+        {
+            playerResource.GenerateAngerFromAutoAttack();
+        }
 
         if (currentEnemyTarget != null)
         {

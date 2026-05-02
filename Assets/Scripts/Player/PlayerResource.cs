@@ -1,121 +1,244 @@
 using System;
 using UnityEngine;
 
+[RequireComponent(typeof(Health))]
 public class PlayerResource : MonoBehaviour
 {
-    private int maxMana;
-    private float currentMana;
-    private float manaRegenPerSecond;
+    private PlayerResourceType resourceType = PlayerResourceType.None;
+    private int maxResource;
+    private float currentResource;
+    private float regenPerSecond;
+    private float decayPerSecond;
+    private bool startsFull = true;
 
-    public int MaxMana => maxMana;
-    public int CurrentMana => Mathf.FloorToInt(currentMana);
-    public float CurrentManaFloat => currentMana;
-    public float ManaPercent => maxMana <= 0 ? 0f : currentMana / maxMana;
-    public bool HasManaResource => maxMana > 0;
+    private Health health;
+    private PlayerStats playerStats;
 
+    public PlayerResourceType ResourceType => resourceType;
+    public int MaxResource => maxResource;
+    public int CurrentResource => Mathf.FloorToInt(currentResource);
+    public float CurrentResourceFloat => currentResource;
+    public float ResourcePercent => maxResource <= 0 ? 0f : currentResource / maxResource;
+    public bool HasResource => resourceType != PlayerResourceType.None && maxResource > 0;
+
+    // Backward-compatible aliases in case any existing UI still references mana.
+    public int MaxMana => MaxResource;
+    public int CurrentMana => CurrentResource;
+    public float CurrentManaFloat => CurrentResourceFloat;
+    public float ManaPercent => ResourcePercent;
+    public bool HasManaResource => HasResource && resourceType == PlayerResourceType.Mana;
+
+    public string ResourceDisplayName
+    {
+        get
+        {
+            return resourceType switch
+            {
+                PlayerResourceType.Mana => "Mana",
+                PlayerResourceType.Energy => "Energy",
+                PlayerResourceType.Anger => "Anger",
+                _ => "Resource"
+            };
+        }
+    }
+
+    public event Action OnResourceChanged;
+
+    // Backward-compatible event alias.
     public event Action OnManaChanged;
+
+    private void Awake()
+    {
+        health = GetComponent<Health>();
+        playerStats = GetComponent<PlayerStats>();
+    }
+
+    private void OnEnable()
+    {
+        if (health != null)
+        {
+            health.OnDamaged += HandleDamaged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (health != null)
+        {
+            health.OnDamaged -= HandleDamaged;
+        }
+    }
 
     private void Update()
     {
-        RegenerateMana();
+        UpdateResourceOverTime();
     }
 
-    public void ApplyManaStats(int newMaxMana, float newManaRegenPerSecond)
+    public void ApplyResourceStats(
+        PlayerResourceType newResourceType,
+        int newMaxResource,
+        float newRegenPerSecond,
+        float newDecayPerSecond,
+        bool newStartsFull)
     {
-        int oldMaxMana = maxMana;
+        PlayerResourceType oldResourceType = resourceType;
+        int oldMaxResource = maxResource;
 
-        maxMana = Mathf.Max(0, newMaxMana);
-        manaRegenPerSecond = Mathf.Max(0f, newManaRegenPerSecond);
+        resourceType = newResourceType;
+        maxResource = Mathf.Max(0, newMaxResource);
+        regenPerSecond = Mathf.Max(0f, newRegenPerSecond);
+        decayPerSecond = Mathf.Max(0f, newDecayPerSecond);
+        startsFull = newStartsFull;
 
-        if (maxMana <= 0)
+        if (resourceType == PlayerResourceType.None || maxResource <= 0)
         {
-            currentMana = 0;
-            OnManaChanged?.Invoke();
+            currentResource = 0f;
+            NotifyResourceChanged();
             return;
         }
 
-        if (oldMaxMana <= 0)
+        if (oldResourceType != resourceType)
         {
-            currentMana = maxMana;
+            currentResource = startsFull ? maxResource : 0f;
+            NotifyResourceChanged();
+            return;
+        }
+
+        if (oldMaxResource <= 0)
+        {
+            currentResource = startsFull ? maxResource : 0f;
         }
         else
         {
-            int delta = maxMana - oldMaxMana;
-            currentMana += delta;
-            currentMana = Mathf.Clamp(currentMana, 0f, maxMana);
+            int delta = maxResource - oldMaxResource;
+            currentResource += delta;
+            currentResource = Mathf.Clamp(currentResource, 0f, maxResource);
         }
 
-        OnManaChanged?.Invoke();
+        NotifyResourceChanged();
     }
 
-    public bool HasEnoughMana(int amount)
+    // Backward-compatible method in case anything still calls ApplyManaStats.
+    public void ApplyManaStats(int newMaxMana, float newManaRegenPerSecond)
+    {
+        ApplyResourceStats(
+            PlayerResourceType.Mana,
+            newMaxMana,
+            newManaRegenPerSecond,
+            0f,
+            true);
+    }
+
+    public bool HasEnoughResource(int amount)
     {
         if (amount <= 0)
         {
             return true;
         }
 
-        return CurrentMana >= amount;
+        return HasResource && CurrentResource >= amount;
     }
 
-    public bool TrySpendMana(int amount)
+    public bool TrySpendResource(int amount)
     {
         if (amount <= 0)
         {
             return true;
         }
 
-        if (!HasEnoughMana(amount))
+        if (!HasEnoughResource(amount))
         {
             return false;
         }
 
-        currentMana -= amount;
-        currentMana = Mathf.Clamp(currentMana, 0f, maxMana);
+        currentResource -= amount;
+        currentResource = Mathf.Clamp(currentResource, 0f, maxResource);
 
-        OnManaChanged?.Invoke();
+        NotifyResourceChanged();
         return true;
     }
 
-    public void RestoreMana(int amount)
+    public void GenerateResource(int amount)
     {
-        if (amount <= 0 || maxMana <= 0)
+        if (amount <= 0 || !HasResource)
         {
             return;
         }
 
-        currentMana = Mathf.Clamp(currentMana + amount, 0f, maxMana);
-        OnManaChanged?.Invoke();
+        currentResource += amount;
+        currentResource = Mathf.Clamp(currentResource, 0f, maxResource);
+
+        NotifyResourceChanged();
     }
 
-    public void RestoreManaToFull()
+    public void RestoreResource(int amount)
     {
-        if (maxMana <= 0)
-        {
-            currentMana = 0;
-            OnManaChanged?.Invoke();
-            return;
-        }
-
-        currentMana = maxMana;
-        OnManaChanged?.Invoke();
+        GenerateResource(amount);
     }
 
-    private void RegenerateMana()
+    public void RestoreResourceToFull()
     {
-        if (maxMana <= 0 || manaRegenPerSecond <= 0f)
+        if (!HasResource)
+        {
+            currentResource = 0f;
+            NotifyResourceChanged();
+            return;
+        }
+
+        currentResource = maxResource;
+        NotifyResourceChanged();
+    }
+
+    public void GenerateAngerFromAutoAttack()
+    {
+        if (resourceType != PlayerResourceType.Anger || playerStats == null)
         {
             return;
         }
 
-        if (currentMana >= maxMana)
+        GenerateResource(playerStats.CombatTuning.AngerGeneratedByAutoAttack);
+    }
+
+    private void HandleDamaged(int amount, GameObject source)
+    {
+        if (resourceType != PlayerResourceType.Anger || playerStats == null)
         {
             return;
         }
 
-        currentMana += manaRegenPerSecond * Time.deltaTime;
-        currentMana = Mathf.Clamp(currentMana, 0f, maxMana);
+        GenerateResource(playerStats.CombatTuning.AngerGeneratedWhenTakingDamage);
+    }
 
+    private void UpdateResourceOverTime()
+    {
+        if (!HasResource)
+        {
+            return;
+        }
+
+        float oldValue = currentResource;
+
+        if (regenPerSecond > 0f)
+        {
+            currentResource += regenPerSecond * Time.deltaTime;
+        }
+
+        if (decayPerSecond > 0f)
+        {
+            currentResource -= decayPerSecond * Time.deltaTime;
+        }
+
+        currentResource = Mathf.Clamp(currentResource, 0f, maxResource);
+
+        if (!Mathf.Approximately(oldValue, currentResource))
+        {
+            NotifyResourceChanged();
+        }
+    }
+
+    private void NotifyResourceChanged()
+    {
+        OnResourceChanged?.Invoke();
         OnManaChanged?.Invoke();
     }
 }

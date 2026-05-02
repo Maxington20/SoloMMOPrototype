@@ -35,9 +35,14 @@ MonoBehaviour:
     hitChance: 0
   combatTuning:
     healthPerStamina: 12
-    baseMana: 0
-    manaPerIntellect: 0
-    manaRegenPerSecond: 0
+    resourceType: 3
+    baseResource: 100
+    resourcePerPrimaryStat: 0
+    resourceRegenPerSecond: 0
+    resourceDecayPerSecond: 2
+    startsFull: 0
+    angerGeneratedWhenTakingDamage: 8
+    angerGeneratedByAutoAttack: 5
     primaryStatDamageMultiplier: 1
     primaryStatHealingMultiplier: 0.6
     baseHitChance: 95

@@ -19,6 +19,7 @@ public class AbilityTooltipUI : MonoBehaviour
 
     private Canvas rootCanvas;
     private RectTransform rectTransform;
+    private PlayerResource playerResource;
 
     private void Awake()
     {
@@ -32,6 +33,7 @@ public class AbilityTooltipUI : MonoBehaviour
 
         rootCanvas = GetComponentInParent<Canvas>();
         rectTransform = GetComponent<RectTransform>();
+        playerResource = FindFirstObjectByType<PlayerResource>();
 
         Hide();
     }
@@ -100,7 +102,15 @@ public class AbilityTooltipUI : MonoBehaviour
             effectLine = AppendInline(effectLine, $"Heal: {ability.HealthRestoreAmount}");
         }
 
-        string costLine = $"Mana: {ability.ManaCost}";
+        string resourceName = GetResourceName();
+        string costLine = ability.ResourceCost > 0
+            ? $"{resourceName} Cost: {ability.ResourceCost}"
+            : $"{resourceName} Cost: 0";
+
+        string generateLine = ability.ResourceGenerated > 0
+            ? $"Generates: {ability.ResourceGenerated} {resourceName}"
+            : string.Empty;
+
         string cooldownLine = $"Cooldown: {ability.CooldownSeconds:0.#}s";
         string rangeLine = ability.RequiresTarget ? $"Range: {ability.Range:0.#}" : "Target: Self";
         string castLine = BuildCastLine(ability);
@@ -113,6 +123,12 @@ public class AbilityTooltipUI : MonoBehaviour
         }
 
         result = AppendLine(result, costLine);
+
+        if (!string.IsNullOrWhiteSpace(generateLine))
+        {
+            result = AppendLine(result, generateLine);
+        }
+
         result = AppendLine(result, cooldownLine);
         result = AppendLine(result, rangeLine);
         result = AppendLine(result, castLine);
@@ -138,6 +154,21 @@ public class AbilityTooltipUI : MonoBehaviour
             AbilityCastType.Channel => $"Channel: {ability.ChannelDurationSeconds:0.#}s",
             _ => "Instant"
         };
+    }
+
+    private string GetResourceName()
+    {
+        if (playerResource == null)
+        {
+            playerResource = FindFirstObjectByType<PlayerResource>();
+        }
+
+        if (playerResource == null || !playerResource.HasResource)
+        {
+            return "Resource";
+        }
+
+        return playerResource.ResourceDisplayName;
     }
 
     private string AppendInline(string currentText, string value)

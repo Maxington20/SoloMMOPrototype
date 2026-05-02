@@ -18,7 +18,8 @@ MonoBehaviour:
   requiresTarget: 1
   range: 2.5
   cooldownSeconds: 3
-  manaCost: 0
+  resourceCost: 0
+  resourceGenerated: 10
   castType: 0
   castTimeSeconds: 0
   channelDurationSeconds: 0

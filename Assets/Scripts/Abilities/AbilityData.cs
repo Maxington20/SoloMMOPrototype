@@ -15,7 +15,10 @@ public class AbilityData : ScriptableObject
     [SerializeField] private bool requiresTarget = true;
     [SerializeField] private float range = 2.5f;
     [SerializeField] private float cooldownSeconds = 2f;
-    [SerializeField] private int manaCost = 0;
+
+    [Header("Resource")]
+    [SerializeField] private int resourceCost = 0;
+    [SerializeField] private int resourceGenerated = 0;
 
     [Header("Cast Rules")]
     [SerializeField] private AbilityCastType castType = AbilityCastType.Instant;
@@ -35,9 +38,15 @@ public class AbilityData : ScriptableObject
     public bool RequiresTarget => requiresTarget;
     public float Range => Mathf.Max(0f, range);
     public float CooldownSeconds => Mathf.Max(0f, cooldownSeconds);
-    public int ManaCost => Mathf.Max(0, manaCost);
+
+    public int ResourceCost => Mathf.Max(0, resourceCost);
+    public int ResourceGenerated => Mathf.Max(0, resourceGenerated);
+
+    // Backward-compatible alias so older UI references do not break.
+    public int ManaCost => ResourceCost;
 
     public AbilityCastType CastType => castType;
+
     public float CastTimeSeconds => castType == AbilityCastType.CastTime
         ? Mathf.Max(0f, castTimeSeconds)
         : 0f;

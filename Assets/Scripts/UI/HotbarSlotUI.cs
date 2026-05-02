@@ -4,7 +4,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+public class HotbarSlotUI : MonoBehaviour,
+    IPointerClickHandler,
+    IDropHandler,
+    IPointerEnterHandler,
+    IPointerExitHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private Image rarityBorderImage;
@@ -74,8 +78,11 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler, I
             cooldownText.text = string.Empty;
         }
     }
+
     public void RefreshItem(ItemData item, int quantity)
     {
+        currentAbility = null;
+
         if (keybindText != null)
         {
             keybindText.text = (slotIndex + 1).ToString();
@@ -171,8 +178,8 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler, I
 
         if (quantityText != null)
         {
-            quantityText.text = ability != null && ability.ManaCost > 0
-                ? ability.ManaCost.ToString()
+            quantityText.text = ability != null && ability.ResourceCost > 0
+                ? ability.ResourceCost.ToString()
                 : string.Empty;
         }
 
@@ -203,6 +210,19 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler, I
         onDropAction?.Invoke(slotIndex, eventData);
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentAbility != null)
+        {
+            AbilityTooltipUI.Instance?.Show(currentAbility);
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        AbilityTooltipUI.Instance?.Hide();
+    }
+
     private void DisableChildRaycasts()
     {
         if (iconImage != null) iconImage.raycastTarget = false;
@@ -220,18 +240,5 @@ public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler, IDropHandler, I
                 graphics[i].raycastTarget = false;
             }
         }
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (currentAbility != null)
-        {
-            AbilityTooltipUI.Instance?.Show(currentAbility);
-        }
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        AbilityTooltipUI.Instance?.Hide();
     }
 }

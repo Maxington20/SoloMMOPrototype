@@ -9,10 +9,17 @@ public class ClassCombatTuning
     [Header("Health")]
     [SerializeField] private int healthPerStamina = 10;
 
-    [Header("Mana")]
-    [SerializeField] private int baseMana = 0;
-    [SerializeField] private int manaPerIntellect = 0;
-    [SerializeField] private float manaRegenPerSecond = 0f;
+    [Header("Class Resource")]
+    [SerializeField] private PlayerResourceType resourceType = PlayerResourceType.None;
+    [SerializeField] private int baseResource = 0;
+    [SerializeField] private int resourcePerPrimaryStat = 0;
+    [SerializeField] private float resourceRegenPerSecond = 0f;
+    [SerializeField] private float resourceDecayPerSecond = 0f;
+    [SerializeField] private bool startsFull = true;
+
+    [Header("Anger Generation")]
+    [SerializeField] private int angerGeneratedWhenTakingDamage = 8;
+    [SerializeField] private int angerGeneratedByAutoAttack = 5;
 
     [Header("Damage / Healing")]
     [SerializeField] private float primaryStatDamageMultiplier = 1f;
@@ -31,9 +38,15 @@ public class ClassCombatTuning
 
     public int HealthPerStamina => Mathf.Max(1, healthPerStamina);
 
-    public int BaseMana => Mathf.Max(0, baseMana);
-    public int ManaPerIntellect => Mathf.Max(0, manaPerIntellect);
-    public float ManaRegenPerSecond => Mathf.Max(0f, manaRegenPerSecond);
+    public PlayerResourceType ResourceType => resourceType;
+    public int BaseResource => Mathf.Max(0, baseResource);
+    public int ResourcePerPrimaryStat => Mathf.Max(0, resourcePerPrimaryStat);
+    public float ResourceRegenPerSecond => Mathf.Max(0f, resourceRegenPerSecond);
+    public float ResourceDecayPerSecond => Mathf.Max(0f, resourceDecayPerSecond);
+    public bool StartsFull => startsFull;
+
+    public int AngerGeneratedWhenTakingDamage => Mathf.Max(0, angerGeneratedWhenTakingDamage);
+    public int AngerGeneratedByAutoAttack => Mathf.Max(0, angerGeneratedByAutoAttack);
 
     public float PrimaryStatDamageMultiplier => Mathf.Max(0f, primaryStatDamageMultiplier);
     public float PrimaryStatHealingMultiplier => Mathf.Max(0f, primaryStatHealingMultiplier);
