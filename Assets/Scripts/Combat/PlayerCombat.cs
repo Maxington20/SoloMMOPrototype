@@ -54,14 +54,17 @@ public class PlayerCombat : MonoBehaviour
         Debug.Log($"Player damage updated to {Damage}");
     }
 
-    public int GetScaledAbilityDamage(int baseAbilityDamage)
+    public int CalculateAbilityDamage(AbilityData ability)
     {
-        if (playerStats == null)
+        if (ability == null || !ability.DealsDamage)
         {
-            return Mathf.Max(0, baseAbilityDamage);
+            return 0;
         }
 
-        return playerStats.ApplyPrimaryStatDamageScaling(baseAbilityDamage);
+        int scaledAttackDamage = CalculateAutoAttackDamage();
+        int finalDamage = Mathf.RoundToInt(scaledAttackDamage * ability.DamageMultiplier);
+
+        return Mathf.Max(1, finalDamage);
     }
 
     public bool CanUseAbilityOnCurrentTarget(string abilityName, float range, bool postMessages)
@@ -102,30 +105,40 @@ public class PlayerCombat : MonoBehaviour
         return true;
     }
 
-    public bool TryUseAbilityOnCurrentTarget(string abilityName, int amount, float range)
+    public bool TryUseAbilityOnCurrentTarget(AbilityData ability)
     {
-        if (!CanUseAbilityOnCurrentTarget(abilityName, range, true))
+        if (ability == null)
+        {
+            return false;
+        }
+
+        if (!CanUseAbilityOnCurrentTarget(ability.DisplayName, ability.Range, true))
         {
             return false;
         }
 
         FaceTarget(currentTarget.transform);
 
-        int finalDamage = GetScaledAbilityDamage(amount);
+        bool didSomething = false;
 
-        currentTarget.TakeDamage(finalDamage, gameObject);
+        if (ability.DealsDamage)
+        {
+            int finalDamage = CalculateAbilityDamage(ability);
+            currentTarget.TakeDamage(finalDamage, gameObject);
+
+            string targetName = GetTargetDisplayName(currentTarget.gameObject);
+            Debug.Log($"Player uses {ability.DisplayName} on {targetName} for {finalDamage}");
+            PostSystem($"You use {ability.DisplayName} on {targetName} for {finalDamage} damage.");
+
+            didSomething = true;
+        }
 
         if (currentEnemyTarget != null)
         {
             currentEnemyTarget.SetTarget(transform);
         }
 
-        string targetName = GetTargetDisplayName(currentTarget.gameObject);
-
-        Debug.Log($"Player uses {abilityName} on {targetName} for {finalDamage}");
-        PostSystem($"You use {abilityName} on {targetName} for {finalDamage} damage.");
-
-        return true;
+        return didSomething;
     }
 
     private void HandleTargetSelection()

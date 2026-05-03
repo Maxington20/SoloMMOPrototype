@@ -81,6 +81,33 @@ public class PlayerAbilityController : MonoBehaviour
         return GetRemainingCooldown(ability) > 0f;
     }
 
+    public int CalculateAbilityHealing(AbilityData ability)
+    {
+        if (ability == null || !ability.RestoresHealth)
+        {
+            return 0;
+        }
+
+        int primaryStatValue = playerStats != null ? playerStats.PrimaryStatValue : 0;
+
+        float healingPower = playerStats != null
+            ? primaryStatValue * playerStats.CombatTuning.PrimaryStatHealingMultiplier
+            : primaryStatValue;
+
+        int finalHealing = Mathf.RoundToInt(healingPower * ability.HealingMultiplier);
+
+        return Mathf.Max(1, finalHealing);
+    }
+
+    public float GetBaseHealingPower()
+    {
+        int primaryStatValue = playerStats != null ? playerStats.PrimaryStatValue : 0;
+
+        return playerStats != null
+            ? primaryStatValue * playerStats.CombatTuning.PrimaryStatHealingMultiplier
+            : primaryStatValue;
+    }
+
     public bool TryUseAbility(AbilityData ability)
     {
         if (ability == null)
@@ -242,15 +269,11 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        bool used;
+        bool used = false;
 
         if (ability.RequiresTarget)
         {
-            used = playerCombat != null &&
-                   playerCombat.TryUseAbilityOnCurrentTarget(
-                       ability.DisplayName,
-                       ability.DamageAmount,
-                       ability.Range);
+            used = playerCombat != null && playerCombat.TryUseAbilityOnCurrentTarget(ability);
         }
         else
         {
@@ -271,7 +294,7 @@ public class PlayerAbilityController : MonoBehaviour
 
     private bool CanApplySelfAbility(AbilityData ability, bool postMessages)
     {
-        if (ability.HealthRestoreAmount <= 0)
+        if (!ability.RestoresHealth)
         {
             return true;
         }
@@ -308,18 +331,15 @@ public class PlayerAbilityController : MonoBehaviour
     {
         bool didSomething = false;
 
-        if (ability.HealthRestoreAmount > 0)
+        if (ability.RestoresHealth)
         {
             if (!CanApplySelfAbility(ability, true))
             {
                 return false;
             }
 
-            int finalHealingAmount = playerStats != null
-                ? playerStats.ApplyPrimaryStatHealingScaling(ability.HealthRestoreAmount)
-                : ability.HealthRestoreAmount;
-
-            int restored = playerHealth.RestoreHealth(finalHealingAmount);
+            int restoredAmount = CalculateAbilityHealing(ability);
+            int restored = playerHealth.RestoreHealth(restoredAmount);
 
             if (restored > 0)
             {

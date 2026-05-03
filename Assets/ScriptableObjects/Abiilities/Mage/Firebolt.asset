@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Firebolt
   m_EditorClassIdentifier: Assembly-CSharp::AbilityData
   displayName: Firebolt
-  description: 
+  description: Shoot a bolt of fire at a targeted enemy.
   icon: {fileID: 21300000, guid: d2f7f2bcaae873d4fb3eec74d30810d6, type: 3}
   requiresTarget: 1
   range: 8
@@ -25,5 +25,7 @@ MonoBehaviour:
   channelDurationSeconds: 0
   canMoveWhileCasting: 0
   canBeInterrupted: 1
-  damageAmount: 28
-  healthRestoreAmount: 0
+  dealsDamage: 1
+  damageMultiplier: 1.6
+  restoresHealth: 0
+  healingMultiplier: 1

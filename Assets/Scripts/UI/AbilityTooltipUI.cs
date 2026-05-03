@@ -20,6 +20,8 @@ public class AbilityTooltipUI : MonoBehaviour
     private Canvas rootCanvas;
     private RectTransform rectTransform;
     private PlayerResource playerResource;
+    private PlayerCombat playerCombat;
+    private PlayerAbilityController abilityController;
 
     private void Awake()
     {
@@ -33,7 +35,10 @@ public class AbilityTooltipUI : MonoBehaviour
 
         rootCanvas = GetComponentInParent<Canvas>();
         rectTransform = GetComponent<RectTransform>();
+
         playerResource = FindFirstObjectByType<PlayerResource>();
+        playerCombat = FindFirstObjectByType<PlayerCombat>();
+        abilityController = FindFirstObjectByType<PlayerAbilityController>();
 
         Hide();
     }
@@ -90,48 +95,30 @@ public class AbilityTooltipUI : MonoBehaviour
 
     private string BuildDetailsText(AbilityData ability)
     {
-        string effectLine = string.Empty;
+        string result = string.Empty;
 
-        if (ability.DamageAmount > 0)
+        string effectText = BuildEffectText(ability);
+        if (!string.IsNullOrWhiteSpace(effectText))
         {
-            effectLine = AppendInline(effectLine, $"Damage: {ability.DamageAmount}");
-        }
-
-        if (ability.HealthRestoreAmount > 0)
-        {
-            effectLine = AppendInline(effectLine, $"Heal: {ability.HealthRestoreAmount}");
+            result = AppendLine(result, effectText);
         }
 
         string resourceName = GetResourceName();
+
         string costLine = ability.ResourceCost > 0
             ? $"{resourceName} Cost: {ability.ResourceCost}"
             : $"{resourceName} Cost: 0";
 
-        string generateLine = ability.ResourceGenerated > 0
-            ? $"Generates: {ability.ResourceGenerated} {resourceName}"
-            : string.Empty;
-
-        string cooldownLine = $"Cooldown: {ability.CooldownSeconds:0.#}s";
-        string rangeLine = ability.RequiresTarget ? $"Range: {ability.Range:0.#}" : "Target: Self";
-        string castLine = BuildCastLine(ability);
-
-        string result = string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(effectLine))
-        {
-            result = AppendLine(result, effectLine);
-        }
-
         result = AppendLine(result, costLine);
 
-        if (!string.IsNullOrWhiteSpace(generateLine))
+        if (ability.ResourceGenerated > 0)
         {
-            result = AppendLine(result, generateLine);
+            result = AppendLine(result, $"Generates: {ability.ResourceGenerated} {resourceName}");
         }
 
-        result = AppendLine(result, cooldownLine);
-        result = AppendLine(result, rangeLine);
-        result = AppendLine(result, castLine);
+        result = AppendLine(result, $"Cooldown: {ability.CooldownSeconds:0.#}s");
+        result = AppendLine(result, ability.RequiresTarget ? $"Range: {ability.Range:0.#}" : "Target: Self");
+        result = AppendLine(result, BuildCastLine(ability));
 
         if (ability.CanBeInterrupted && !ability.IsInstant)
         {
@@ -144,6 +131,93 @@ public class AbilityTooltipUI : MonoBehaviour
         }
 
         return result;
+    }
+
+    private string BuildEffectText(AbilityData ability)
+    {
+        string result = string.Empty;
+
+        if (ability.DealsDamage)
+        {
+            int actualDamage = GetCurrentAbilityDamage(ability);
+            int baseDamage = GetCurrentBaseDamage();
+
+            result = AppendLine(
+                result,
+                $"Damage: {actualDamage}  <size=85%><color=#BDBDBD>({baseDamage} × {ability.DamageMultiplier:0.##})</color></size>");
+        }
+
+        if (ability.RestoresHealth)
+        {
+            int actualHealing = GetCurrentAbilityHealing(ability);
+            float baseHealingPower = GetCurrentBaseHealingPower();
+
+            result = AppendLine(
+                result,
+                $"Healing: {actualHealing}  <size=85%><color=#BDBDBD>({baseHealingPower:0.#} × {ability.HealingMultiplier:0.##})</color></size>");
+        }
+
+        return result;
+    }
+
+    private int GetCurrentAbilityDamage(AbilityData ability)
+    {
+        if (playerCombat == null)
+        {
+            playerCombat = FindFirstObjectByType<PlayerCombat>();
+        }
+
+        if (playerCombat == null)
+        {
+            return 0;
+        }
+
+        return playerCombat.CalculateAbilityDamage(ability);
+    }
+
+    private int GetCurrentBaseDamage()
+    {
+        if (playerCombat == null)
+        {
+            playerCombat = FindFirstObjectByType<PlayerCombat>();
+        }
+
+        if (playerCombat == null)
+        {
+            return 0;
+        }
+
+        return playerCombat.Damage;
+    }
+
+    private int GetCurrentAbilityHealing(AbilityData ability)
+    {
+        if (abilityController == null)
+        {
+            abilityController = FindFirstObjectByType<PlayerAbilityController>();
+        }
+
+        if (abilityController == null)
+        {
+            return 0;
+        }
+
+        return abilityController.CalculateAbilityHealing(ability);
+    }
+
+    private float GetCurrentBaseHealingPower()
+    {
+        if (abilityController == null)
+        {
+            abilityController = FindFirstObjectByType<PlayerAbilityController>();
+        }
+
+        if (abilityController == null)
+        {
+            return 0f;
+        }
+
+        return abilityController.GetBaseHealingPower();
     }
 
     private string BuildCastLine(AbilityData ability)
@@ -169,16 +243,6 @@ public class AbilityTooltipUI : MonoBehaviour
         }
 
         return playerResource.ResourceDisplayName;
-    }
-
-    private string AppendInline(string currentText, string value)
-    {
-        if (string.IsNullOrWhiteSpace(currentText))
-        {
-            return value;
-        }
-
-        return currentText + " | " + value;
     }
 
     private string AppendLine(string currentText, string line)

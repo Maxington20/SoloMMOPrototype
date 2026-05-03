@@ -26,5 +26,7 @@ MonoBehaviour:
   channelDurationSeconds: 0
   canMoveWhileCasting: 0
   canBeInterrupted: 0
-  damageAmount: 18
-  healthRestoreAmount: 0
+  dealsDamage: 1
+  damageMultiplier: 1.3
+  restoresHealth: 0
+  healingMultiplier: 0

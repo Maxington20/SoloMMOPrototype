@@ -27,9 +27,11 @@ public class AbilityData : ScriptableObject
     [SerializeField] private bool canMoveWhileCasting = false;
     [SerializeField] private bool canBeInterrupted = true;
 
-    [Header("Effects")]
-    [SerializeField] private int damageAmount = 0;
-    [SerializeField] private int healthRestoreAmount = 0;
+    [Header("Scaled Effects")]
+    [SerializeField] private bool dealsDamage = false;
+    [SerializeField] private float damageMultiplier = 1f;
+    [SerializeField] private bool restoresHealth = false;
+    [SerializeField] private float healingMultiplier = 1f;
 
     public string DisplayName => displayName;
     public string Description => description;
@@ -42,7 +44,6 @@ public class AbilityData : ScriptableObject
     public int ResourceCost => Mathf.Max(0, resourceCost);
     public int ResourceGenerated => Mathf.Max(0, resourceGenerated);
 
-    // Backward-compatible alias so older UI references do not break.
     public int ManaCost => ResourceCost;
 
     public AbilityCastType CastType => castType;
@@ -58,8 +59,11 @@ public class AbilityData : ScriptableObject
     public bool CanMoveWhileCasting => canMoveWhileCasting;
     public bool CanBeInterrupted => canBeInterrupted;
 
-    public int DamageAmount => Mathf.Max(0, damageAmount);
-    public int HealthRestoreAmount => Mathf.Max(0, healthRestoreAmount);
+    public bool DealsDamage => dealsDamage;
+    public float DamageMultiplier => Mathf.Max(0f, damageMultiplier);
+
+    public bool RestoresHealth => restoresHealth;
+    public float HealingMultiplier => Mathf.Max(0f, healingMultiplier);
 
     public bool IsInstant => castType == AbilityCastType.Instant;
     public bool HasCastTime => castType == AbilityCastType.CastTime && CastTimeSeconds > 0f;
