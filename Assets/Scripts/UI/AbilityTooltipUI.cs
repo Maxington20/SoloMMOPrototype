@@ -103,7 +103,16 @@ public class AbilityTooltipUI : MonoBehaviour
             result = AppendLine(result, effectText);
         }
 
+        string statusText = BuildStatusEffectsText(ability);
+        if (!string.IsNullOrWhiteSpace(statusText))
+        {
+            result = AppendLine(result, string.Empty);
+            result = AppendLine(result, statusText);
+        }
+
         string resourceName = GetResourceName();
+
+        result = AppendLine(result, string.Empty);
 
         string costLine = ability.ResourceCost > 0
             ? $"{resourceName} Cost: {ability.ResourceCost}"
@@ -158,6 +167,48 @@ public class AbilityTooltipUI : MonoBehaviour
         }
 
         return result;
+    }
+
+    private string BuildStatusEffectsText(AbilityData ability)
+    {
+        if (ability.StatusEffects == null || ability.StatusEffects.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        string result = "<color=#FFD966>Status Effects</color>";
+
+        for (int i = 0; i < ability.StatusEffects.Length; i++)
+        {
+            StatusEffectData effect = ability.StatusEffects[i];
+
+            if (effect == null)
+            {
+                continue;
+            }
+
+            result = AppendLine(result, BuildSingleStatusEffectLine(effect));
+        }
+
+        return result;
+    }
+
+    private string BuildSingleStatusEffectLine(StatusEffectData effect)
+    {
+        return effect.EffectType switch
+        {
+            StatusEffectType.DamageOverTime =>
+                $"{effect.DisplayName}: deals {effect.TickDamageMultiplier * 100f:0.#}% ability damage every {effect.TickIntervalSeconds:0.#}s for {effect.DurationSeconds:0.#}s",
+
+            StatusEffectType.Stun =>
+                $"{effect.DisplayName}: prevents movement and attacks for {effect.DurationSeconds:0.#}s",
+
+            StatusEffectType.Slow =>
+                $"{effect.DisplayName}: slows movement by {effect.SlowAmount * 100f:0.#}% for {effect.DurationSeconds:0.#}s",
+
+            _ =>
+                $"{effect.DisplayName}: lasts {effect.DurationSeconds:0.#}s"
+        };
     }
 
     private int GetCurrentAbilityDamage(AbilityData ability)
@@ -250,6 +301,11 @@ public class AbilityTooltipUI : MonoBehaviour
         if (string.IsNullOrWhiteSpace(currentText))
         {
             return line;
+        }
+
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return currentText + "\n";
         }
 
         return currentText + "\n" + line;
