@@ -29,3 +29,7 @@ MonoBehaviour:
   damageMultiplier: 1
   restoresHealth: 1
   healingMultiplier: 2.2
+  statusEffects: []
+  threatMultiplier: 0.4
+  bonusThreat: 0
+  isTaunt: 0

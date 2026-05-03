@@ -37,3 +37,6 @@ MonoBehaviour:
     tickIntervalSeconds: 0
     tickDamageMultiplier: 0
     slowAmount: 0.5
+  threatMultiplier: 1.1
+  bonusThreat: 0
+  isTaunt: 0

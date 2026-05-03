@@ -53,6 +53,8 @@ public class EnemyController : MonoBehaviour
     private bool hasWanderDestination;
     private float wanderIdleTimer;
 
+    private ThreatTable threatTable;
+
     private void Awake()
     {
         health = GetComponent<Health>();
@@ -62,6 +64,7 @@ public class EnemyController : MonoBehaviour
 
         homePosition = transform.position;
         homeRotation = transform.rotation;
+        threatTable = GetComponent<ThreatTable>();
     }
 
     private void OnEnable()
@@ -120,6 +123,15 @@ public class EnemyController : MonoBehaviour
 
         if (target != null)
         {
+            GameObject highestThreat = threatTable != null
+                ? threatTable.GetHighestThreatTarget()
+                : null;
+
+            if (highestThreat != null)
+            {
+                target = highestThreat.transform;
+            }
+
             float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
             if (distanceToTarget > leashRange)
@@ -156,19 +168,18 @@ public class EnemyController : MonoBehaviour
         hasWanderDestination = false;
     }
 
-    private void AcquireTargetIfNeeded()
+   private void AcquireTargetIfNeeded()
     {
-        if (target != null || player == null)
+        if (threatTable == null)
         {
             return;
         }
 
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-        if (distanceToPlayer <= aggroRange)
+        GameObject highestThreat = threatTable.GetHighestThreatTarget();
+
+        if (highestThreat != null)
         {
-            target = player;
-            isReturningHome = false;
-            hasWanderDestination = false;
+            target = highestThreat.transform;
         }
     }
 
@@ -359,6 +370,11 @@ public class EnemyController : MonoBehaviour
         isRespawning = true;
         respawnTimer = respawnDelay;
         hasWanderDestination = false;
+
+        if (threatTable != null)
+        {
+            threatTable.RemoveTarget(gameObject);
+        }
 
         if (hideBodyOnDeath)
         {

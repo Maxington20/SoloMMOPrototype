@@ -125,6 +125,7 @@ public class PlayerCombat : MonoBehaviour
         if (ability.DealsDamage)
         {
             currentTarget.TakeDamage(abilityDamage, gameObject);
+            ApplyThreat(currentTarget.gameObject, ability, abilityDamage);
 
             string targetName = GetTargetDisplayName(currentTarget.gameObject);
             Debug.Log($"Player uses {ability.DisplayName} on {targetName} for {abilityDamage}");
@@ -273,6 +274,7 @@ public class PlayerCombat : MonoBehaviour
 
         Debug.Log($"Player {attackType} {currentTarget.name} for {finalDamage}");
         currentTarget.TakeDamage(finalDamage, gameObject);
+        ApplyThreat(currentTarget.gameObject, null, finalDamage);
 
         if (playerResource != null)
         {
@@ -365,5 +367,30 @@ public class PlayerCombat : MonoBehaviour
         {
             ChatManager.Instance.PostSystem(message);
         }
+    }
+
+    private void ApplyThreat(GameObject targetObject, AbilityData ability, int damage)
+    {
+        ThreatTable threatTable = targetObject.GetComponent<ThreatTable>();
+        if (threatTable == null)
+        {
+            return;
+        }
+
+        float threat = damage;
+
+        if (ability != null)
+        {
+            threat *= ability.ThreatMultiplier;
+            threat += ability.BonusThreat;
+
+            if (ability.IsTaunt)
+            {
+                threatTable.SetHighestThreat(gameObject, 50f);
+                return;
+            }
+        }
+
+        threatTable.AddThreat(gameObject, threat);
     }
 }

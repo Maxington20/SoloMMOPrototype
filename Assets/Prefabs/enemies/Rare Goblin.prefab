@@ -99,6 +99,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 824103936319127935, guid: 4790d502dc7f55046b096a4b926dc122, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7338851252748290530}
+    - targetCorrespondingSourceObject: {fileID: 824103936319127935, guid: 4790d502dc7f55046b096a4b926dc122, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6640679794153462279}
   m_SourcePrefab: {fileID: 100100000, guid: 4790d502dc7f55046b096a4b926dc122, type: 3}
 --- !u!1 &5940798816252539582 stripped
 GameObject:
@@ -117,3 +120,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48feee26df8f2244d85d75e802ef5d9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatusEffectController
+--- !u!114 &-6640679794153462279
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5940798816252539582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb5e03baef1e75740ad661d6dab8c4bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThreatTable

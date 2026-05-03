@@ -36,6 +36,11 @@ public class AbilityData : ScriptableObject
     [Header("Status Effects")]
     [SerializeField] private StatusEffectData[] statusEffects = new StatusEffectData[0];
 
+    [Header("Threat")]
+    [SerializeField] private float threatMultiplier = 1f;
+    [SerializeField] private float bonusThreat = 0f;
+    [SerializeField] private bool isTaunt = false;
+
     public string DisplayName => displayName;
     public string Description => description;
     public Sprite Icon => icon;
@@ -73,4 +78,8 @@ public class AbilityData : ScriptableObject
     public bool IsInstant => castType == AbilityCastType.Instant;
     public bool HasCastTime => castType == AbilityCastType.CastTime && CastTimeSeconds > 0f;
     public bool IsChannel => castType == AbilityCastType.Channel && ChannelDurationSeconds > 0f;
+
+    public float ThreatMultiplier => Mathf.Max(0f, threatMultiplier);
+    public float BonusThreat => Mathf.Max(0f, bonusThreat);
+    public bool IsTaunt => isTaunt;
 }
