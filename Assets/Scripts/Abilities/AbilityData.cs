@@ -33,6 +33,9 @@ public class AbilityData : ScriptableObject
     [SerializeField] private bool restoresHealth = false;
     [SerializeField] private float healingMultiplier = 1f;
 
+    [Header("Status Effects")]
+    [SerializeField] private StatusEffectData[] statusEffects = new StatusEffectData[0];
+
     public string DisplayName => displayName;
     public string Description => description;
     public Sprite Icon => icon;
@@ -64,6 +67,8 @@ public class AbilityData : ScriptableObject
 
     public bool RestoresHealth => restoresHealth;
     public float HealingMultiplier => Mathf.Max(0f, healingMultiplier);
+
+    public StatusEffectData[] StatusEffects => statusEffects;
 
     public bool IsInstant => castType == AbilityCastType.Instant;
     public bool HasCastTime => castType == AbilityCastType.CastTime && CastTimeSeconds > 0f;

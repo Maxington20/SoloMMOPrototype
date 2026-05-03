@@ -57,6 +57,7 @@ GameObject:
   - component: {fileID: 4269588256471811823}
   - component: {fileID: 3575367152950135953}
   - component: {fileID: 1085462353989161724}
+  - component: {fileID: -5722161687637568360}
   m_Layer: 0
   m_Name: Wolf
   m_TagString: Untagged
@@ -241,6 +242,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisplayName
   displayName: Wolf
+  defaultColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &8634603557529143385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -269,6 +271,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyType: 0
+  difficultyTier: 0
   xpReward: 25
   baseMaxHealth: 45
   baseDamage: 5
@@ -282,6 +285,14 @@ MonoBehaviour:
     hitChance: 0
   combatTuning:
     healthPerStamina: 8
+    resourceType: 0
+    baseResource: 0
+    resourcePerPrimaryStat: 0
+    resourceRegenPerSecond: 0
+    resourceDecayPerSecond: 0
+    startsFull: 1
+    angerGeneratedWhenTakingDamage: 8
+    angerGeneratedByAutoAttack: 5
     primaryStatDamageMultiplier: 0.75
     primaryStatHealingMultiplier: 0
     baseHitChance: 92
@@ -339,6 +350,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f91d1d58b57f040874d2533c565389, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
+--- !u!114 &-5722161687637568360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895793233579756450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48feee26df8f2244d85d75e802ef5d9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StatusEffectController
 --- !u!1 &4193225523691303986
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,7 +437,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyNameplate
   target: {fileID: 4486358482448419676}
   nameText: {fileID: 5896742392501508530}
-  displayName: Wolf
   worldOffset: {x: 0, y: 2.2, z: 0}
   visualRoot: {fileID: 211039094620602653}
 --- !u!1 &5161745942860080936

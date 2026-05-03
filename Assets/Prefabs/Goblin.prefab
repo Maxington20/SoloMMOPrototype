@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 2998863200717848812}
   - component: {fileID: 5448741595172155239}
   - component: {fileID: 1554170247968502267}
+  - component: {fileID: 773233843724014913}
   m_Layer: 0
   m_Name: Goblin
   m_TagString: Untagged
@@ -204,6 +205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisplayName
   displayName: Goblin
+  defaultColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &732027118408212616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -232,6 +234,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyType: 1
+  difficultyTier: 0
   xpReward: 40
   baseMaxHealth: 65
   baseDamage: 7
@@ -245,6 +248,14 @@ MonoBehaviour:
     hitChance: 0
   combatTuning:
     healthPerStamina: 10
+    resourceType: 0
+    baseResource: 0
+    resourcePerPrimaryStat: 0
+    resourceRegenPerSecond: 0
+    resourceDecayPerSecond: 0
+    startsFull: 1
+    angerGeneratedWhenTakingDamage: 8
+    angerGeneratedByAutoAttack: 5
     primaryStatDamageMultiplier: 0.8
     primaryStatHealingMultiplier: 0
     baseHitChance: 94
@@ -307,6 +318,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f91d1d58b57f040874d2533c565389, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
+--- !u!114 &773233843724014913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48feee26df8f2244d85d75e802ef5d9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StatusEffectController
 --- !u!1 &1105335585389521241
 GameObject:
   m_ObjectHideFlags: 0
@@ -382,7 +405,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyNameplate
   target: {fileID: 6105053478087004263}
   nameText: {fileID: 3543171120414561885}
-  displayName: Goblin
   worldOffset: {x: 0, y: 2.2, z: 0}
   visualRoot: {fileID: 5160716579013327797}
 --- !u!1 &1529020723078456899

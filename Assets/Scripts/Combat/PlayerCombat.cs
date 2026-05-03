@@ -120,16 +120,21 @@ public class PlayerCombat : MonoBehaviour
         FaceTarget(currentTarget.transform);
 
         bool didSomething = false;
+        int abilityDamage = CalculateAbilityDamage(ability);
 
         if (ability.DealsDamage)
         {
-            int finalDamage = CalculateAbilityDamage(ability);
-            currentTarget.TakeDamage(finalDamage, gameObject);
+            currentTarget.TakeDamage(abilityDamage, gameObject);
 
             string targetName = GetTargetDisplayName(currentTarget.gameObject);
-            Debug.Log($"Player uses {ability.DisplayName} on {targetName} for {finalDamage}");
-            PostSystem($"You use {ability.DisplayName} on {targetName} for {finalDamage} damage.");
+            Debug.Log($"Player uses {ability.DisplayName} on {targetName} for {abilityDamage}");
+            PostSystem($"You use {ability.DisplayName} on {targetName} for {abilityDamage} damage.");
 
+            didSomething = true;
+        }
+
+        if (ApplyStatusEffectsToCurrentTarget(ability, abilityDamage))
+        {
             didSomething = true;
         }
 
@@ -139,6 +144,40 @@ public class PlayerCombat : MonoBehaviour
         }
 
         return didSomething;
+    }
+
+    private bool ApplyStatusEffectsToCurrentTarget(AbilityData ability, int abilityDamage)
+    {
+        if (ability == null || ability.StatusEffects == null || ability.StatusEffects.Length == 0)
+        {
+            return false;
+        }
+
+        StatusEffectController statusController = currentTarget.GetComponent<StatusEffectController>();
+
+        if (statusController == null)
+        {
+            return false;
+        }
+
+        int sourceDamageForEffects = abilityDamage > 0 ? abilityDamage : CalculateAutoAttackDamage();
+
+        bool appliedAny = false;
+
+        for (int i = 0; i < ability.StatusEffects.Length; i++)
+        {
+            StatusEffectData effect = ability.StatusEffects[i];
+
+            if (effect == null)
+            {
+                continue;
+            }
+
+            statusController.ApplyEffect(effect, gameObject, sourceDamageForEffects);
+            appliedAny = true;
+        }
+
+        return appliedAny;
     }
 
     private void HandleTargetSelection()

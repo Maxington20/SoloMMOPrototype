@@ -29,3 +29,11 @@ MonoBehaviour:
   damageMultiplier: 1.9
   restoresHealth: 0
   healingMultiplier: 1
+  statusEffects:
+  - effectType: 2
+    displayName: Chilled
+    icon: {fileID: 21300000, guid: 167ed73d21476194da36e3c5ae2b0fca, type: 3}
+    durationSeconds: 2
+    tickIntervalSeconds: 0
+    tickDamageMultiplier: 0
+    slowAmount: 0.5

@@ -87,5 +87,25 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 895793233579756450, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2567553419871172314}
   m_SourcePrefab: {fileID: 100100000, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
+--- !u!1 &1398474835708539876 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 895793233579756450, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
+  m_PrefabInstance: {fileID: 2235507555428382790}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2567553419871172314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1398474835708539876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48feee26df8f2244d85d75e802ef5d9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StatusEffectController

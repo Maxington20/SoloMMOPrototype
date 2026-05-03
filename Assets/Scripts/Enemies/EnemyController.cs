@@ -40,6 +40,7 @@ public class EnemyController : MonoBehaviour
     private Health health;
     private CharacterController characterController;
     private EnemyStats enemyStats;
+    private StatusEffectController statusEffectController;
 
     private Vector3 homePosition;
     private Quaternion homeRotation;
@@ -57,6 +58,7 @@ public class EnemyController : MonoBehaviour
         health = GetComponent<Health>();
         characterController = GetComponent<CharacterController>();
         enemyStats = GetComponent<EnemyStats>();
+        statusEffectController = GetComponent<StatusEffectController>();
 
         homePosition = transform.position;
         homeRotation = transform.rotation;
@@ -102,6 +104,11 @@ public class EnemyController : MonoBehaviour
         }
 
         HandleGravity();
+
+        if (IsStunned())
+        {
+            return;
+        }
 
         if (isReturningHome)
         {
@@ -238,7 +245,11 @@ public class EnemyController : MonoBehaviour
 
         direction.Normalize();
 
-        Vector3 movement = direction * moveSpeed;
+        float movementMultiplier = statusEffectController != null
+            ? statusEffectController.MovementSpeedMultiplier
+            : 1f;
+
+        Vector3 movement = direction * moveSpeed * movementMultiplier;
         characterController.Move(movement * Time.deltaTime);
 
         FaceDirection(direction);
@@ -268,6 +279,11 @@ public class EnemyController : MonoBehaviour
 
     private void TryAttack()
     {
+        if (IsStunned())
+        {
+            return;
+        }
+
         if (Time.time - lastAttackTime < attackCooldown)
         {
             return;
@@ -285,6 +301,11 @@ public class EnemyController : MonoBehaviour
             Debug.Log($"{gameObject.name} attacks {target.name} for {finalDamage}");
             targetHealth.TakeDamage(finalDamage, gameObject);
         }
+    }
+
+    private bool IsStunned()
+    {
+        return statusEffectController != null && statusEffectController.IsStunned;
     }
 
     private void HandleGravity()

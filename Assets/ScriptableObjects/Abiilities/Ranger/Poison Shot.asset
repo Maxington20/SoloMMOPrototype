@@ -29,3 +29,11 @@ MonoBehaviour:
   damageMultiplier: 1.4
   restoresHealth: 0
   healingMultiplier: 1
+  statusEffects:
+  - effectType: 0
+    displayName: Poison
+    icon: {fileID: 21300000, guid: 7cda02d79223fcf4c8df6149519d77b3, type: 3}
+    durationSeconds: 4
+    tickIntervalSeconds: 1
+    tickDamageMultiplier: 0.25
+    slowAmount: 0
