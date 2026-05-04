@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 1554170247968502267}
   - component: {fileID: 773233843724014913}
   - component: {fileID: 4236334684162656714}
+  - component: {fileID: -8259962012400392994}
   m_Layer: 0
   m_Name: Goblin
   m_TagString: Untagged
@@ -343,6 +344,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb5e03baef1e75740ad661d6dab8c4bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThreatTable
+--- !u!114 &-8259962012400392994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6a7c82557ad8ae46ac03a201aabc3fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAbilityController
+  abilities:
+  - {fileID: 11400000, guid: 0ed1e79ee86cd424b8d21f325c709937, type: 2}
+  - {fileID: 11400000, guid: 3e683677770cb534eb1ff51d3ab82f8e, type: 2}
 --- !u!1 &1105335585389521241
 GameObject:
   m_ObjectHideFlags: 0

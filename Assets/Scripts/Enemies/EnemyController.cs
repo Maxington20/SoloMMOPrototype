@@ -55,6 +55,8 @@ public class EnemyController : MonoBehaviour
 
     private ThreatTable threatTable;
 
+    private EnemyAbilityController abilityController;
+
     private void Awake()
     {
         health = GetComponent<Health>();
@@ -65,6 +67,7 @@ public class EnemyController : MonoBehaviour
         homePosition = transform.position;
         homeRotation = transform.rotation;
         threatTable = GetComponent<ThreatTable>();
+        abilityController = GetComponent<EnemyAbilityController>();
     }
 
     private void OnEnable()
@@ -295,6 +298,22 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
+        if (target == null)
+        {
+            return;
+        }
+
+        // Try ability first
+        if (abilityController != null)
+        {
+            bool usedAbility = abilityController.TryUseAbility(target);
+            if (usedAbility)
+            {
+                return;
+            }
+        }
+
+        // fallback auto attack
         if (Time.time - lastAttackTime < attackCooldown)
         {
             return;
@@ -303,13 +322,13 @@ public class EnemyController : MonoBehaviour
         lastAttackTime = Time.time;
 
         Health targetHealth = target.GetComponent<Health>();
+
         if (targetHealth != null && !targetHealth.IsDead)
         {
             int finalDamage = enemyStats != null
                 ? enemyStats.GetScaledDamage()
                 : damage;
 
-            Debug.Log($"{gameObject.name} attacks {target.name} for {finalDamage}");
             targetHealth.TakeDamage(finalDamage, gameObject);
         }
     }

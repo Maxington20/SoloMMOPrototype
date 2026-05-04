@@ -59,6 +59,7 @@ GameObject:
   - component: {fileID: 1085462353989161724}
   - component: {fileID: -5722161687637568360}
   - component: {fileID: -396876268204103541}
+  - component: {fileID: 7488256861975007940}
   m_Layer: 0
   m_Name: Wolf
   m_TagString: Untagged
@@ -375,6 +376,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb5e03baef1e75740ad661d6dab8c4bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThreatTable
+--- !u!114 &7488256861975007940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895793233579756450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6a7c82557ad8ae46ac03a201aabc3fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAbilityController
+  abilities:
+  - {fileID: 11400000, guid: 89dd47b93ae4d994a8fe7a58d76a6a40, type: 2}
 --- !u!1 &4193225523691303986
 GameObject:
   m_ObjectHideFlags: 0

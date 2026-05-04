@@ -94,6 +94,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 895793233579756450, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4266385072926985397}
+    - targetCorrespondingSourceObject: {fileID: 895793233579756450, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8164832944834349364}
   m_SourcePrefab: {fileID: 100100000, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
 --- !u!1 &1398474835708539876 stripped
 GameObject:
@@ -124,3 +127,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb5e03baef1e75740ad661d6dab8c4bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThreatTable
+--- !u!114 &-8164832944834349364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1398474835708539876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6a7c82557ad8ae46ac03a201aabc3fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAbilityController
+  abilities: []

@@ -1,8 +1,9 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class StatusEffectIconUI : MonoBehaviour
+public class StatusEffectIconUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private Image cooldownFillImage;
@@ -30,5 +31,20 @@ public class StatusEffectIconUI : MonoBehaviour
         {
             timerText.text = Mathf.CeilToInt(info.RemainingTime).ToString();
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentInfo.Data == null)
+        {
+            return;
+        }
+
+        StatusEffectTooltipUI.Instance?.Show(currentInfo);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        StatusEffectTooltipUI.Instance?.Hide();
     }
 }
