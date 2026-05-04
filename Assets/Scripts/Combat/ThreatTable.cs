@@ -48,12 +48,20 @@ public class ThreatTable : MonoBehaviour
         float highest = -1f;
         GameObject target = null;
 
-        for (int i = 0; i < entries.Count; i++)
+        for (int i = entries.Count - 1; i >= 0; i--)
         {
             ThreatEntry entry = entries[i];
 
             if (entry.Source == null)
             {
+                entries.RemoveAt(i);
+                continue;
+            }
+
+            Health health = entry.Source.GetComponent<Health>();
+            if (health != null && health.IsDead)
+            {
+                entries.RemoveAt(i);
                 continue;
             }
 
@@ -70,6 +78,11 @@ public class ThreatTable : MonoBehaviour
     public void RemoveTarget(GameObject source)
     {
         entries.RemoveAll(e => e.Source == source);
+    }
+
+    public void ClearAll()
+    {
+        entries.Clear();
     }
 
     private ThreatEntry GetEntry(GameObject source)

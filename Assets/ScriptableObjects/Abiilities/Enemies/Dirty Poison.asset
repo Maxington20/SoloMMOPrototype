@@ -20,8 +20,8 @@ MonoBehaviour:
   cooldownSeconds: 2
   resourceCost: 0
   resourceGenerated: 0
-  castType: 0
-  castTimeSeconds: 0
+  castType: 1
+  castTimeSeconds: 1.5
   channelDurationSeconds: 0
   canMoveWhileCasting: 0
   canBeInterrupted: 1

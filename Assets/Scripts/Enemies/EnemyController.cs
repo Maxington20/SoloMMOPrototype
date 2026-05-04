@@ -4,6 +4,8 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(EnemyData))]
 [RequireComponent(typeof(EnemyStats))]
+[RequireComponent(typeof(StatusEffectController))]
+[RequireComponent(typeof(ThreatTable))]
 public class EnemyController : MonoBehaviour
 {
     [SerializeField] private float aggroRange = 8f;
@@ -41,6 +43,8 @@ public class EnemyController : MonoBehaviour
     private CharacterController characterController;
     private EnemyStats enemyStats;
     private StatusEffectController statusEffectController;
+    private EnemyAbilityController abilityController;
+    private ThreatTable threatTable;
 
     private Vector3 homePosition;
     private Quaternion homeRotation;
@@ -53,21 +57,17 @@ public class EnemyController : MonoBehaviour
     private bool hasWanderDestination;
     private float wanderIdleTimer;
 
-    private ThreatTable threatTable;
-
-    private EnemyAbilityController abilityController;
-
     private void Awake()
     {
         health = GetComponent<Health>();
         characterController = GetComponent<CharacterController>();
         enemyStats = GetComponent<EnemyStats>();
         statusEffectController = GetComponent<StatusEffectController>();
+        abilityController = GetComponent<EnemyAbilityController>();
+        threatTable = GetComponent<ThreatTable>();
 
         homePosition = transform.position;
         homeRotation = transform.rotation;
-        threatTable = GetComponent<ThreatTable>();
-        abilityController = GetComponent<EnemyAbilityController>();
     }
 
     private void OnEnable()
@@ -113,6 +113,12 @@ public class EnemyController : MonoBehaviour
 
         if (IsStunned())
         {
+            return;
+        }
+
+        if (abilityController != null && abilityController.IsCasting)
+        {
+            FaceCurrentTarget();
             return;
         }
 
@@ -169,20 +175,42 @@ public class EnemyController : MonoBehaviour
         target = newTarget;
         isReturningHome = false;
         hasWanderDestination = false;
+
+        if (threatTable != null && newTarget != null)
+        {
+            threatTable.AddThreat(newTarget.gameObject, 1f);
+        }
     }
 
-   private void AcquireTargetIfNeeded()
+    private void AcquireTargetIfNeeded()
     {
-        if (threatTable == null)
+        if (threatTable != null)
+        {
+            GameObject highestThreat = threatTable.GetHighestThreatTarget();
+
+            if (highestThreat != null)
+            {
+                target = highestThreat.transform;
+                return;
+            }
+        }
+
+        if (target != null || player == null)
         {
             return;
         }
 
-        GameObject highestThreat = threatTable.GetHighestThreatTarget();
-
-        if (highestThreat != null)
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        if (distanceToPlayer <= aggroRange)
         {
-            target = highestThreat.transform;
+            target = player;
+            isReturningHome = false;
+            hasWanderDestination = false;
+
+            if (threatTable != null)
+            {
+                threatTable.AddThreat(player.gameObject, 1f);
+            }
         }
     }
 
@@ -269,6 +297,16 @@ public class EnemyController : MonoBehaviour
         FaceDirection(direction);
     }
 
+    private void FaceCurrentTarget()
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        FacePosition(target.position);
+    }
+
     private void FacePosition(Vector3 destination)
     {
         Vector3 direction = destination - transform.position;
@@ -303,7 +341,6 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
-        // Try ability first
         if (abilityController != null)
         {
             bool usedAbility = abilityController.TryUseAbility(target);
@@ -313,7 +350,6 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        // fallback auto attack
         if (Time.time - lastAttackTime < attackCooldown)
         {
             return;
@@ -322,13 +358,13 @@ public class EnemyController : MonoBehaviour
         lastAttackTime = Time.time;
 
         Health targetHealth = target.GetComponent<Health>();
-
         if (targetHealth != null && !targetHealth.IsDead)
         {
             int finalDamage = enemyStats != null
                 ? enemyStats.GetScaledDamage()
                 : damage;
 
+            Debug.Log($"{gameObject.name} attacks {target.name} for {finalDamage}");
             targetHealth.TakeDamage(finalDamage, gameObject);
         }
     }
@@ -340,6 +376,11 @@ public class EnemyController : MonoBehaviour
 
     private void HandleGravity()
     {
+        if (characterController.enabled == false)
+        {
+            return;
+        }
+
         if (characterController.isGrounded && verticalVelocity.y < 0f)
         {
             verticalVelocity.y = -2f;
@@ -392,7 +433,7 @@ public class EnemyController : MonoBehaviour
 
         if (threatTable != null)
         {
-            threatTable.RemoveTarget(gameObject);
+            threatTable.ClearAll();
         }
 
         if (hideBodyOnDeath)
@@ -444,7 +485,11 @@ public class EnemyController : MonoBehaviour
 
         SetVisible(true);
 
-        characterController.enabled = true;
+        if (characterController != null)
+        {
+            characterController.enabled = true;
+        }
+
         ResetWanderTimer();
     }
 
