@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterRaceData
   raceName: Orc
   description: Strong and resilient, orcs excel in direct combat.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 47aef3c1edbce604aaf3e4cb34ea2d47, type: 3}
   statModifier:
     statBonuses:
       strength: 3

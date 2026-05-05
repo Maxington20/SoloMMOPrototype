@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterRaceData
   raceName: Elf
   description: Graceful and sharp-minded, elves favour precision and magic.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5a80423574f25f74792e41cb9e208f9a, type: 3}
   statModifier:
     statBonuses:
       strength: 0

@@ -12,6 +12,11 @@ public class CharacterUI : MonoBehaviour
     [Header("Header")]
     [SerializeField] private TMP_Text headerText;
 
+    [Header("Identity Text")]
+    [SerializeField] private TMP_Text raceText;
+    [SerializeField] private TMP_Text backgroundText;
+    [SerializeField] private TMP_Text innateAbilityText;
+
     [Header("Stats Text")]
     [SerializeField] private TMP_Text roleText;
     [SerializeField] private TMP_Text healthText;
@@ -37,6 +42,7 @@ public class CharacterUI : MonoBehaviour
 
     [Header("Player References")]
     [SerializeField] private DisplayName displayName;
+    [SerializeField] private PlayerCharacterIdentity characterIdentity;
     [SerializeField] private PlayerProgression progression;
     [SerializeField] private Health health;
     [SerializeField] private PlayerResource playerResource;
@@ -177,13 +183,47 @@ public class CharacterUI : MonoBehaviour
             ? classController.SelectedClass
             : null;
 
+        CharacterRaceData selectedRace = characterIdentity != null
+            ? characterIdentity.SelectedRace
+            : null;
+
+        CharacterBackgroundData selectedBackground = characterIdentity != null
+            ? characterIdentity.SelectedBackground
+            : null;
+
         string playerName = displayName != null ? displayName.Display : "Unknown";
+        string raceName = selectedRace != null ? selectedRace.RaceName : "No Race";
         string className = selectedClass != null ? selectedClass.ClassName : "No Class";
         int level = progression != null ? progression.Level : 1;
 
         if (headerText != null)
         {
-            headerText.text = $"{playerName} — Level {level} {className}";
+            headerText.text = $"{playerName} — Level {level} {raceName} {className}";
+        }
+
+        if (raceText != null)
+        {
+            raceText.text = selectedRace != null
+                ? $"Race: {selectedRace.RaceName}"
+                : "Race: None";
+        }
+
+        if (backgroundText != null)
+        {
+            backgroundText.text = selectedBackground != null
+                ? $"Background: {selectedBackground.BackgroundName}"
+                : "Background: None";
+        }
+
+        if (innateAbilityText != null)
+        {
+            AbilityData innateAbility = characterIdentity != null
+                ? characterIdentity.RaceInnateAbility
+                : null;
+
+            innateAbilityText.text = innateAbility != null
+                ? $"Innate Ability: {innateAbility.DisplayName}"
+                : "Innate Ability: None";
         }
 
         if (roleText != null)
@@ -328,7 +368,7 @@ public class CharacterUI : MonoBehaviour
         int levelValue,
         int gearValue)
     {
-        return $"{label}: {total}  <size=75%><color=#BDBDBD>(Base {baseValue} + Race {raceValue} + Background {backgroundValue} + Level {levelValue} + Gear {gearValue})</color></size>";
+        return $"{label}: {total}";  //<size=75%><color=#BDBDBD>(Base {baseValue} + Race {raceValue} + Background {backgroundValue} + Level {levelValue} + Gear {gearValue})</color></size>";
     }
 
     private void SetStatTextsToUnknown()

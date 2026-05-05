@@ -6,6 +6,7 @@ public class PlayerUnitFrameUI : MonoBehaviour
 {
     [Header("Player References")]
     [SerializeField] private DisplayName displayName;
+    [SerializeField] private PlayerCharacterIdentity characterIdentity;
     [SerializeField] private PlayerClassController classController;
     [SerializeField] private PlayerProgression progression;
     [SerializeField] private Health health;
@@ -36,8 +37,15 @@ public class PlayerUnitFrameUI : MonoBehaviour
     [SerializeField] private Image xpFillImage;
     [SerializeField] private TMP_Text xpText;
 
+    private void Awake()
+    {
+        ResolveMissingReferences();
+    }
+
     private void OnEnable()
     {
+        ResolveMissingReferences();
+
         if (health != null)
         {
             health.OnHealthChanged += Refresh;
@@ -51,6 +59,11 @@ public class PlayerUnitFrameUI : MonoBehaviour
         if (progression != null)
         {
             progression.OnLevelChanged += Refresh;
+        }
+
+        if (characterIdentity != null)
+        {
+            characterIdentity.OnIdentityChanged += Refresh;
         }
 
         Refresh();
@@ -72,6 +85,11 @@ public class PlayerUnitFrameUI : MonoBehaviour
         {
             progression.OnLevelChanged -= Refresh;
         }
+
+        if (characterIdentity != null)
+        {
+            characterIdentity.OnIdentityChanged -= Refresh;
+        }
     }
 
     private void Update()
@@ -79,8 +97,23 @@ public class PlayerUnitFrameUI : MonoBehaviour
         Refresh();
     }
 
+    private void ResolveMissingReferences()
+    {
+        if (characterIdentity == null && classController != null)
+        {
+            characterIdentity = classController.GetComponent<PlayerCharacterIdentity>();
+        }
+
+        if (characterIdentity == null)
+        {
+            characterIdentity = FindFirstObjectByType<PlayerCharacterIdentity>();
+        }
+    }
+
     private void Refresh()
     {
+        ResolveMissingReferences();
+
         if (visualRoot != null)
         {
             visualRoot.SetActive(true);
@@ -101,13 +134,17 @@ public class PlayerUnitFrameUI : MonoBehaviour
 
         if (classLevelText != null)
         {
+            string raceName = characterIdentity != null && characterIdentity.SelectedRace != null
+                ? characterIdentity.SelectedRace.RaceName
+                : "No Race";
+
             string className = classController != null && classController.SelectedClass != null
                 ? classController.SelectedClass.ClassName
                 : "No Class";
 
             int level = progression != null ? progression.Level : 1;
 
-            classLevelText.text = $"Level {level} {className}";
+            classLevelText.text = $"Level {level} {raceName} {className}";
         }
     }
 
@@ -115,16 +152,8 @@ public class PlayerUnitFrameUI : MonoBehaviour
     {
         if (health == null)
         {
-            if (healthFillImage != null)
-            {
-                healthFillImage.fillAmount = 0f;
-            }
-
-            if (healthText != null)
-            {
-                healthText.text = "Health: ?";
-            }
-
+            if (healthFillImage != null) healthFillImage.fillAmount = 0f;
+            if (healthText != null) healthText.text = "Health: ?";
             return;
         }
 
@@ -169,16 +198,8 @@ public class PlayerUnitFrameUI : MonoBehaviour
     {
         if (progression == null)
         {
-            if (xpFillImage != null)
-            {
-                xpFillImage.fillAmount = 0f;
-            }
-
-            if (xpText != null)
-            {
-                xpText.text = "XP: ?";
-            }
-
+            if (xpFillImage != null) xpFillImage.fillAmount = 0f;
+            if (xpText != null) xpText.text = "XP: ?";
             return;
         }
 

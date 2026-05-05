@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterRaceData
   raceName: Human
   description: Adaptable and determined, humans are balanced and reliable.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 2b6ca15c8bd6b6641a56ce1af823c10f, type: 3}
   statModifier:
     statBonuses:
       strength: 1
