@@ -232,6 +232,8 @@ public class CharacterUI : MonoBehaviour
 
         StatBlock total = playerStats.TotalStats;
         StatBlock baseStats = playerStats.BaseStats;
+        StatBlock raceStats = playerStats.RaceStats;
+        StatBlock backgroundStats = playerStats.BackgroundStats;
         StatBlock levelStats = playerStats.LevelBonusStats;
         StatBlock gearStats = playerStats.GearStats;
 
@@ -245,6 +247,8 @@ public class CharacterUI : MonoBehaviour
                 "Armour",
                 total.Armor,
                 baseStats.Armor,
+                raceStats.Armor,
+                backgroundStats.Armor,
                 levelStats.Armor,
                 gearStats.Armor);
         }
@@ -272,6 +276,8 @@ public class CharacterUI : MonoBehaviour
                 "Strength",
                 total.Strength,
                 baseStats.Strength,
+                raceStats.Strength,
+                backgroundStats.Strength,
                 levelStats.Strength,
                 gearStats.Strength);
         }
@@ -282,6 +288,8 @@ public class CharacterUI : MonoBehaviour
                 "Agility",
                 total.Agility,
                 baseStats.Agility,
+                raceStats.Agility,
+                backgroundStats.Agility,
                 levelStats.Agility,
                 gearStats.Agility);
         }
@@ -292,6 +300,8 @@ public class CharacterUI : MonoBehaviour
                 "Intellect",
                 total.Intellect,
                 baseStats.Intellect,
+                raceStats.Intellect,
+                backgroundStats.Intellect,
                 levelStats.Intellect,
                 gearStats.Intellect);
         }
@@ -302,14 +312,23 @@ public class CharacterUI : MonoBehaviour
                 "Stamina",
                 total.Stamina,
                 baseStats.Stamina,
+                raceStats.Stamina,
+                backgroundStats.Stamina,
                 levelStats.Stamina,
                 gearStats.Stamina);
         }
     }
 
-    private string BuildStatBreakdownLine(string label, int total, int baseValue, int levelValue, int gearValue)
+    private string BuildStatBreakdownLine(
+        string label,
+        int total,
+        int baseValue,
+        int raceValue,
+        int backgroundValue,
+        int levelValue,
+        int gearValue)
     {
-        return $"{label}: {total}  <size=75%><color=#BDBDBD>(Base {baseValue} + Level {levelValue} + Gear {gearValue})</color></size>";
+        return $"{label}: {total}  <size=75%><color=#BDBDBD>(Base {baseValue} + Race {raceValue} + Background {backgroundValue} + Level {levelValue} + Gear {gearValue})</color></size>";
     }
 
     private void SetStatTextsToUnknown()

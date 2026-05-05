@@ -12,6 +12,7 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
     private PlayerProgression progression;
     private Health health;
     private PlayerResource playerResource;
+    private PlayerCharacterIdentity characterIdentity;
 
     public event Action OnStatsChanged;
 
@@ -19,6 +20,8 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
     public StatBlock BaseStats => CalculateBaseStats();
     public StatBlock LevelBonusStats => CalculateLevelBonusStats();
     public StatBlock GearStats => GetEquipmentStats();
+    public StatBlock RaceStats => characterIdentity != null ? characterIdentity.RaceStats : StatBlock.Zero;
+    public StatBlock BackgroundStats => characterIdentity != null ? characterIdentity.BackgroundStats : StatBlock.Zero;
 
     public CharacterClassData SelectedClass => classController != null ? classController.SelectedClass : null;
 
@@ -92,6 +95,7 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
         progression = GetComponent<PlayerProgression>();
         health = GetComponent<Health>();
         playerResource = GetComponent<PlayerResource>();
+        characterIdentity = GetComponent<PlayerCharacterIdentity>();
     }
 
     private void OnEnable()
@@ -105,6 +109,11 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
         {
             progression.OnLevelChanged += RecalculateAndApplyStats;
         }
+
+        if (characterIdentity != null)
+        {
+            characterIdentity.OnIdentityChanged += RecalculateAndApplyStats;
+        }
     }
 
     private void OnDisable()
@@ -117,6 +126,11 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
         if (progression != null)
         {
             progression.OnLevelChanged -= RecalculateAndApplyStats;
+        }
+
+        if (characterIdentity != null)
+        {
+            characterIdentity.OnIdentityChanged -= RecalculateAndApplyStats;
         }
     }
 
@@ -181,6 +195,8 @@ public class PlayerStats : MonoBehaviour, ICombatStatsProvider
     public StatBlock CalculateTotalStats()
     {
         return CalculateBaseStats()
+            .Add(RaceStats)
+            .Add(BackgroundStats)
             .Add(CalculateLevelBonusStats())
             .Add(GetEquipmentStats());
     }
