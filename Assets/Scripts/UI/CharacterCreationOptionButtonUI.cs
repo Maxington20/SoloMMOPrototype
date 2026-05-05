@@ -12,6 +12,9 @@ public class CharacterCreationOptionButtonUI : MonoBehaviour
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private Button button;
 
+    [Header("Selection Visual")]
+    [SerializeField] private GameObject selectionOutline;
+
     private Action onClicked;
 
     public void Initialize(
@@ -49,10 +52,20 @@ public class CharacterCreationOptionButtonUI : MonoBehaviour
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(HandleClicked);
         }
+
+        SetSelected(false);
     }
 
     private void HandleClicked()
     {
         onClicked?.Invoke();
+    }
+
+    public void SetSelected(bool selected)
+    {
+        if (selectionOutline != null)
+        {
+            selectionOutline.SetActive(selected);
+        }
     }
 }

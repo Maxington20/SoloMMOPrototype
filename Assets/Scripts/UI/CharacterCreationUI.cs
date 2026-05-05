@@ -39,6 +39,10 @@ public class CharacterCreationUI : MonoBehaviour
     private CharacterClassData selectedClass;
     private CharacterBackgroundData selectedBackground;
 
+    private CharacterCreationOptionButtonUI selectedRaceButton;
+    private CharacterCreationOptionButtonUI selectedClassButton;
+    private CharacterCreationOptionButtonUI selectedBackgroundButton;
+
     private void Start()
     {
         if (startButton != null)
@@ -78,6 +82,11 @@ public class CharacterCreationUI : MonoBehaviour
         selectedClass = null;
         selectedBackground = null;
 
+        selectedRaceButton = null;
+        selectedClassButton = null;
+        selectedBackgroundButton = null;
+
+        ClearAllButtonSelections();
         RefreshSummary();
 
         if (pauseGameUntilCreated)
@@ -122,13 +131,14 @@ public class CharacterCreationUI : MonoBehaviour
             button.gameObject.SetActive(true);
 
             CharacterRaceData capturedRace = race;
+            CharacterCreationOptionButtonUI capturedButton = button;
 
             button.Initialize(
                 race.Icon,
                 race.RaceName,
                 BuildStatSummary(race.StatBonuses),
                 race.Description,
-                () => SelectRace(capturedRace));
+                () => SelectRace(capturedRace, capturedButton));
         }
     }
 
@@ -152,13 +162,14 @@ public class CharacterCreationUI : MonoBehaviour
             button.gameObject.SetActive(true);
 
             CharacterClassData capturedClass = characterClass;
+            CharacterCreationOptionButtonUI capturedButton = button;
 
             button.Initialize(
                 characterClass.Icon,
                 characterClass.ClassName,
                 $"Role: {characterClass.Role} | Primary: {characterClass.PrimaryStat}",
                 characterClass.Description,
-                () => SelectClass(capturedClass));
+                () => SelectClass(capturedClass, capturedButton));
         }
     }
 
@@ -182,13 +193,14 @@ public class CharacterCreationUI : MonoBehaviour
             button.gameObject.SetActive(true);
 
             CharacterBackgroundData capturedBackground = background;
+            CharacterCreationOptionButtonUI capturedButton = button;
 
             button.Initialize(
                 background.Icon,
                 background.BackgroundName,
                 BuildStatSummary(background.StatBonuses),
                 background.Description,
-                () => SelectBackground(capturedBackground));
+                () => SelectBackground(capturedBackground, capturedButton));
         }
     }
 
@@ -205,21 +217,83 @@ public class CharacterCreationUI : MonoBehaviour
         }
     }
 
-    private void SelectRace(CharacterRaceData race)
+    private void ClearAllButtonSelections()
+    {
+        ClearButtonSelectionsInContainer(raceButtonContainer);
+        ClearButtonSelectionsInContainer(classButtonContainer);
+        ClearButtonSelectionsInContainer(backgroundButtonContainer);
+    }
+
+    private void ClearButtonSelectionsInContainer(Transform container)
+    {
+        if (container == null)
+        {
+            return;
+        }
+
+        CharacterCreationOptionButtonUI[] buttons =
+            container.GetComponentsInChildren<CharacterCreationOptionButtonUI>(true);
+
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            buttons[i].SetSelected(false);
+        }
+    }
+
+    private void SelectRace(CharacterRaceData race, CharacterCreationOptionButtonUI button)
     {
         selectedRace = race;
+
+        if (selectedRaceButton != null)
+        {
+            selectedRaceButton.SetSelected(false);
+        }
+
+        selectedRaceButton = button;
+
+        if (selectedRaceButton != null)
+        {
+            selectedRaceButton.SetSelected(true);
+        }
+
         RefreshSummary();
     }
 
-    private void SelectClass(CharacterClassData characterClass)
+    private void SelectClass(CharacterClassData characterClass, CharacterCreationOptionButtonUI button)
     {
         selectedClass = characterClass;
+
+        if (selectedClassButton != null)
+        {
+            selectedClassButton.SetSelected(false);
+        }
+
+        selectedClassButton = button;
+
+        if (selectedClassButton != null)
+        {
+            selectedClassButton.SetSelected(true);
+        }
+
         RefreshSummary();
     }
 
-    private void SelectBackground(CharacterBackgroundData background)
+    private void SelectBackground(CharacterBackgroundData background, CharacterCreationOptionButtonUI button)
     {
         selectedBackground = background;
+
+        if (selectedBackgroundButton != null)
+        {
+            selectedBackgroundButton.SetSelected(false);
+        }
+
+        selectedBackgroundButton = button;
+
+        if (selectedBackgroundButton != null)
+        {
+            selectedBackgroundButton.SetSelected(true);
+        }
+
         RefreshSummary();
     }
 
