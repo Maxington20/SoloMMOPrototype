@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterBackgroundData
   backgroundName: Scholar
   description: Educated and curious, with a sharper mind than most.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 03f7cb535e6e1db439d76237557cf929, type: 3}
   statModifier:
     statBonuses:
       strength: 0

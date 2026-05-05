@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterBackgroundData
   backgroundName: Soldier
   description: Trained in battle, used to discipline, weapons, and danger.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3ee2d2ceefe62b042bff073dc1faad61, type: 3}
   statModifier:
     statBonuses:
       strength: 2

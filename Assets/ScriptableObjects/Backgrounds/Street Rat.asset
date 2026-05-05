@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterBackgroundData
   backgroundName: Street Rat
   description: Quick, slippery, and used to surviving with very little.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 20749281089faba409217f5f8b2f22a2, type: 3}
   statModifier:
     statBonuses:
       strength: 0

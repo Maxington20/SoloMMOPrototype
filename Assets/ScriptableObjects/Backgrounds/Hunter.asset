@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterBackgroundData
   backgroundName: Hunter
   description: A patient tracker skilled at striking from range.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 56947d7f9ddb3704a899275bafbd44a9, type: 3}
   statModifier:
     statBonuses:
       strength: 0
