@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(PlayerWallet))]
+[RequireComponent(typeof(PlayerItemUseController))]
 public class PlayerInventory : MonoBehaviour
 {
     public static PlayerInventory Instance { get; private set; }
@@ -16,10 +18,12 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField] private int slotCount = 20;
 
     private readonly List<InventorySlotData> slots = new List<InventorySlotData>();
-    private PlayerEquipment playerEquipment;
-    private Health playerHealth;
 
-    public int Gold { get; private set; }
+    private PlayerEquipment playerEquipment;
+    private PlayerWallet playerWallet;
+    private PlayerItemUseController itemUseController;
+
+    public int Gold => playerWallet != null ? playerWallet.Gold : 0;
     public int SlotCount => slotCount;
     public IReadOnlyList<InventorySlotData> Slots => slots;
 
@@ -32,17 +36,44 @@ public class PlayerInventory : MonoBehaviour
         }
 
         Instance = this;
-        playerEquipment = GetComponent<PlayerEquipment>();
-        playerHealth = GetComponent<Health>();
 
-        Gold = Mathf.Max(0, startingGold);
+        playerEquipment = GetComponent<PlayerEquipment>();
+        playerWallet = GetComponent<PlayerWallet>();
+        itemUseController = GetComponent<PlayerItemUseController>();
+
+        if (playerWallet == null)
+        {
+            playerWallet = gameObject.AddComponent<PlayerWallet>();
+        }
+
+        if (itemUseController == null)
+        {
+            itemUseController = gameObject.AddComponent<PlayerItemUseController>();
+        }
+
+        playerWallet.OnGoldChanged += HandleWalletGoldChanged;
+        playerWallet.Initialize(startingGold);
+
         InitializeSlots();
     }
 
     private void Start()
     {
-        OnGoldChanged?.Invoke(Gold);
-        OnInventoryChanged?.Invoke();
+        NotifyGoldChanged();
+        NotifyInventoryChanged();
+    }
+
+    private void OnDestroy()
+    {
+        if (playerWallet != null)
+        {
+            playerWallet.OnGoldChanged -= HandleWalletGoldChanged;
+        }
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     private void InitializeSlots()
@@ -64,13 +95,12 @@ public class PlayerInventory : MonoBehaviour
 
     public void AddGold(int amount, bool postLootMessage)
     {
-        if (amount <= 0)
+        if (amount <= 0 || playerWallet == null)
         {
             return;
         }
 
-        Gold += amount;
-        OnGoldChanged?.Invoke(Gold);
+        playerWallet.AddGold(amount);
 
         if (postLootMessage)
         {
@@ -80,19 +110,12 @@ public class PlayerInventory : MonoBehaviour
 
     public bool SpendGold(int amount)
     {
-        if (amount <= 0)
-        {
-            return true;
-        }
-
-        if (Gold < amount)
+        if (playerWallet == null)
         {
             return false;
         }
 
-        Gold -= amount;
-        OnGoldChanged?.Invoke(Gold);
-        return true;
+        return playerWallet.SpendGold(amount);
     }
 
     public InventorySlotData GetSlot(int index)
@@ -107,66 +130,12 @@ public class PlayerInventory : MonoBehaviour
 
     public int GetTotalQuantityOfItem(ItemData item)
     {
-        if (item == null)
-        {
-            return 0;
-        }
-
-        int total = 0;
-
-        for (int i = 0; i < slots.Count; i++)
-        {
-            InventorySlotData slot = slots[i];
-            if (slot != null && !slot.IsEmpty && slot.Item == item)
-            {
-                total += slot.Quantity;
-            }
-        }
-
-        return total;
+        return InventoryTransactionService.GetTotalQuantityOfItem(slots, item);
     }
 
     public bool CanAddItem(ItemData item, int quantity = 1)
     {
-        if (item == null || quantity <= 0)
-        {
-            return false;
-        }
-
-        int remaining = quantity;
-        int maxStack = item.IsStackable ? item.MaxStack : 1;
-
-        if (item.IsStackable)
-        {
-            for (int i = 0; i < slots.Count; i++)
-            {
-                if (slots[i].CanStack(item))
-                {
-                    int freeSpace = maxStack - slots[i].Quantity;
-                    remaining -= freeSpace;
-
-                    if (remaining <= 0)
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        for (int i = 0; i < slots.Count; i++)
-        {
-            if (slots[i].IsEmpty)
-            {
-                remaining -= maxStack;
-
-                if (remaining <= 0)
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return InventoryTransactionService.CanAddItem(slots, item, quantity);
     }
 
     public bool AddItem(ItemData item, int quantity = 1)
@@ -202,7 +171,7 @@ public class PlayerInventory : MonoBehaviour
         }
 
         AddItemInternal(item, quantity, false);
-        OnInventoryChanged?.Invoke();
+        NotifyInventoryChanged();
 
         PostSystem($"You buy {FormatItemQuantity(item, quantity)} for {totalCost} gold.");
 
@@ -212,12 +181,7 @@ public class PlayerInventory : MonoBehaviour
     public bool TrySellItemFromSlot(int slotIndex, int quantity = 1)
     {
         InventorySlotData slot = GetSlot(slotIndex);
-        if (slot == null || slot.IsEmpty || slot.Item == null)
-        {
-            return false;
-        }
-
-        if (quantity <= 0)
+        if (slot == null || slot.IsEmpty || slot.Item == null || quantity <= 0)
         {
             return false;
         }
@@ -236,7 +200,7 @@ public class PlayerInventory : MonoBehaviour
         int totalGold = item.SellValue * quantityToSell;
         AddGold(totalGold, false);
 
-        OnInventoryChanged?.Invoke();
+        NotifyInventoryChanged();
 
         PostSystem($"You sell {FormatItemQuantity(item, quantityToSell)} for {totalGold} gold.");
 
@@ -258,14 +222,13 @@ public class PlayerInventory : MonoBehaviour
             return false;
         }
 
-        bool used = ApplyItemUse(item);
-        if (!used)
+        if (itemUseController == null || !itemUseController.TryUseItem(item))
         {
             return false;
         }
 
         RemoveFromSlotInternal(slotIndex, 1, false);
-        OnInventoryChanged?.Invoke();
+        NotifyInventoryChanged();
 
         PostSystem($"You use {item.DisplayName}.");
 
@@ -296,65 +259,11 @@ public class PlayerInventory : MonoBehaviour
 
     public bool TryMoveOrSwapSlot(int sourceIndex, int targetIndex)
     {
-        if (sourceIndex < 0 || sourceIndex >= slots.Count || targetIndex < 0 || targetIndex >= slots.Count)
-        {
-            return false;
-        }
-
-        if (sourceIndex == targetIndex)
-        {
-            return false;
-        }
-
-        InventorySlotData sourceSlot = slots[sourceIndex];
-        InventorySlotData targetSlot = slots[targetIndex];
-
-        if (sourceSlot == null || sourceSlot.IsEmpty || sourceSlot.Item == null)
-        {
-            return false;
-        }
-
-        bool changed = false;
-
-        if (targetSlot.IsEmpty)
-        {
-            targetSlot.Set(sourceSlot.Item, sourceSlot.Quantity);
-            sourceSlot.Clear();
-            changed = true;
-        }
-        else if (sourceSlot.Item == targetSlot.Item && sourceSlot.Item.IsStackable)
-        {
-            int maxStack = sourceSlot.Item.MaxStack;
-            int freeSpace = maxStack - targetSlot.Quantity;
-
-            if (freeSpace > 0)
-            {
-                int amountToMove = Mathf.Min(freeSpace, sourceSlot.Quantity);
-                targetSlot.Quantity += amountToMove;
-                sourceSlot.Quantity -= amountToMove;
-
-                if (sourceSlot.Quantity <= 0)
-                {
-                    sourceSlot.Clear();
-                }
-
-                changed = amountToMove > 0;
-            }
-        }
-        else
-        {
-            ItemData sourceItem = sourceSlot.Item;
-            int sourceQuantity = sourceSlot.Quantity;
-
-            sourceSlot.Set(targetSlot.Item, targetSlot.Quantity);
-            targetSlot.Set(sourceItem, sourceQuantity);
-
-            changed = true;
-        }
+        bool changed = InventoryTransactionService.MoveOrSwap(slots, sourceIndex, targetIndex);
 
         if (changed)
         {
-            OnInventoryChanged?.Invoke();
+            NotifyInventoryChanged();
         }
 
         return changed;
@@ -397,7 +306,7 @@ public class PlayerInventory : MonoBehaviour
         if (!equipped)
         {
             AddItemInternal(item, 1, false);
-            OnInventoryChanged?.Invoke();
+            NotifyInventoryChanged();
             return false;
         }
 
@@ -406,7 +315,7 @@ public class PlayerInventory : MonoBehaviour
             AddItemInternal(replacedItem, 1, false);
         }
 
-        OnInventoryChanged?.Invoke();
+        NotifyInventoryChanged();
 
         PostSystem($"You equip {item.DisplayName}.");
 
@@ -437,7 +346,6 @@ public class PlayerInventory : MonoBehaviour
         }
 
         ItemData currentlyEquipped = playerEquipment.GetEquippedItem(targetSlotType);
-
         bool sourceSlotWillBeEmptyAfterRemove = sourceSlot.Quantity <= 1;
 
         if (currentlyEquipped != null && !sourceSlotWillBeEmptyAfterRemove && !CanAddItem(currentlyEquipped, 1))
@@ -449,11 +357,11 @@ public class PlayerInventory : MonoBehaviour
         RemoveFromSlotInternal(slotIndex, 1, false);
 
         bool equipped = playerEquipment.Equip(item, targetSlotType, out ItemData replacedItem);
-        
+
         if (!equipped)
         {
             AddItemInternal(item, 1, false);
-            OnInventoryChanged?.Invoke();
+            NotifyInventoryChanged();
             return false;
         }
 
@@ -471,7 +379,7 @@ public class PlayerInventory : MonoBehaviour
             }
         }
 
-        OnInventoryChanged?.Invoke();
+        NotifyInventoryChanged();
 
         PostSystem($"You equip {item.DisplayName}.");
 
@@ -505,7 +413,7 @@ public class PlayerInventory : MonoBehaviour
         }
 
         targetSlot.Set(removedItem, 1);
-        OnInventoryChanged?.Invoke();
+        NotifyInventoryChanged();
 
         PostSystem($"You unequip {removedItem.DisplayName}.");
 
@@ -539,60 +447,39 @@ public class PlayerInventory : MonoBehaviour
         }
 
         AddItemInternal(removedItem, 1, false);
-        OnInventoryChanged?.Invoke();
+        NotifyInventoryChanged();
 
         PostSystem($"You unequip {removedItem.DisplayName}.");
 
         return true;
     }
 
-    private bool ApplyItemUse(ItemData item)
+    public bool CanRemoveItem(ItemData item, int quantity)
     {
-        if (item == null || !item.IsUsable)
+        return InventoryTransactionService.CanRemoveItem(slots, item, quantity);
+    }
+
+    public bool RemoveItem(ItemData item, int quantity, bool notify = true)
+    {
+        bool removed = InventoryTransactionService.RemoveItem(slots, item, quantity);
+
+        if (removed && notify)
         {
-            return false;
+            NotifyInventoryChanged();
+        }
+        else if (removed)
+        {
+            NotifyInventoryChanged();
         }
 
-        bool usedSomething = false;
-
-        if (item.HealthRestoreAmount > 0)
-        {
-            if (playerHealth == null)
-            {
-                return false;
-            }
-
-            if (playerHealth.IsDead)
-            {
-                PostSystem("You cannot use that while dead.");
-                return false;
-            }
-
-            if (playerHealth.CurrentHealth >= playerHealth.MaxHealth)
-            {
-                PostSystem("You are already at full health.");
-                return false;
-            }
-
-            int restored = playerHealth.RestoreHealth(item.HealthRestoreAmount);
-            if (restored > 0)
-            {
-                usedSomething = true;
-                PostSystem($"{item.DisplayName} restores {restored} health.");
-            }
-        }
-
-        return usedSomething;
+        return removed;
     }
 
     private bool AddItemInternal(ItemData item, int quantity, bool notify)
     {
-        if (item == null || quantity <= 0)
-        {
-            return false;
-        }
+        bool added = InventoryTransactionService.AddItem(slots, item, quantity);
 
-        if (!CanAddItem(item, quantity))
+        if (!added)
         {
             if (notify)
             {
@@ -602,54 +489,9 @@ public class PlayerInventory : MonoBehaviour
             return false;
         }
 
-        int remaining = quantity;
-
-        if (item.IsStackable)
-        {
-            for (int i = 0; i < slots.Count; i++)
-            {
-                if (!slots[i].CanStack(item))
-                {
-                    continue;
-                }
-
-                int freeSpace = item.MaxStack - slots[i].Quantity;
-                if (freeSpace <= 0)
-                {
-                    continue;
-                }
-
-                int toAdd = Mathf.Min(freeSpace, remaining);
-                slots[i].Quantity += toAdd;
-                remaining -= toAdd;
-
-                if (remaining <= 0)
-                {
-                    break;
-                }
-            }
-        }
-
-        for (int i = 0; i < slots.Count; i++)
-        {
-            if (remaining <= 0)
-            {
-                break;
-            }
-
-            if (!slots[i].IsEmpty)
-            {
-                continue;
-            }
-
-            int stackSize = item.IsStackable ? Mathf.Min(item.MaxStack, remaining) : 1;
-            slots[i].Set(item, stackSize);
-            remaining -= stackSize;
-        }
-
         if (notify)
         {
-            OnInventoryChanged?.Invoke();
+            NotifyInventoryChanged();
             PostSystem($"You receive {FormatItemQuantity(item, quantity)}.");
         }
 
@@ -659,21 +501,11 @@ public class PlayerInventory : MonoBehaviour
     private void RemoveFromSlotInternal(int slotIndex, int quantity, bool notify)
     {
         InventorySlotData slot = GetSlot(slotIndex);
-        if (slot == null || slot.IsEmpty || quantity <= 0)
-        {
-            return;
-        }
-
-        slot.Quantity -= quantity;
-
-        if (slot.Quantity <= 0)
-        {
-            slot.Clear();
-        }
+        InventoryTransactionService.RemoveFromSlot(slot, quantity);
 
         if (notify)
         {
-            OnInventoryChanged?.Invoke();
+            NotifyInventoryChanged();
         }
     }
 
@@ -692,71 +524,26 @@ public class PlayerInventory : MonoBehaviour
         return $"{item.DisplayName} x{quantity}";
     }
 
+    private void HandleWalletGoldChanged(int updatedGold)
+    {
+        OnGoldChanged?.Invoke(updatedGold);
+    }
+
+    private void NotifyGoldChanged()
+    {
+        OnGoldChanged?.Invoke(Gold);
+    }
+
+    private void NotifyInventoryChanged()
+    {
+        OnInventoryChanged?.Invoke();
+    }
+
     private void PostSystem(string message)
     {
         if (ChatManager.Instance != null)
         {
             ChatManager.Instance.PostSystem(message);
         }
-    }
-
-        public bool CanRemoveItem(ItemData item, int quantity)
-    {
-        if (item == null || quantity <= 0)
-        {
-            return false;
-        }
-
-        return GetTotalQuantityOfItem(item) >= quantity;
-    }
-
-    public bool RemoveItem(ItemData item, int quantity, bool notify = true)
-    {
-        if (item == null || quantity <= 0)
-        {
-            return false;
-        }
-
-        if (!CanRemoveItem(item, quantity))
-        {
-            return false;
-        }
-
-        int remaining = quantity;
-
-        for (int i = 0; i < slots.Count; i++)
-        {
-            InventorySlotData slot = slots[i];
-
-            if (slot == null || slot.IsEmpty || slot.Item != item)
-            {
-                continue;
-            }
-
-            int amountToRemove = Mathf.Min(slot.Quantity, remaining);
-            slot.Quantity -= amountToRemove;
-            remaining -= amountToRemove;
-
-            if (slot.Quantity <= 0)
-            {
-                slot.Clear();
-            }
-
-            if (remaining <= 0)
-            {
-                break;
-            }
-        }
-
-        if (notify)
-        {
-            OnInventoryChanged?.Invoke();
-        }
-        else
-        {
-            OnInventoryChanged?.Invoke();
-        }
-
-        return true;
     }
 }

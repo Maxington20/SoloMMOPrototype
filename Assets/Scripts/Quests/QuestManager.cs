@@ -36,20 +36,22 @@ public class QuestManager : MonoBehaviour
     public string GetQuestOfferText()
     {
         ActiveQuest completableQuest = GetFirstCompletableQuest();
+
         if (completableQuest != null)
         {
-            return $"Press F to speak with the quest giver.";
+            return "Press F to speak with the quest giver.";
         }
 
         QuestDefinition availableQuest = GetFirstAvailableQuest();
+
         if (availableQuest != null)
         {
-            return $"Press F to speak with the quest giver.";
+            return "Press F to speak with the quest giver.";
         }
 
         if (activeQuests.Count > 0)
         {
-            return $"Press F to review your quests.";
+            return "Press F to review your quests.";
         }
 
         return "No quests available.";
@@ -218,44 +220,35 @@ public class QuestManager : MonoBehaviour
 
         QuestDefinition completedQuest = quest.definition;
         PlayerInventory inventory = GetPlayerInventory();
-        PlayerProgression progression = GetPlayerProgression();
 
         if (completedQuest == null || !quest.IsComplete(inventory))
         {
             return;
         }
 
-        List<QuestItemReward> finalItemRewards = BuildFinalItemRewards(completedQuest, selectedChoiceRewardIndex);
+        List<QuestItemReward> finalItemRewards =
+            QuestRewardService.BuildFinalItemRewards(
+                completedQuest,
+                selectedChoiceRewardIndex);
 
-        if (!CanFitRewardsAfterTurnIn(inventory, completedQuest.collectionObjectives, finalItemRewards))
+        if (!QuestRewardService.CanFitRewardsAfterTurnIn(
+                inventory,
+                completedQuest.collectionObjectives,
+                finalItemRewards))
         {
             PostSystem("Inventory is full. Make space before turning in this quest.");
             return;
         }
 
-        ConsumeCollectionItems(inventory, completedQuest.collectionObjectives);
+        QuestRewardService.ConsumeCollectionItems(
+            inventory,
+            completedQuest.collectionObjectives);
 
-        if (progression != null && completedQuest.xpReward > 0)
-        {
-            progression.AddXp(completedQuest.xpReward);
-        }
-
-        if (inventory != null && completedQuest.goldReward > 0)
-        {
-            inventory.AddGold(completedQuest.goldReward, false);
-            PostSystem($"You receive {completedQuest.goldReward} gold.");
-        }
-
-        if (inventory != null)
-        {
-            foreach (QuestItemReward reward in finalItemRewards)
-            {
-                if (reward != null && reward.Item != null)
-                {
-                    inventory.AddItem(reward.Item, reward.Quantity);
-                }
-            }
-        }
+        QuestRewardService.GrantRewards(
+            completedQuest,
+            finalItemRewards,
+            inventory,
+            GetPlayerProgression());
 
         activeQuests.Remove(quest);
 
@@ -266,10 +259,7 @@ public class QuestManager : MonoBehaviour
 
         PostSystem($"Quest completed: {completedQuest.title}.");
 
-        if (QuestGiverUI.Instance != null && QuestGiverUI.Instance.IsOpen)
-        {
-            QuestGiverUI.Instance.Refresh();
-        }
+        RefreshQuestUI();
     }
 
     public void RegisterEnemyKilled(GameObject enemyObject, GameObject killer)
@@ -280,6 +270,7 @@ public class QuestManager : MonoBehaviour
         }
 
         EnemyData enemyData = enemyObject.GetComponent<EnemyData>();
+
         if (enemyData == null)
         {
             return;
@@ -288,8 +279,10 @@ public class QuestManager : MonoBehaviour
         bool progressedAnyQuest = false;
         PlayerInventory inventory = GetPlayerInventory();
 
-        foreach (ActiveQuest quest in activeQuests)
+        for (int i = 0; i < activeQuests.Count; i++)
         {
+            ActiveQuest quest = activeQuests[i];
+
             if (quest == null || quest.definition == null)
             {
                 continue;
@@ -330,8 +323,10 @@ public class QuestManager : MonoBehaviour
     {
         PlayerInventory inventory = GetPlayerInventory();
 
-        foreach (ActiveQuest quest in activeQuests)
+        for (int i = 0; i < activeQuests.Count; i++)
         {
+            ActiveQuest quest = activeQuests[i];
+
             if (quest != null && quest.IsComplete(inventory))
             {
                 return quest;
@@ -343,8 +338,10 @@ public class QuestManager : MonoBehaviour
 
     private bool IsQuestAlreadyActive(QuestDefinition definition)
     {
-        foreach (ActiveQuest quest in activeQuests)
+        for (int i = 0; i < activeQuests.Count; i++)
         {
+            ActiveQuest quest = activeQuests[i];
+
             if (quest != null && quest.definition == definition)
             {
                 return true;
@@ -366,188 +363,11 @@ public class QuestManager : MonoBehaviour
             return false;
         }
 
-        foreach (QuestKillObjective objective in quest.definition.killObjectives)
+        for (int i = 0; i < quest.definition.killObjectives.Count; i++)
         {
+            QuestKillObjective objective = quest.definition.killObjectives[i];
+
             if (objective != null && objective.EnemyType == enemyType)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private List<QuestItemReward> BuildFinalItemRewards(QuestDefinition definition, int selectedChoiceRewardIndex)
-    {
-        List<QuestItemReward> rewards = new List<QuestItemReward>();
-
-        if (definition.guaranteedItemRewards != null)
-        {
-            rewards.AddRange(definition.guaranteedItemRewards);
-        }
-
-        if (definition.choiceItemRewards != null &&
-            selectedChoiceRewardIndex >= 0 &&
-            selectedChoiceRewardIndex < definition.choiceItemRewards.Count)
-        {
-            rewards.Add(definition.choiceItemRewards[selectedChoiceRewardIndex]);
-        }
-
-        return rewards;
-    }
-
-    private void ConsumeCollectionItems(PlayerInventory inventory, List<QuestCollectionObjective> objectives)
-    {
-        if (inventory == null || objectives == null)
-        {
-            return;
-        }
-
-        foreach (QuestCollectionObjective objective in objectives)
-        {
-            if (objective != null && objective.Item != null)
-            {
-                inventory.RemoveItem(objective.Item, objective.RequiredAmount, false);
-            }
-        }
-    }
-
-    private bool CanFitRewardsAfterTurnIn(
-        PlayerInventory inventory,
-        List<QuestCollectionObjective> consumedItems,
-        List<QuestItemReward> rewards)
-    {
-        if (inventory == null)
-        {
-            return rewards == null || rewards.Count == 0;
-        }
-
-        List<SimulatedSlot> simulatedSlots = new List<SimulatedSlot>();
-
-        foreach (InventorySlotData slot in inventory.Slots)
-        {
-            simulatedSlots.Add(new SimulatedSlot
-            {
-                item = slot != null && !slot.IsEmpty ? slot.Item : null,
-                quantity = slot != null && !slot.IsEmpty ? slot.Quantity : 0
-            });
-        }
-
-        if (consumedItems != null)
-        {
-            foreach (QuestCollectionObjective objective in consumedItems)
-            {
-                if (objective != null && objective.Item != null)
-                {
-                    if (!TryRemoveFromSimulatedSlots(simulatedSlots, objective.Item, objective.RequiredAmount))
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        if (rewards != null)
-        {
-            foreach (QuestItemReward reward in rewards)
-            {
-                if (reward != null && reward.Item != null)
-                {
-                    if (!TryAddToSimulatedSlots(simulatedSlots, reward.Item, reward.Quantity))
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    private bool TryRemoveFromSimulatedSlots(List<SimulatedSlot> slots, ItemData item, int quantity)
-    {
-        int remaining = quantity;
-
-        for (int i = 0; i < slots.Count; i++)
-        {
-            if (slots[i].item != item)
-            {
-                continue;
-            }
-
-            int removed = Mathf.Min(slots[i].quantity, remaining);
-            SimulatedSlot updatedSlot = slots[i];
-            updatedSlot.quantity -= removed;
-
-            if (updatedSlot.quantity <= 0)
-            {
-                updatedSlot.item = null;
-                updatedSlot.quantity = 0;
-            }
-
-            slots[i] = updatedSlot;
-            remaining -= removed;
-
-            if (remaining <= 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private bool TryAddToSimulatedSlots(List<SimulatedSlot> slots, ItemData item, int quantity)
-    {
-        int remaining = quantity;
-
-        if (item.IsStackable)
-        {
-            for (int i = 0; i < slots.Count; i++)
-            {
-                SimulatedSlot slot = slots[i];
-
-                if (slot.item != item)
-                {
-                    continue;
-                }
-
-                int freeSpace = item.MaxStack - slot.quantity;
-                if (freeSpace <= 0)
-                {
-                    continue;
-                }
-
-                int added = Mathf.Min(freeSpace, remaining);
-                slot.quantity += added;
-                slots[i] = slot;
-
-                remaining -= added;
-
-                if (remaining <= 0)
-                {
-                    return true;
-                }
-            }
-        }
-
-        for (int i = 0; i < slots.Count; i++)
-        {
-            SimulatedSlot slot = slots[i];
-
-            if (slot.item != null)
-            {
-                continue;
-            }
-
-            int added = item.IsStackable ? Mathf.Min(item.MaxStack, remaining) : 1;
-            slot.item = item;
-            slot.quantity = added;
-            slots[i] = slot;
-
-            remaining -= added;
-
-            if (remaining <= 0)
             {
                 return true;
             }
@@ -564,13 +384,25 @@ public class QuestManager : MonoBehaviour
         }
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        return playerObject != null ? playerObject.GetComponent<PlayerInventory>() : null;
+        return playerObject != null
+            ? playerObject.GetComponent<PlayerInventory>()
+            : null;
     }
 
     private PlayerProgression GetPlayerProgression()
     {
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        return playerObject != null ? playerObject.GetComponent<PlayerProgression>() : null;
+        return playerObject != null
+            ? playerObject.GetComponent<PlayerProgression>()
+            : null;
+    }
+
+    private void RefreshQuestUI()
+    {
+        if (QuestGiverUI.Instance != null && QuestGiverUI.Instance.IsOpen)
+        {
+            QuestGiverUI.Instance.Refresh();
+        }
     }
 
     private void PostSystem(string message)
@@ -579,11 +411,5 @@ public class QuestManager : MonoBehaviour
         {
             ChatManager.Instance.PostSystem(message);
         }
-    }
-
-    private struct SimulatedSlot
-    {
-        public ItemData item;
-        public int quantity;
     }
 }
