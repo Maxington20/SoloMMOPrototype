@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyStats))]
 [RequireComponent(typeof(StatusEffectController))]
 [RequireComponent(typeof(ThreatTable))]
+[RequireComponent(typeof(EnemyDeathRespawnController))]
 public class EnemyController : MonoBehaviour
 {
     [SerializeField] private float aggroRange = 8f;
@@ -26,14 +27,6 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float minIdleTimeBetweenWanders = 1.5f;
     [SerializeField] private float maxIdleTimeBetweenWanders = 4f;
 
-    [Header("Respawn")]
-    [SerializeField] private float respawnDelay = 8f;
-    [SerializeField] private Renderer[] renderersToHideOnDeath;
-    [SerializeField] private GameObject[] objectsToHideOnDeath;
-
-    [Header("Corpse / Loot")]
-    [SerializeField] private bool hideBodyOnDeath = false;
-
     private Transform target;
     private Transform player;
     private float lastAttackTime;
@@ -45,13 +38,11 @@ public class EnemyController : MonoBehaviour
     private StatusEffectController statusEffectController;
     private EnemyAbilityController abilityController;
     private ThreatTable threatTable;
+    private EnemyDeathRespawnController deathRespawnController;
 
     private Vector3 homePosition;
     private Quaternion homeRotation;
     private bool isReturningHome;
-
-    private bool isRespawning;
-    private float respawnTimer;
 
     private Vector3 wanderDestination;
     private bool hasWanderDestination;
@@ -65,9 +56,15 @@ public class EnemyController : MonoBehaviour
         statusEffectController = GetComponent<StatusEffectController>();
         abilityController = GetComponent<EnemyAbilityController>();
         threatTable = GetComponent<ThreatTable>();
+        deathRespawnController = GetComponent<EnemyDeathRespawnController>();
 
         homePosition = transform.position;
         homeRotation = transform.rotation;
+
+        if (deathRespawnController != null)
+        {
+            deathRespawnController.ForceHomePosition(homePosition, homeRotation);
+        }
     }
 
     private void OnEnable()
@@ -88,19 +85,13 @@ public class EnemyController : MonoBehaviour
             player = playerObject.transform;
         }
 
-        if (renderersToHideOnDeath == null || renderersToHideOnDeath.Length == 0)
-        {
-            renderersToHideOnDeath = GetComponentsInChildren<Renderer>();
-        }
-
         ResetWanderTimer();
     }
 
     private void Update()
     {
-        if (isRespawning)
+        if (deathRespawnController != null && deathRespawnController.IsRespawning)
         {
-            HandleRespawnCountdown();
             return;
         }
 
@@ -167,7 +158,7 @@ public class EnemyController : MonoBehaviour
 
     public void SetTarget(Transform newTarget)
     {
-        if (health.IsDead || isRespawning)
+        if (health.IsDead || deathRespawnController != null && deathRespawnController.IsRespawning)
         {
             return;
         }
@@ -219,6 +210,11 @@ public class EnemyController : MonoBehaviour
         target = null;
         isReturningHome = true;
         hasWanderDestination = false;
+
+        if (threatTable != null)
+        {
+            threatTable.ClearAll();
+        }
     }
 
     private void ReturnHome()
@@ -232,6 +228,16 @@ public class EnemyController : MonoBehaviour
             transform.rotation = homeRotation;
             hasWanderDestination = false;
             ResetWanderTimer();
+
+            if (enemyStats != null)
+            {
+                enemyStats.RecalculateAndApplyStats(true);
+            }
+            else
+            {
+                health.ResetHealth();
+            }
+
             return;
         }
 
@@ -415,8 +421,6 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        DisableCollisionOnDeath(enemyLoot != null ? enemyLoot.LootClickCollider : null);
-
         DisplayName displayName = GetComponent<DisplayName>();
         string enemyName = displayName != null ? displayName.Display : gameObject.name;
 
@@ -427,8 +431,8 @@ public class EnemyController : MonoBehaviour
 
         target = null;
         isReturningHome = false;
-        isRespawning = true;
-        respawnTimer = respawnDelay;
+        lastAttackTime = 0f;
+        verticalVelocity = Vector3.zero;
         hasWanderDestination = false;
 
         if (threatTable != null)
@@ -436,134 +440,9 @@ public class EnemyController : MonoBehaviour
             threatTable.ClearAll();
         }
 
-        if (hideBodyOnDeath)
+        if (deathRespawnController != null)
         {
-            SetVisible(false);
-        }
-    }
-
-    private void HandleRespawnCountdown()
-    {
-        respawnTimer -= Time.deltaTime;
-
-        if (respawnTimer > 0f)
-        {
-            return;
-        }
-
-        Respawn();
-    }
-
-    private void Respawn()
-    {
-        isRespawning = false;
-        target = null;
-        isReturningHome = false;
-        lastAttackTime = 0f;
-        verticalVelocity = Vector3.zero;
-        hasWanderDestination = false;
-
-        transform.position = homePosition;
-        transform.rotation = homeRotation;
-
-        EnemyLoot enemyLoot = GetComponent<EnemyLoot>();
-        if (enemyLoot != null)
-        {
-            enemyLoot.ResetLoot();
-        }
-
-        ReenableCollisionAfterRespawn();
-
-        if (enemyStats != null)
-        {
-            enemyStats.RecalculateAndApplyStats(true);
-        }
-        else
-        {
-            health.ResetHealth();
-        }
-
-        SetVisible(true);
-
-        if (characterController != null)
-        {
-            characterController.enabled = true;
-        }
-
-        ResetWanderTimer();
-    }
-
-    private void SetVisible(bool visible)
-    {
-        if (renderersToHideOnDeath != null)
-        {
-            foreach (Renderer renderer in renderersToHideOnDeath)
-            {
-                if (renderer != null)
-                {
-                    renderer.enabled = visible;
-                }
-            }
-        }
-
-        if (objectsToHideOnDeath != null)
-        {
-            foreach (GameObject obj in objectsToHideOnDeath)
-            {
-                if (obj != null)
-                {
-                    obj.SetActive(visible);
-                }
-            }
-        }
-    }
-
-    private void DisableCollisionOnDeath(Collider colliderToKeepEnabled)
-    {
-        Collider[] colliders = GetComponentsInChildren<Collider>(true);
-        foreach (Collider col in colliders)
-        {
-            if (col == null)
-            {
-                continue;
-            }
-
-            if (colliderToKeepEnabled != null && col == colliderToKeepEnabled)
-            {
-                col.enabled = true;
-                continue;
-            }
-
-            col.enabled = false;
-        }
-
-        if (characterController != null)
-        {
-            characterController.enabled = false;
-        }
-
-        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (agent != null)
-        {
-            agent.enabled = false;
-        }
-    }
-
-    private void ReenableCollisionAfterRespawn()
-    {
-        Collider[] colliders = GetComponentsInChildren<Collider>(true);
-        foreach (Collider col in colliders)
-        {
-            if (col != null)
-            {
-                col.enabled = true;
-            }
-        }
-
-        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (agent != null)
-        {
-            agent.enabled = true;
+            deathRespawnController.BeginRespawn();
         }
     }
 }
