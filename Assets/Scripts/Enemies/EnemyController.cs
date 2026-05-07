@@ -9,20 +9,14 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyDeathRespawnController))]
 [RequireComponent(typeof(EnemyMovementController))]
 [RequireComponent(typeof(EnemyAggroController))]
+[RequireComponent(typeof(EnemyAttackController))]
 public class EnemyController : MonoBehaviour
 {
     [Header("Combat")]
     [SerializeField] private float attackRange = 1.5f;
 
-    [Tooltip("Legacy fallback damage. EnemyData Base Damage is used when EnemyStats is present.")]
-    [SerializeField] private int damage = 10;
-
-    [SerializeField] private float attackCooldown = 1.5f;
-
     [Header("Return Home")]
     [SerializeField] private float returnStopDistance = 0.2f;
-
-    private float lastAttackTime;
 
     private Health health;
     private EnemyStats enemyStats;
@@ -31,6 +25,7 @@ public class EnemyController : MonoBehaviour
     private EnemyDeathRespawnController deathRespawnController;
     private EnemyMovementController movementController;
     private EnemyAggroController aggroController;
+    private EnemyAttackController attackController;
 
     private Vector3 homePosition;
     private Quaternion homeRotation;
@@ -49,6 +44,7 @@ public class EnemyController : MonoBehaviour
         deathRespawnController = GetComponent<EnemyDeathRespawnController>();
         movementController = GetComponent<EnemyMovementController>();
         aggroController = GetComponent<EnemyAggroController>();
+        attackController = GetComponent<EnemyAttackController>();
 
         homePosition = transform.position;
         homeRotation = transform.rotation;
@@ -196,6 +192,11 @@ public class EnemyController : MonoBehaviour
                 movementController.ResetVerticalVelocity();
             }
 
+            if (attackController != null)
+            {
+                attackController.ResetAttackTimer();
+            }
+
             if (enemyStats != null)
             {
                 enemyStats.RecalculateAndApplyStats(true);
@@ -261,23 +262,9 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        if (Time.time - lastAttackTime < attackCooldown)
+        if (attackController != null)
         {
-            return;
-        }
-
-        lastAttackTime = Time.time;
-
-        Health targetHealth = target.GetComponent<Health>();
-
-        if (targetHealth != null && !targetHealth.IsDead)
-        {
-            int finalDamage = enemyStats != null
-                ? enemyStats.GetScaledDamage()
-                : damage;
-
-            Debug.Log($"{gameObject.name} attacks {target.name} for {finalDamage}");
-            targetHealth.TakeDamage(finalDamage, gameObject);
+            attackController.TryBasicAttack(target);
         }
     }
 
@@ -320,7 +307,6 @@ public class EnemyController : MonoBehaviour
         }
 
         isReturningHome = false;
-        lastAttackTime = 0f;
 
         if (movementController != null)
         {
@@ -331,6 +317,11 @@ public class EnemyController : MonoBehaviour
         if (aggroController != null)
         {
             aggroController.ClearTargetAndThreat();
+        }
+
+        if (attackController != null)
+        {
+            attackController.ResetAttackTimer();
         }
 
         if (deathRespawnController != null)
