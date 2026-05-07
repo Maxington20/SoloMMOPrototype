@@ -7,56 +7,44 @@ using UnityEngine;
 [RequireComponent(typeof(StatusEffectController))]
 [RequireComponent(typeof(ThreatTable))]
 [RequireComponent(typeof(EnemyDeathRespawnController))]
+[RequireComponent(typeof(EnemyMovementController))]
 public class EnemyController : MonoBehaviour
 {
     [SerializeField] private float aggroRange = 8f;
     [SerializeField] private float leashRange = 14f;
     [SerializeField] private float attackRange = 1.5f;
-    [SerializeField] private float moveSpeed = 3f;
 
     [Tooltip("Legacy fallback damage. EnemyData Base Damage is used when EnemyStats is present.")]
     [SerializeField] private int damage = 10;
 
     [SerializeField] private float attackCooldown = 1.5f;
-    [SerializeField] private float gravity = -20f;
     [SerializeField] private float returnStopDistance = 0.2f;
-
-    [Header("Wandering")]
-    [SerializeField] private float wanderRadius = 3f;
-    [SerializeField] private float wanderStopDistance = 0.2f;
-    [SerializeField] private float minIdleTimeBetweenWanders = 1.5f;
-    [SerializeField] private float maxIdleTimeBetweenWanders = 4f;
 
     private Transform target;
     private Transform player;
     private float lastAttackTime;
-    private Vector3 verticalVelocity;
 
     private Health health;
-    private CharacterController characterController;
     private EnemyStats enemyStats;
     private StatusEffectController statusEffectController;
     private EnemyAbilityController abilityController;
     private ThreatTable threatTable;
     private EnemyDeathRespawnController deathRespawnController;
+    private EnemyMovementController movementController;
 
     private Vector3 homePosition;
     private Quaternion homeRotation;
     private bool isReturningHome;
 
-    private Vector3 wanderDestination;
-    private bool hasWanderDestination;
-    private float wanderIdleTimer;
-
     private void Awake()
     {
         health = GetComponent<Health>();
-        characterController = GetComponent<CharacterController>();
         enemyStats = GetComponent<EnemyStats>();
         statusEffectController = GetComponent<StatusEffectController>();
         abilityController = GetComponent<EnemyAbilityController>();
         threatTable = GetComponent<ThreatTable>();
         deathRespawnController = GetComponent<EnemyDeathRespawnController>();
+        movementController = GetComponent<EnemyMovementController>();
 
         homePosition = transform.position;
         homeRotation = transform.rotation;
@@ -64,6 +52,11 @@ public class EnemyController : MonoBehaviour
         if (deathRespawnController != null)
         {
             deathRespawnController.ForceHomePosition(homePosition, homeRotation);
+        }
+
+        if (movementController != null)
+        {
+            movementController.SetHomePosition(homePosition);
         }
     }
 
@@ -84,8 +77,6 @@ public class EnemyController : MonoBehaviour
         {
             player = playerObject.transform;
         }
-
-        ResetWanderTimer();
     }
 
     private void Update()
@@ -100,7 +91,10 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
-        HandleGravity();
+        if (movementController != null)
+        {
+            movementController.TickGravity();
+        }
 
         if (IsStunned())
         {
@@ -153,7 +147,10 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
-        HandleWandering();
+        if (movementController != null)
+        {
+            movementController.TickWandering();
+        }
     }
 
     public void SetTarget(Transform newTarget)
@@ -165,7 +162,11 @@ public class EnemyController : MonoBehaviour
 
         target = newTarget;
         isReturningHome = false;
-        hasWanderDestination = false;
+
+        if (movementController != null)
+        {
+            movementController.ClearWanderDestination();
+        }
 
         if (threatTable != null && newTarget != null)
         {
@@ -196,7 +197,11 @@ public class EnemyController : MonoBehaviour
         {
             target = player;
             isReturningHome = false;
-            hasWanderDestination = false;
+
+            if (movementController != null)
+            {
+                movementController.ClearWanderDestination();
+            }
 
             if (threatTable != null)
             {
@@ -209,7 +214,11 @@ public class EnemyController : MonoBehaviour
     {
         target = null;
         isReturningHome = true;
-        hasWanderDestination = false;
+
+        if (movementController != null)
+        {
+            movementController.ClearWanderDestination();
+        }
 
         if (threatTable != null)
         {
@@ -226,8 +235,13 @@ public class EnemyController : MonoBehaviour
             isReturningHome = false;
             transform.position = homePosition;
             transform.rotation = homeRotation;
-            hasWanderDestination = false;
-            ResetWanderTimer();
+
+            if (movementController != null)
+            {
+                movementController.ClearWanderDestination();
+                movementController.ResetWanderTimer();
+                movementController.ResetVerticalVelocity();
+            }
 
             if (enemyStats != null)
             {
@@ -244,63 +258,12 @@ public class EnemyController : MonoBehaviour
         MoveTowardPosition(homePosition);
     }
 
-    private void HandleWandering()
-    {
-        if (hasWanderDestination)
-        {
-            float distanceToDestination = Vector3.Distance(transform.position, wanderDestination);
-
-            if (distanceToDestination <= wanderStopDistance)
-            {
-                hasWanderDestination = false;
-                ResetWanderTimer();
-                return;
-            }
-
-            MoveTowardPosition(wanderDestination);
-            return;
-        }
-
-        wanderIdleTimer -= Time.deltaTime;
-
-        if (wanderIdleTimer <= 0f)
-        {
-            PickNewWanderDestination();
-        }
-    }
-
-    private void PickNewWanderDestination()
-    {
-        Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
-        wanderDestination = homePosition + new Vector3(randomCircle.x, 0f, randomCircle.y);
-        hasWanderDestination = true;
-    }
-
-    private void ResetWanderTimer()
-    {
-        wanderIdleTimer = Random.Range(minIdleTimeBetweenWanders, maxIdleTimeBetweenWanders);
-    }
-
     private void MoveTowardPosition(Vector3 destination)
     {
-        Vector3 direction = destination - transform.position;
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude < 0.001f)
+        if (movementController != null)
         {
-            return;
+            movementController.MoveTowardPosition(destination);
         }
-
-        direction.Normalize();
-
-        float movementMultiplier = statusEffectController != null
-            ? statusEffectController.MovementSpeedMultiplier
-            : 1f;
-
-        Vector3 movement = direction * moveSpeed * movementMultiplier;
-        characterController.Move(movement * Time.deltaTime);
-
-        FaceDirection(direction);
     }
 
     private void FaceCurrentTarget()
@@ -315,24 +278,10 @@ public class EnemyController : MonoBehaviour
 
     private void FacePosition(Vector3 destination)
     {
-        Vector3 direction = destination - transform.position;
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude < 0.001f)
+        if (movementController != null)
         {
-            return;
+            movementController.FacePosition(destination);
         }
-
-        FaceDirection(direction.normalized);
-    }
-
-    private void FaceDirection(Vector3 direction)
-    {
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRotation,
-            10f * Time.deltaTime);
     }
 
     private void TryAttack()
@@ -380,22 +329,6 @@ public class EnemyController : MonoBehaviour
         return statusEffectController != null && statusEffectController.IsStunned;
     }
 
-    private void HandleGravity()
-    {
-        if (characterController.enabled == false)
-        {
-            return;
-        }
-
-        if (characterController.isGrounded && verticalVelocity.y < 0f)
-        {
-            verticalVelocity.y = -2f;
-        }
-
-        verticalVelocity.y += gravity * Time.deltaTime;
-        characterController.Move(verticalVelocity * Time.deltaTime);
-    }
-
     private void HandleDeath()
     {
         if (QuestManager.Instance != null)
@@ -432,8 +365,12 @@ public class EnemyController : MonoBehaviour
         target = null;
         isReturningHome = false;
         lastAttackTime = 0f;
-        verticalVelocity = Vector3.zero;
-        hasWanderDestination = false;
+
+        if (movementController != null)
+        {
+            movementController.ResetVerticalVelocity();
+            movementController.ClearWanderDestination();
+        }
 
         if (threatTable != null)
         {
