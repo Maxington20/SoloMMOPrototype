@@ -33,3 +33,6 @@ MonoBehaviour:
   threatMultiplier: 1.5
   bonusThreat: 5
   isTaunt: 0
+  useAbilityImpactFeedback: 1
+  impactFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  impactScalePunchAmount: 0.08

@@ -124,6 +124,8 @@ public class PlayerCombat : MonoBehaviour
 
         if (ability.DealsDamage)
         {
+            QueueCombatFeedback(currentTarget, ability);
+
             currentTarget.TakeDamage(abilityDamage, gameObject);
             ApplyThreat(currentTarget.gameObject, ability, abilityDamage);
 
@@ -273,6 +275,9 @@ public class PlayerCombat : MonoBehaviour
         int finalDamage = CalculateAutoAttackDamage();
 
         Debug.Log($"Player {attackType} {currentTarget.name} for {finalDamage}");
+
+        QueueCombatFeedback(currentTarget, null);
+
         currentTarget.TakeDamage(finalDamage, gameObject);
         ApplyThreat(currentTarget.gameObject, null, finalDamage);
 
@@ -325,6 +330,23 @@ public class PlayerCombat : MonoBehaviour
         }
 
         return true;
+    }
+
+    private void QueueCombatFeedback(Health targetHealth, AbilityData ability)
+    {
+        if (targetHealth == null)
+        {
+            return;
+        }
+
+        CombatFeedbackReceiver feedbackReceiver = targetHealth.GetComponent<CombatFeedbackReceiver>();
+
+        if (feedbackReceiver == null)
+        {
+            return;
+        }
+
+        feedbackReceiver.QueueAbilityImpactFeedback(ability);
     }
 
     private void FaceTarget(Transform target)

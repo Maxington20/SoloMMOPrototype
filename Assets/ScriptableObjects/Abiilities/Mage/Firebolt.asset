@@ -29,3 +29,10 @@ MonoBehaviour:
   damageMultiplier: 1.6
   restoresHealth: 0
   healingMultiplier: 1
+  statusEffects: []
+  threatMultiplier: 1
+  bonusThreat: 0
+  isTaunt: 0
+  useAbilityImpactFeedback: 0
+  impactFlashColor: {r: 0.41585082, g: 0.96155584, b: 0.990566, a: 1}
+  impactScalePunchAmount: 0.06

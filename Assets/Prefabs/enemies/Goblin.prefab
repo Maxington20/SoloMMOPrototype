@@ -23,6 +23,7 @@ GameObject:
   - component: {fileID: 773233843724014913}
   - component: {fileID: 4236334684162656714}
   - component: {fileID: -8259962012400392994}
+  - component: {fileID: 3859163404910090744}
   m_Layer: 0
   m_Name: Goblin
   m_TagString: Untagged
@@ -359,6 +360,30 @@ MonoBehaviour:
   abilities:
   - {fileID: 11400000, guid: 0ed1e79ee86cd424b8d21f325c709937, type: 2}
   - {fileID: 11400000, guid: 3e683677770cb534eb1ff51d3ab82f8e, type: 2}
+--- !u!114 &3859163404910090744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da78e2ad3a183b4184aa697c155a7c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatFeedbackReceiver
+  health: {fileID: 9020680835841711278}
+  renderersToFlash: []
+  scaleRoot: {fileID: 6105053478087004263}
+  defaultHitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  defaultFlashDuration: 0.08
+  defaultScalePunchAmount: 0.08
+  defaultScalePunchDuration: 0.1
+  missFlashColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  missFlashDuration: 0.06
+  playDeathScale: 1
+  deathScaleAmount: 0.85
+  deathScaleDuration: 0.12
 --- !u!1 &1105335585389521241
 GameObject:
   m_ObjectHideFlags: 0

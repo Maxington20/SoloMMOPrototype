@@ -41,6 +41,11 @@ public class AbilityData : ScriptableObject
     [SerializeField] private float bonusThreat = 0f;
     [SerializeField] private bool isTaunt = false;
 
+    [Header("Combat Feedback")]
+    [SerializeField] private bool useAbilityImpactFeedback = true;
+    [SerializeField] private Color impactFlashColor = Color.white;
+    [SerializeField] private float impactScalePunchAmount = 0.08f;
+
     public string DisplayName => displayName;
     public string Description => description;
     public Sprite Icon => icon;
@@ -82,4 +87,8 @@ public class AbilityData : ScriptableObject
     public float ThreatMultiplier => Mathf.Max(0f, threatMultiplier);
     public float BonusThreat => Mathf.Max(0f, bonusThreat);
     public bool IsTaunt => isTaunt;
+
+    public bool UseAbilityImpactFeedback => useAbilityImpactFeedback;
+    public Color ImpactFlashColor => impactFlashColor;
+    public float ImpactScalePunchAmount => Mathf.Max(0f, impactScalePunchAmount);
 }
