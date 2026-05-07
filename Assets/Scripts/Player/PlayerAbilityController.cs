@@ -4,6 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(PlayerCombat))]
 [RequireComponent(typeof(Health))]
+[RequireComponent(typeof(AbilityExecutor))]
 public class PlayerAbilityController : MonoBehaviour
 {
     [Header("Casting")]
@@ -11,8 +12,8 @@ public class PlayerAbilityController : MonoBehaviour
 
     private PlayerCombat playerCombat;
     private Health playerHealth;
-    private PlayerStats playerStats;
     private PlayerResource playerResource;
+    private AbilityExecutor abilityExecutor;
 
     private readonly Dictionary<AbilityData, float> cooldownEndTimes = new Dictionary<AbilityData, float>();
 
@@ -24,6 +25,7 @@ public class PlayerAbilityController : MonoBehaviour
 
     public bool IsCasting => isCasting;
     public AbilityData CurrentCastingAbility => currentCastingAbility;
+
     public float CastProgress => !isCasting || castDuration <= 0f
         ? 0f
         : Mathf.Clamp01((Time.time - castStartTime) / castDuration);
@@ -36,8 +38,8 @@ public class PlayerAbilityController : MonoBehaviour
     {
         playerCombat = GetComponent<PlayerCombat>();
         playerHealth = GetComponent<Health>();
-        playerStats = GetComponent<PlayerStats>();
         playerResource = GetComponent<PlayerResource>();
+        abilityExecutor = GetComponent<AbilityExecutor>();
     }
 
     private void OnEnable()
@@ -83,29 +85,16 @@ public class PlayerAbilityController : MonoBehaviour
 
     public int CalculateAbilityHealing(AbilityData ability)
     {
-        if (ability == null || !ability.RestoresHealth)
-        {
-            return 0;
-        }
-
-        int primaryStatValue = playerStats != null ? playerStats.PrimaryStatValue : 0;
-
-        float healingPower = playerStats != null
-            ? primaryStatValue * playerStats.CombatTuning.PrimaryStatHealingMultiplier
-            : primaryStatValue;
-
-        int finalHealing = Mathf.RoundToInt(healingPower * ability.HealingMultiplier);
-
-        return Mathf.Max(1, finalHealing);
+        return abilityExecutor != null
+            ? abilityExecutor.CalculateAbilityHealing(ability)
+            : 0;
     }
 
     public float GetBaseHealingPower()
     {
-        int primaryStatValue = playerStats != null ? playerStats.PrimaryStatValue : 0;
-
-        return playerStats != null
-            ? primaryStatValue * playerStats.CombatTuning.PrimaryStatHealingMultiplier
-            : primaryStatValue;
+        return abilityExecutor != null
+            ? abilityExecutor.GetBaseHealingPower()
+            : 0f;
     }
 
     public bool TryUseAbility(AbilityData ability)
@@ -159,7 +148,8 @@ public class PlayerAbilityController : MonoBehaviour
                        true);
         }
 
-        return CanApplySelfAbility(ability, true);
+        return abilityExecutor != null &&
+               abilityExecutor.CanExecuteSelfAbility(ability, true);
     }
 
     private void StartCast(AbilityData ability)
@@ -269,16 +259,9 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        bool used = false;
-
-        if (ability.RequiresTarget)
-        {
-            used = playerCombat != null && playerCombat.TryUseAbilityOnCurrentTarget(ability);
-        }
-        else
-        {
-            used = TryApplySelfAbility(ability);
-        }
+        bool used = ability.RequiresTarget
+            ? ExecuteTargetAbility(ability)
+            : ExecuteSelfAbility(ability);
 
         if (!used)
         {
@@ -292,63 +275,29 @@ public class PlayerAbilityController : MonoBehaviour
         return true;
     }
 
-    private bool CanApplySelfAbility(AbilityData ability, bool postMessages)
+    private bool ExecuteTargetAbility(AbilityData ability)
     {
-        if (!ability.RestoresHealth)
-        {
-            return true;
-        }
-
-        if (playerHealth == null)
+        if (playerCombat == null || abilityExecutor == null)
         {
             return false;
         }
 
-        if (playerHealth.IsDead)
+        if (!playerCombat.CanUseAbilityOnCurrentTarget(
+                ability.DisplayName,
+                ability.Range,
+                true))
         {
-            if (postMessages)
-            {
-                PostSystem("You cannot use that while dead.");
-            }
-
             return false;
         }
 
-        if (playerHealth.CurrentHealth >= playerHealth.MaxHealth)
-        {
-            if (postMessages)
-            {
-                PostSystem("You are already at full health.");
-            }
-
-            return false;
-        }
-
-        return true;
+        playerCombat.FaceCurrentTarget();
+        return abilityExecutor.ExecuteTargetAbility(ability);
     }
 
-    private bool TryApplySelfAbility(AbilityData ability)
+    private bool ExecuteSelfAbility(AbilityData ability)
     {
-        bool didSomething = false;
-
-        if (ability.RestoresHealth)
-        {
-            if (!CanApplySelfAbility(ability, true))
-            {
-                return false;
-            }
-
-            int restoredAmount = CalculateAbilityHealing(ability);
-            int restored = playerHealth.RestoreHealth(restoredAmount);
-
-            if (restored > 0)
-            {
-                didSomething = true;
-                PostSystem($"You use {ability.DisplayName} and restore {restored} health.");
-            }
-        }
-
-        return didSomething;
+        return abilityExecutor != null &&
+               abilityExecutor.ExecuteSelfAbility(ability);
     }
 
     private bool CanPayResourceCost(AbilityData ability)

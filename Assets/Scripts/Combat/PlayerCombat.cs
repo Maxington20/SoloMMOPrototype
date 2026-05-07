@@ -19,6 +19,9 @@ public class PlayerCombat : MonoBehaviour
     private PlayerResource playerResource;
 
     public Transform CurrentTargetTransform => currentTarget != null ? currentTarget.transform : null;
+    public Health CurrentTargetHealth => currentTarget;
+    public EnemyController CurrentEnemyTarget => currentEnemyTarget;
+
     public int Damage => CalculateAutoAttackDamage();
     public float CurrentAttackRange => GetCurrentAttackRange();
     public bool CurrentAutoAttackIsMelee => GetCurrentAutoAttackIsMelee();
@@ -56,15 +59,11 @@ public class PlayerCombat : MonoBehaviour
 
     public int CalculateAbilityDamage(AbilityData ability)
     {
-        if (ability == null || !ability.DealsDamage)
-        {
-            return 0;
-        }
+        AbilityExecutor executor = GetComponent<AbilityExecutor>();
 
-        int scaledAttackDamage = CalculateAutoAttackDamage();
-        int finalDamage = Mathf.RoundToInt(scaledAttackDamage * ability.DamageMultiplier);
-
-        return Mathf.Max(1, finalDamage);
+        return executor != null
+            ? executor.CalculateAbilityDamage(ability)
+            : 0;
     }
 
     public bool CanUseAbilityOnCurrentTarget(string abilityName, float range, bool postMessages)
@@ -117,70 +116,26 @@ public class PlayerCombat : MonoBehaviour
             return false;
         }
 
-        FaceTarget(currentTarget.transform);
+        FaceCurrentTarget();
 
-        bool didSomething = false;
-        int abilityDamage = CalculateAbilityDamage(ability);
+        AbilityExecutor executor = GetComponent<AbilityExecutor>();
 
-        if (ability.DealsDamage)
+        if (executor == null)
         {
-            QueueCombatFeedback(currentTarget, ability);
-
-            currentTarget.TakeDamage(abilityDamage, gameObject);
-            ApplyThreat(currentTarget.gameObject, ability, abilityDamage);
-
-            string targetName = GetTargetDisplayName(currentTarget.gameObject);
-            Debug.Log($"Player uses {ability.DisplayName} on {targetName} for {abilityDamage}");
-            PostSystem($"You use {ability.DisplayName} on {targetName} for {abilityDamage} damage.");
-
-            didSomething = true;
+            return false;
         }
 
-        if (ApplyStatusEffectsToCurrentTarget(ability, abilityDamage))
-        {
-            didSomething = true;
-        }
-
-        if (currentEnemyTarget != null)
-        {
-            currentEnemyTarget.SetTarget(transform);
-        }
-
-        return didSomething;
+        return executor.ExecuteTargetAbility(ability);
     }
 
-    private bool ApplyStatusEffectsToCurrentTarget(AbilityData ability, int abilityDamage)
+    public void FaceCurrentTarget()
     {
-        if (ability == null || ability.StatusEffects == null || ability.StatusEffects.Length == 0)
+        if (currentTarget == null)
         {
-            return false;
+            return;
         }
 
-        StatusEffectController statusController = currentTarget.GetComponent<StatusEffectController>();
-
-        if (statusController == null)
-        {
-            return false;
-        }
-
-        int sourceDamageForEffects = abilityDamage > 0 ? abilityDamage : CalculateAutoAttackDamage();
-
-        bool appliedAny = false;
-
-        for (int i = 0; i < ability.StatusEffects.Length; i++)
-        {
-            StatusEffectData effect = ability.StatusEffects[i];
-
-            if (effect == null)
-            {
-                continue;
-            }
-
-            statusController.ApplyEffect(effect, gameObject, sourceDamageForEffects);
-            appliedAny = true;
-        }
-
-        return appliedAny;
+        FaceTarget(currentTarget.transform);
     }
 
     private void HandleTargetSelection()
@@ -383,15 +338,7 @@ public class PlayerCombat : MonoBehaviour
         currentEnemyTarget = null;
     }
 
-    private void PostSystem(string message)
-    {
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem(message);
-        }
-    }
-
-    private void ApplyThreat(GameObject targetObject, AbilityData ability, int damage)
+    private void ApplyThreat(GameObject targetObject, AbilityData ability, int damageAmount)
     {
         ThreatTable threatTable = targetObject.GetComponent<ThreatTable>();
         if (threatTable == null)
@@ -399,7 +346,7 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        float threat = damage;
+        float threat = damageAmount;
 
         if (ability != null)
         {
@@ -414,5 +361,13 @@ public class PlayerCombat : MonoBehaviour
         }
 
         threatTable.AddThreat(gameObject, threat);
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
+        }
     }
 }
