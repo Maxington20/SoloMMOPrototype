@@ -8,14 +8,15 @@ using UnityEngine;
 [RequireComponent(typeof(AbilityResourceController))]
 [RequireComponent(typeof(AbilityCastController))]
 [RequireComponent(typeof(AbilityTargetValidator))]
+[RequireComponent(typeof(AbilityUseValidator))]
 public class PlayerAbilityController : MonoBehaviour
 {
-    private PlayerCombat playerCombat;
     private AbilityExecutor abilityExecutor;
     private AbilityCooldownController cooldownController;
     private AbilityResourceController resourceController;
     private AbilityCastController castController;
     private AbilityTargetValidator targetValidator;
+    private AbilityUseValidator useValidator;
 
     public bool IsCasting => castController != null && castController.IsCasting;
 
@@ -33,12 +34,12 @@ public class PlayerAbilityController : MonoBehaviour
 
     private void Awake()
     {
-        playerCombat = GetComponent<PlayerCombat>();
         abilityExecutor = GetComponent<AbilityExecutor>();
         cooldownController = GetComponent<AbilityCooldownController>();
         resourceController = GetComponent<AbilityResourceController>();
         castController = GetComponent<AbilityCastController>();
         targetValidator = GetComponent<AbilityTargetValidator>();
+        useValidator = GetComponent<AbilityUseValidator>();
     }
 
     private void OnEnable()
@@ -116,31 +117,8 @@ public class PlayerAbilityController : MonoBehaviour
 
     private bool CanBeginAbility(AbilityData ability)
     {
-        float cooldownRemaining = GetRemainingCooldown(ability);
-
-        if (cooldownRemaining > 0f)
-        {
-            PostSystem($"{ability.DisplayName} is on cooldown for {Mathf.CeilToInt(cooldownRemaining)} more second(s).");
-            return false;
-        }
-
-        if (!CanPayResourceCost(ability))
-        {
-            PostSystem($"Not enough {GetResourceName()} for {ability.DisplayName}.");
-            return false;
-        }
-
-        if (ability.RequiresTarget)
-        {
-            return targetValidator != null &&
-                   targetValidator.CanUseAbilityOnCurrentTarget(
-                       ability.DisplayName,
-                       ability.Range,
-                       true);
-        }
-
-        return abilityExecutor != null &&
-               abilityExecutor.CanExecuteSelfAbility(ability, true);
+        return useValidator != null &&
+               useValidator.CanBeginAbility(ability, true);
     }
 
     private void StartCast(AbilityData ability)
@@ -184,9 +162,9 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        if (!CanPayResourceCost(ability))
+        if (resourceController != null && !resourceController.CanPayResourceCost(ability))
         {
-            PostSystem($"Not enough {GetResourceName()} for {ability.DisplayName}.");
+            PostSystem($"Not enough {resourceController.GetResourceName()} for {ability.DisplayName}.");
             return false;
         }
 
@@ -199,9 +177,16 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        SpendResourceCost(ability);
-        GenerateResourceFromAbility(ability);
-        StartCooldown(ability);
+        if (resourceController != null)
+        {
+            resourceController.SpendResourceCost(ability);
+            resourceController.GenerateResourceFromAbility(ability);
+        }
+
+        if (cooldownController != null)
+        {
+            cooldownController.StartCooldown(ability);
+        }
 
         return true;
     }
@@ -229,43 +214,6 @@ public class PlayerAbilityController : MonoBehaviour
     {
         return abilityExecutor != null &&
                abilityExecutor.ExecuteSelfAbility(ability);
-    }
-
-    private bool CanPayResourceCost(AbilityData ability)
-    {
-        return resourceController == null ||
-               resourceController.CanPayResourceCost(ability);
-    }
-
-    private void SpendResourceCost(AbilityData ability)
-    {
-        if (resourceController != null)
-        {
-            resourceController.SpendResourceCost(ability);
-        }
-    }
-
-    private void GenerateResourceFromAbility(AbilityData ability)
-    {
-        if (resourceController != null)
-        {
-            resourceController.GenerateResourceFromAbility(ability);
-        }
-    }
-
-    private void StartCooldown(AbilityData ability)
-    {
-        if (cooldownController != null)
-        {
-            cooldownController.StartCooldown(ability);
-        }
-    }
-
-    private string GetResourceName()
-    {
-        return resourceController != null
-            ? resourceController.GetResourceName()
-            : "resource";
     }
 
     private void PostSystem(string message)

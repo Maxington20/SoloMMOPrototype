@@ -30981,6 +30981,7 @@ GameObject:
   - component: {fileID: 1861179901}
   - component: {fileID: 1861179903}
   - component: {fileID: 1861179904}
+  - component: {fileID: 1861179905}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -31480,6 +31481,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0b217d30d5a42443909eea330231191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTargetValidator
+--- !u!114 &1861179905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 958d4142c4272994192fed8e3ecd1f7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityUseValidator
 --- !u!1 &1861185946
 GameObject:
   m_ObjectHideFlags: 0
