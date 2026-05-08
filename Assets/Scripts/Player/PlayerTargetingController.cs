@@ -54,6 +54,15 @@ public class PlayerTargetingController : MonoBehaviour
             return;
         }
 
+        NpcInteractionController npcInteraction = hit.collider.GetComponentInParent<NpcInteractionController>();
+
+        if (npcInteraction != null)
+        {
+            ClearTarget();
+            npcInteraction.Interact(transform);
+            return;
+        }
+
         EnemyLoot enemyLoot = hit.collider.GetComponentInParent<EnemyLoot>();
         Health clickedHealth = hit.collider.GetComponentInParent<Health>();
 
@@ -70,6 +79,7 @@ public class PlayerTargetingController : MonoBehaviour
         }
 
         Health targetHealth = hit.collider.GetComponentInParent<Health>();
+
         if (targetHealth == null || targetHealth.IsDead)
         {
             ClearTarget();
@@ -77,6 +87,7 @@ public class PlayerTargetingController : MonoBehaviour
         }
 
         EnemyController enemy = hit.collider.GetComponentInParent<EnemyController>();
+
         if (enemy == null)
         {
             ClearTarget();

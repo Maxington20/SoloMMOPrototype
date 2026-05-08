@@ -7,45 +7,43 @@ public class VendorNPC : MonoBehaviour
     [SerializeField] private string vendorName = "Merchant";
     [SerializeField] private List<ItemData> itemsForSale = new List<ItemData>();
 
-    [Header("Interaction")]
-    [SerializeField] private float interactionRange = 3f;
-    [SerializeField] private Transform player;
-    [SerializeField] private KeyCode interactionKey = KeyCode.F;
-
     public string VendorName => vendorName;
     public IReadOnlyList<ItemData> ItemsForSale => itemsForSale;
-    public float InteractionRange => interactionRange;
-    public Transform Player => player;
 
-    private void Start()
+    public void ApplyNpcData(NpcData npcData)
     {
-        if (player == null)
-        {
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-            if (playerObject != null)
-            {
-                player = playerObject.transform;
-            }
-        }
-    }
-
-    private void Update()
-    {
-        if (player == null || VendorUI.Instance == null)
+        if (npcData == null)
         {
             return;
         }
 
-        float distance = Vector3.Distance(transform.position, player.position);
-
-        if (distance <= interactionRange && Input.GetKeyDown(interactionKey))
+        if (!string.IsNullOrWhiteSpace(npcData.DisplayName))
         {
-            VendorUI.Instance.OpenVendor(this);
+            vendorName = npcData.DisplayName;
         }
 
-        if (VendorUI.Instance.IsOpenFor(this) && distance > interactionRange)
+        if (npcData.VendorItems != null && npcData.VendorItems.Count > 0)
         {
-            VendorUI.Instance.CloseVendor();
+            itemsForSale = new List<ItemData>(npcData.VendorItems);
+        }
+    }
+
+    public void OpenVendor()
+    {
+        if (VendorUI.Instance == null)
+        {
+            PostSystem("Vendor UI is missing.");
+            return;
+        }
+
+        VendorUI.Instance.OpenVendor(this);
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
         }
     }
 }

@@ -2,39 +2,22 @@ using UnityEngine;
 
 public class QuestGiver : MonoBehaviour
 {
-    [SerializeField] private float interactionRange = 3f;
-    [SerializeField] private Transform player;
-    [SerializeField] private KeyCode interactionKey = KeyCode.F;
-
-    private void Start()
+    public void Interact()
     {
-        if (player == null)
+        if (QuestManager.Instance == null)
         {
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-            if (playerObject != null)
-            {
-                player = playerObject.transform;
-            }
+            PostSystem("Quest manager is missing.");
+            return;
         }
+
+        QuestManager.Instance.InteractWithQuestGiver();
     }
 
-    private void Update()
+    private void PostSystem(string message)
     {
-        if (player == null || QuestManager.Instance == null)
+        if (ChatManager.Instance != null)
         {
-            return;
-        }
-
-        float distance = Vector3.Distance(transform.position, player.position);
-
-        if (distance > interactionRange)
-        {
-            return;
-        }
-
-        if (Input.GetKeyDown(interactionKey))
-        {
-            QuestManager.Instance.InteractWithQuestGiver();
+            ChatManager.Instance.PostSystem(message);
         }
     }
 }

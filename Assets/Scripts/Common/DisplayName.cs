@@ -1,42 +1,45 @@
 using UnityEngine;
+using TMPro;
 
 public class DisplayName : MonoBehaviour
 {
-    [SerializeField] private string displayName = "Unknown";
-    [SerializeField] private Color defaultColor = Color.white;
+    [SerializeField] private string displayName = "Unit";
+    [SerializeField] private Color displayColor = Color.white;
+    [SerializeField] private TMP_Text nameText;
 
-    private EnemyData enemyData;
-
-    public string BaseDisplay => displayName;
-
-    public string Display
-    {
-        get
-        {
-            if (enemyData != null)
-            {
-                return $"{enemyData.GetDisplayNamePrefix()}{displayName}";
-            }
-
-            return displayName;
-        }
-    }
-
-    public Color DisplayColor
-    {
-        get
-        {
-            if (enemyData != null)
-            {
-                return enemyData.GetTierNameColor(defaultColor);
-            }
-
-            return defaultColor;
-        }
-    }
+    public string Display => displayName;
+    public Color DisplayColor => displayColor;
 
     private void Awake()
     {
-        enemyData = GetComponent<EnemyData>();
+        ApplyDisplayName();
+    }
+
+    public void SetDisplayName(string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            return;
+        }
+
+        displayName = newName;
+        ApplyDisplayName();
+    }
+
+    public void SetDisplayColor(Color newColor)
+    {
+        displayColor = newColor;
+        ApplyDisplayName();
+    }
+
+    private void ApplyDisplayName()
+    {
+        if (nameText == null)
+        {
+            return;
+        }
+
+        nameText.text = displayName;
+        nameText.color = displayColor;
     }
 }

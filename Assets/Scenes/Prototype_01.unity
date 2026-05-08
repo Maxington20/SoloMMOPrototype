@@ -8352,6 +8352,8 @@ GameObject:
   m_Component:
   - component: {fileID: 410304895}
   - component: {fileID: 410304894}
+  - component: {fileID: 410304897}
+  - component: {fileID: 410304898}
   m_Layer: 0
   m_Name: Vendor_GeneralGoods
   m_TagString: Untagged
@@ -8371,7 +8373,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e774e346fcbb624ebea64cab03ffc82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VendorNPC
-  vendorName: Merchant
+  vendorName: Carl the Merchant
   itemsForSale:
   - {fileID: 11400000, guid: 689a2cdfd990b1f48b988a14bdf91fee, type: 2}
   - {fileID: 11400000, guid: b049b6c0b53368442aa4a40b11215dbd, type: 2}
@@ -8380,9 +8382,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
   - {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
   - {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
-  interactionRange: 3
-  player: {fileID: 0}
-  interactionKey: 102
 --- !u!4 &410304895
 Transform:
   m_ObjectHideFlags: 0
@@ -8399,6 +8398,44 @@ Transform:
   - {fileID: 94812313}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &410304897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410304893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 959ec31bccc5efa429e8036d03437e9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcInteractionController
+  npcData: {fileID: 11400000, guid: a0a3d58dd6dd5994da14c73300441eeb, type: 2}
+  interactionRange: 4
+  openQuestUIBeforeVendor: 0
+--- !u!136 &410304898
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410304893}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &419241746
 GameObject:
   m_ObjectHideFlags: 0
@@ -31194,7 +31231,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisplayName
   displayName: Maxington
-  defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  nameText: {fileID: 0}
 --- !u!114 &1861179885
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33809,6 +33847,9 @@ GameObject:
   - component: {fileID: 2070381733}
   - component: {fileID: 2070381732}
   - component: {fileID: 2070381736}
+  - component: {fileID: 2070381737}
+  - component: {fileID: 2070381738}
+  - component: {fileID: 2070381739}
   m_Layer: 0
   m_Name: QuestGiver
   m_TagString: Untagged
@@ -33924,9 +33965,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e008394bceee9b47afab85ab4278747, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestGiver
-  interactionRange: 3
-  player: {fileID: 1861179878}
-  interactionKey: 102
+--- !u!114 &2070381737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070381731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3aaf9b538d1a2a34aa909a19f0cdef37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DisplayName
+  displayName: Jeff the Village Elder
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  nameText: {fileID: 0}
+--- !u!114 &2070381738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070381731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e008394bceee9b47afab85ab4278747, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestGiver
+--- !u!114 &2070381739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070381731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 959ec31bccc5efa429e8036d03437e9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcInteractionController
+  npcData: {fileID: 0}
+  interactionRange: 4
+  openQuestUIBeforeVendor: 1
 --- !u!1 &2079324957
 GameObject:
   m_ObjectHideFlags: 0
