@@ -3,10 +3,12 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(PlayerTargetingController))]
 [RequireComponent(typeof(PlayerAutoAttackController))]
+[RequireComponent(typeof(AbilityTargetValidator))]
 public class PlayerCombat : MonoBehaviour
 {
     private PlayerTargetingController targetingController;
     private PlayerAutoAttackController autoAttackController;
+    private AbilityTargetValidator targetValidator;
 
     public Transform CurrentTargetTransform => targetingController != null
         ? targetingController.CurrentTargetTransform
@@ -34,6 +36,7 @@ public class PlayerCombat : MonoBehaviour
     {
         targetingController = GetComponent<PlayerTargetingController>();
         autoAttackController = GetComponent<PlayerAutoAttackController>();
+        targetValidator = GetComponent<AbilityTargetValidator>();
     }
 
     public void SetBaseDamage(int amount)
@@ -71,42 +74,11 @@ public class PlayerCombat : MonoBehaviour
 
     public bool CanUseAbilityOnCurrentTarget(string abilityName, float range, bool postMessages)
     {
-        Health currentTarget = CurrentTargetHealth;
-
-        if (currentTarget == null)
-        {
-            if (postMessages)
-            {
-                PostSystem("No target.");
-            }
-
-            return false;
-        }
-
-        if (currentTarget.IsDead)
-        {
-            ClearTarget();
-
-            if (postMessages)
-            {
-                PostSystem("Target is dead.");
-            }
-
-            return false;
-        }
-
-        float distanceToTarget = Vector3.Distance(transform.position, currentTarget.transform.position);
-        if (distanceToTarget > range)
-        {
-            if (postMessages)
-            {
-                PostSystem($"{abilityName} is out of range.");
-            }
-
-            return false;
-        }
-
-        return true;
+        return targetValidator != null &&
+               targetValidator.CanUseAbilityOnCurrentTarget(
+                   abilityName,
+                   range,
+                   postMessages);
     }
 
     public bool TryUseAbilityOnCurrentTarget(AbilityData ability)
@@ -135,46 +107,21 @@ public class PlayerCombat : MonoBehaviour
 
     public void FaceCurrentTarget()
     {
-        Transform currentTargetTransform = CurrentTargetTransform;
-
-        if (currentTargetTransform == null)
+        if (targetValidator != null)
         {
-            return;
+            targetValidator.FaceCurrentTarget();
         }
-
-        FaceTarget(currentTargetTransform);
     }
 
     public void ClearTarget()
     {
-        if (targetingController != null)
+        if (targetValidator != null)
+        {
+            targetValidator.ClearTarget();
+        }
+        else if (targetingController != null)
         {
             targetingController.ClearTarget();
-        }
-    }
-
-    private void FaceTarget(Transform target)
-    {
-        Vector3 direction = target.position - transform.position;
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude < 0.001f)
-        {
-            return;
-        }
-
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRotation,
-            10f * Time.deltaTime);
-    }
-
-    private void PostSystem(string message)
-    {
-        if (ChatManager.Instance != null)
-        {
-            ChatManager.Instance.PostSystem(message);
         }
     }
 }

@@ -30972,6 +30972,15 @@ GameObject:
   - component: {fileID: 1861179893}
   - component: {fileID: 1861179894}
   - component: {fileID: 1861179895}
+  - component: {fileID: 1861179897}
+  - component: {fileID: 1861179896}
+  - component: {fileID: 1861179898}
+  - component: {fileID: 1861179899}
+  - component: {fileID: 1861179900}
+  - component: {fileID: 1861179902}
+  - component: {fileID: 1861179901}
+  - component: {fileID: 1861179903}
+  - component: {fileID: 1861179904}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -31127,10 +31136,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3792533cb5283bf499eaa7739455650d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
-  attackRange: 2.5
-  damage: 20
-  attackCooldown: 1
-  chaseStopDistance: 1.5
 --- !u!114 &1861179881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31271,7 +31276,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e94268ba3995648b97fcca4ffa2854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAbilityController
-  movementCancelDistance: 0.08
 --- !u!114 &1861179890
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31362,6 +31366,120 @@ MonoBehaviour:
   playDeathScale: 1
   deathScaleAmount: 0.85
   deathScaleDuration: 0.12
+--- !u!114 &1861179896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b033762e49ac8b4ca8566b5dfb72bfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerItemUseController
+  playerHealth: {fileID: 0}
+--- !u!114 &1861179897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6d60e760a20b434695377f5eef9ef10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWallet
+  startingGold: 0
+--- !u!114 &1861179898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf1e229a405894243b0d5bd87731eaf4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityExecutor
+--- !u!114 &1861179899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bda62adfba421cc43abda318c46d1eba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTargetingController
+--- !u!114 &1861179900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8484334729205b42bdd8cf9c65f4781, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAutoAttackController
+  attackRange: 1.8
+  baseDamage: 20
+  attackCooldown: 1
+--- !u!114 &1861179901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46b11996413e074db10b19c1478facf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityResourceController
+--- !u!114 &1861179902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b80e7e8473c441d448fe2b2196929a22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityCooldownController
+--- !u!114 &1861179903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c29af59b48160d945b47529e87b3128d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityCastController
+  movementCancelDistance: 0.08
+--- !u!114 &1861179904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861179872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0b217d30d5a42443909eea330231191, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityTargetValidator
 --- !u!1 &1861185946
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,6 +7,7 @@ using UnityEngine;
 [RequireComponent(typeof(AbilityCooldownController))]
 [RequireComponent(typeof(AbilityResourceController))]
 [RequireComponent(typeof(AbilityCastController))]
+[RequireComponent(typeof(AbilityTargetValidator))]
 public class PlayerAbilityController : MonoBehaviour
 {
     private PlayerCombat playerCombat;
@@ -14,6 +15,7 @@ public class PlayerAbilityController : MonoBehaviour
     private AbilityCooldownController cooldownController;
     private AbilityResourceController resourceController;
     private AbilityCastController castController;
+    private AbilityTargetValidator targetValidator;
 
     public bool IsCasting => castController != null && castController.IsCasting;
 
@@ -36,6 +38,7 @@ public class PlayerAbilityController : MonoBehaviour
         cooldownController = GetComponent<AbilityCooldownController>();
         resourceController = GetComponent<AbilityResourceController>();
         castController = GetComponent<AbilityCastController>();
+        targetValidator = GetComponent<AbilityTargetValidator>();
     }
 
     private void OnEnable()
@@ -129,8 +132,8 @@ public class PlayerAbilityController : MonoBehaviour
 
         if (ability.RequiresTarget)
         {
-            return playerCombat != null &&
-                   playerCombat.CanUseAbilityOnCurrentTarget(
+            return targetValidator != null &&
+                   targetValidator.CanUseAbilityOnCurrentTarget(
                        ability.DisplayName,
                        ability.Range,
                        true);
@@ -205,12 +208,12 @@ public class PlayerAbilityController : MonoBehaviour
 
     private bool ExecuteTargetAbility(AbilityData ability)
     {
-        if (playerCombat == null || abilityExecutor == null)
+        if (abilityExecutor == null || targetValidator == null)
         {
             return false;
         }
 
-        if (!playerCombat.CanUseAbilityOnCurrentTarget(
+        if (!targetValidator.CanUseAbilityOnCurrentTarget(
                 ability.DisplayName,
                 ability.Range,
                 true))
@@ -218,7 +221,7 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        playerCombat.FaceCurrentTarget();
+        targetValidator.FaceCurrentTarget();
         return abilityExecutor.ExecuteTargetAbility(ability);
     }
 
