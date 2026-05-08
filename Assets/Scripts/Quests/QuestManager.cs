@@ -5,7 +5,7 @@ public class QuestManager : MonoBehaviour
 {
     public static QuestManager Instance { get; private set; }
 
-    [Header("Quest List")]
+    [Header("Fallback Quest List")]
     [SerializeField] private List<QuestDefinition> quests = new List<QuestDefinition>();
 
     [Header("Settings")]
@@ -14,6 +14,7 @@ public class QuestManager : MonoBehaviour
     private readonly List<ActiveQuest> activeQuests = new List<ActiveQuest>();
     private readonly List<QuestDefinition> completedQuests = new List<QuestDefinition>();
 
+    private QuestGiver currentQuestGiver;
     private ActiveQuest pendingTurnInQuest;
 
     public IReadOnlyList<ActiveQuest> ActiveQuests => activeQuests;
@@ -33,53 +34,55 @@ public class QuestManager : MonoBehaviour
         Instance = this;
     }
 
+    public void InteractWithQuestGiver()
+    {
+        currentQuestGiver = null;
+        OpenQuestGiverUI();
+    }
+
+    public void InteractWithQuestGiver(QuestGiver questGiver)
+    {
+        currentQuestGiver = questGiver;
+        OpenQuestGiverUI();
+    }
+
     public string GetQuestOfferText()
     {
         ActiveQuest completableQuest = GetFirstCompletableQuest();
 
         if (completableQuest != null)
         {
-            return "Press F to speak with the quest giver.";
+            return "Click to speak with the quest giver.";
         }
 
         QuestDefinition availableQuest = GetFirstAvailableQuest();
 
         if (availableQuest != null)
         {
-            return "Press F to speak with the quest giver.";
+            return "Click to speak with the quest giver.";
         }
 
-        if (activeQuests.Count > 0)
+        if (GetInProgressQuests().Count > 0)
         {
-            return "Press F to review your quests.";
+            return "Click to review your quests.";
         }
 
         return "No quests available.";
     }
 
-    public void InteractWithQuestGiver()
-    {
-        if (QuestGiverUI.Instance != null)
-        {
-            QuestGiverUI.Instance.Open();
-            return;
-        }
-
-        PostSystem("Quest giver UI is missing.");
-    }
-
     public List<QuestDefinition> GetAvailableQuests()
     {
         List<QuestDefinition> available = new List<QuestDefinition>();
+        IReadOnlyList<QuestDefinition> sourceQuests = GetCurrentQuestSource();
 
-        if (quests == null)
+        if (sourceQuests == null)
         {
             return available;
         }
 
-        for (int i = 0; i < quests.Count; i++)
+        for (int i = 0; i < sourceQuests.Count; i++)
         {
-            QuestDefinition quest = quests[i];
+            QuestDefinition quest = sourceQuests[i];
 
             if (quest == null)
             {
@@ -111,7 +114,12 @@ public class QuestManager : MonoBehaviour
         {
             ActiveQuest quest = activeQuests[i];
 
-            if (quest != null && quest.IsComplete(inventory))
+            if (quest == null || !QuestBelongsToCurrentQuestGiver(quest.definition))
+            {
+                continue;
+            }
+
+            if (quest.IsComplete(inventory))
             {
                 completable.Add(quest);
             }
@@ -129,7 +137,12 @@ public class QuestManager : MonoBehaviour
         {
             ActiveQuest quest = activeQuests[i];
 
-            if (quest != null && !quest.IsComplete(inventory))
+            if (quest == null || !QuestBelongsToCurrentQuestGiver(quest.definition))
+            {
+                continue;
+            }
+
+            if (!quest.IsComplete(inventory))
             {
                 inProgress.Add(quest);
             }
@@ -142,6 +155,12 @@ public class QuestManager : MonoBehaviour
     {
         if (definition == null)
         {
+            return;
+        }
+
+        if (!QuestBelongsToCurrentQuestGiver(definition))
+        {
+            PostSystem("That quest does not belong to this quest giver.");
             return;
         }
 
@@ -171,6 +190,12 @@ public class QuestManager : MonoBehaviour
     {
         if (quest == null || !activeQuests.Contains(quest))
         {
+            return;
+        }
+
+        if (!QuestBelongsToCurrentQuestGiver(quest.definition))
+        {
+            PostSystem("You cannot turn that quest in here.");
             return;
         }
 
@@ -215,6 +240,12 @@ public class QuestManager : MonoBehaviour
     {
         if (quest == null || !activeQuests.Contains(quest))
         {
+            return;
+        }
+
+        if (!QuestBelongsToCurrentQuestGiver(quest.definition))
+        {
+            PostSystem("You cannot turn that quest in here.");
             return;
         }
 
@@ -303,7 +334,7 @@ public class QuestManager : MonoBehaviour
 
             if (quest.IsComplete(inventory))
             {
-                PostSystem($"Return to the quest giver to turn in {quest.definition.title}.");
+                PostSystem($"Return to the correct quest giver to turn in {quest.definition.title}.");
             }
         }
 
@@ -311,6 +342,57 @@ public class QuestManager : MonoBehaviour
         {
             PostSystem("Quest progress updated.");
         }
+    }
+
+    private IReadOnlyList<QuestDefinition> GetCurrentQuestSource()
+    {
+        if (currentQuestGiver != null)
+        {
+            return currentQuestGiver.AssignedQuests;
+        }
+
+        return quests;
+    }
+
+    private bool QuestBelongsToCurrentQuestGiver(QuestDefinition definition)
+    {
+        if (definition == null)
+        {
+            return false;
+        }
+
+        if (currentQuestGiver == null)
+        {
+            return true;
+        }
+
+        IReadOnlyList<QuestDefinition> assignedQuests = currentQuestGiver.AssignedQuests;
+
+        if (assignedQuests == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < assignedQuests.Count; i++)
+        {
+            if (assignedQuests[i] == definition)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void OpenQuestGiverUI()
+    {
+        if (QuestGiverUI.Instance != null)
+        {
+            QuestGiverUI.Instance.Open();
+            return;
+        }
+
+        PostSystem("Quest giver UI is missing.");
     }
 
     private QuestDefinition GetFirstAvailableQuest()
@@ -327,7 +409,12 @@ public class QuestManager : MonoBehaviour
         {
             ActiveQuest quest = activeQuests[i];
 
-            if (quest != null && quest.IsComplete(inventory))
+            if (quest == null || !QuestBelongsToCurrentQuestGiver(quest.definition))
+            {
+                continue;
+            }
+
+            if (quest.IsComplete(inventory))
             {
                 return quest;
             }

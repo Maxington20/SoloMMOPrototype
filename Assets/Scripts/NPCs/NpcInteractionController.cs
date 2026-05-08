@@ -18,15 +18,21 @@ public class NpcInteractionController : MonoBehaviour
 
     private void Awake()
     {
-        vendorNpc = GetComponent<VendorNPC>();
-        questGiver = GetComponent<QuestGiver>();
-        displayName = GetComponent<DisplayName>();
+        CacheComponents();
+        ApplyNpcDataToComponents();
+    }
 
+    private void OnValidate()
+    {
+        CacheComponents();
         ApplyNpcDataToComponents();
     }
 
     public void Interact(Transform player)
     {
+        CacheComponents();
+        ApplyNpcDataToComponents();
+
         if (player == null)
         {
             return;
@@ -83,6 +89,24 @@ public class NpcInteractionController : MonoBehaviour
         return gameObject.name;
     }
 
+    private void CacheComponents()
+    {
+        if (vendorNpc == null)
+        {
+            vendorNpc = GetComponent<VendorNPC>();
+        }
+
+        if (questGiver == null)
+        {
+            questGiver = GetComponent<QuestGiver>();
+        }
+
+        if (displayName == null)
+        {
+            displayName = GetComponent<DisplayName>();
+        }
+    }
+
     private bool TryOpenQuestUI()
     {
         bool canGiveQuests = npcData == null || npcData.CanGiveQuests;
@@ -124,6 +148,11 @@ public class NpcInteractionController : MonoBehaviour
         if (vendorNpc != null)
         {
             vendorNpc.ApplyNpcData(npcData);
+        }
+
+        if (questGiver != null)
+        {
+            questGiver.ApplyNpcData(npcData);
         }
     }
 

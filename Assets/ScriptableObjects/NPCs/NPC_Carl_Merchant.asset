@@ -17,4 +17,12 @@ MonoBehaviour:
   portrait: {fileID: 0}
   canGiveQuests: 0
   canVendor: 1
-  vendorItems: []
+  quests: []
+  vendorItems:
+  - {fileID: 11400000, guid: 74142010c0fb01646bb6491bad3e6666, type: 2}
+  - {fileID: 11400000, guid: a8dc16774ee4e95409733c98ba643cff, type: 2}
+  - {fileID: 11400000, guid: b049b6c0b53368442aa4a40b11215dbd, type: 2}
+  - {fileID: 11400000, guid: 903a37a19674d3347be5055079de0dfb, type: 2}
+  - {fileID: 11400000, guid: 4f46ab2331265394584527e4224de0b7, type: 2}
+  - {fileID: 11400000, guid: 42f3609c51313174f8c35c828ae0b8e5, type: 2}
+  - {fileID: 11400000, guid: 689a2cdfd990b1f48b988a14bdf91fee, type: 2}

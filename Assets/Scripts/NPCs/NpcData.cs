@@ -13,6 +13,9 @@ public class NpcData : ScriptableObject
     [SerializeField] private bool canGiveQuests;
     [SerializeField] private bool canVendor;
 
+    [Header("Quests")]
+    [SerializeField] private List<QuestDefinition> quests = new List<QuestDefinition>();
+
     [Header("Vendor")]
     [SerializeField] private List<ItemData> vendorItems = new List<ItemData>();
 
@@ -23,6 +26,7 @@ public class NpcData : ScriptableObject
     public bool CanGiveQuests => canGiveQuests;
     public bool CanVendor => canVendor;
 
+    public IReadOnlyList<QuestDefinition> Quests => quests;
     public IReadOnlyList<ItemData> VendorItems => vendorItems;
 
     public string FullDisplayName
