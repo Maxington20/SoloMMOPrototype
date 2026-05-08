@@ -95,10 +95,10 @@ public class PlayerAutoAttackController : MonoBehaviour
 
         Debug.Log($"Player {attackType} {currentTarget.name} for {finalDamage}");
 
-        QueueCombatFeedback(currentTarget, null);
+        CombatFeedbackService.QueueImpactFeedback(currentTarget, null);
 
         currentTarget.TakeDamage(finalDamage, gameObject);
-        ApplyThreat(currentTarget.gameObject, null, finalDamage);
+        ThreatService.ApplyThreat(gameObject, currentTarget.gameObject, null, finalDamage);
 
         if (playerResource != null)
         {
@@ -106,6 +106,7 @@ public class PlayerAutoAttackController : MonoBehaviour
         }
 
         EnemyController currentEnemyTarget = targetingController.CurrentEnemyTarget;
+
         if (currentEnemyTarget != null)
         {
             currentEnemyTarget.SetTarget(transform);
@@ -150,53 +151,6 @@ public class PlayerAutoAttackController : MonoBehaviour
         }
 
         return true;
-    }
-
-    private void QueueCombatFeedback(Health targetHealth, AbilityData ability)
-    {
-        if (targetHealth == null)
-        {
-            return;
-        }
-
-        CombatFeedbackReceiver feedbackReceiver = targetHealth.GetComponent<CombatFeedbackReceiver>();
-
-        if (feedbackReceiver == null)
-        {
-            return;
-        }
-
-        feedbackReceiver.QueueAbilityImpactFeedback(ability);
-    }
-
-    private void ApplyThreat(GameObject targetObject, AbilityData ability, int damageAmount)
-    {
-        if (targetObject == null)
-        {
-            return;
-        }
-
-        ThreatTable threatTable = targetObject.GetComponent<ThreatTable>();
-        if (threatTable == null)
-        {
-            return;
-        }
-
-        float threat = damageAmount;
-
-        if (ability != null)
-        {
-            threat *= ability.ThreatMultiplier;
-            threat += ability.BonusThreat;
-
-            if (ability.IsTaunt)
-            {
-                threatTable.SetHighestThreat(gameObject, 50f);
-                return;
-            }
-        }
-
-        threatTable.AddThreat(gameObject, threat);
     }
 
     private void FaceTarget(Transform target)

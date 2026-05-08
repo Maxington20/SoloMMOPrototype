@@ -133,10 +133,10 @@ public class AbilityExecutor : MonoBehaviour
 
         if (ability.DealsDamage)
         {
-            QueueCombatFeedback(targetHealth, ability);
+            CombatFeedbackService.QueueImpactFeedback(targetHealth, ability);
 
             targetHealth.TakeDamage(abilityDamage, gameObject);
-            ApplyThreat(targetHealth.gameObject, ability, abilityDamage);
+            ThreatService.ApplyThreat(gameObject, targetHealth.gameObject, ability, abilityDamage);
 
             string targetName = GetTargetDisplayName(targetHealth.gameObject);
 
@@ -152,6 +152,7 @@ public class AbilityExecutor : MonoBehaviour
         }
 
         EnemyController enemyTarget = playerCombat.CurrentEnemyTarget;
+
         if (enemyTarget != null)
         {
             enemyTarget.SetTarget(transform);
@@ -194,53 +195,6 @@ public class AbilityExecutor : MonoBehaviour
         }
 
         return appliedAny;
-    }
-
-    private void QueueCombatFeedback(Health targetHealth, AbilityData ability)
-    {
-        if (targetHealth == null)
-        {
-            return;
-        }
-
-        CombatFeedbackReceiver feedbackReceiver = targetHealth.GetComponent<CombatFeedbackReceiver>();
-
-        if (feedbackReceiver == null)
-        {
-            return;
-        }
-
-        feedbackReceiver.QueueAbilityImpactFeedback(ability);
-    }
-
-    private void ApplyThreat(GameObject targetObject, AbilityData ability, int damage)
-    {
-        if (targetObject == null)
-        {
-            return;
-        }
-
-        ThreatTable threatTable = targetObject.GetComponent<ThreatTable>();
-        if (threatTable == null)
-        {
-            return;
-        }
-
-        float threat = damage;
-
-        if (ability != null)
-        {
-            threat *= ability.ThreatMultiplier;
-            threat += ability.BonusThreat;
-
-            if (ability.IsTaunt)
-            {
-                threatTable.SetHighestThreat(gameObject, 50f);
-                return;
-            }
-        }
-
-        threatTable.AddThreat(gameObject, threat);
     }
 
     private string GetTargetDisplayName(GameObject targetObject)
