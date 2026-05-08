@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerCombat))]
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(AbilityExecutor))]
+[RequireComponent(typeof(AbilityCooldownController))]
 public class PlayerAbilityController : MonoBehaviour
 {
     [Header("Casting")]
@@ -14,8 +14,7 @@ public class PlayerAbilityController : MonoBehaviour
     private Health playerHealth;
     private PlayerResource playerResource;
     private AbilityExecutor abilityExecutor;
-
-    private readonly Dictionary<AbilityData, float> cooldownEndTimes = new Dictionary<AbilityData, float>();
+    private AbilityCooldownController cooldownController;
 
     private bool isCasting;
     private AbilityData currentCastingAbility;
@@ -40,6 +39,7 @@ public class PlayerAbilityController : MonoBehaviour
         playerHealth = GetComponent<Health>();
         playerResource = GetComponent<PlayerResource>();
         abilityExecutor = GetComponent<AbilityExecutor>();
+        cooldownController = GetComponent<AbilityCooldownController>();
     }
 
     private void OnEnable()
@@ -65,22 +65,14 @@ public class PlayerAbilityController : MonoBehaviour
 
     public float GetRemainingCooldown(AbilityData ability)
     {
-        if (ability == null)
-        {
-            return 0f;
-        }
-
-        if (!cooldownEndTimes.TryGetValue(ability, out float endTime))
-        {
-            return 0f;
-        }
-
-        return Mathf.Max(0f, endTime - Time.time);
+        return cooldownController != null
+            ? cooldownController.GetRemainingCooldown(ability)
+            : 0f;
     }
 
     public bool IsOnCooldown(AbilityData ability)
     {
-        return GetRemainingCooldown(ability) > 0f;
+        return cooldownController != null && cooldownController.IsOnCooldown(ability);
     }
 
     public int CalculateAbilityHealing(AbilityData ability)
@@ -127,6 +119,7 @@ public class PlayerAbilityController : MonoBehaviour
     private bool CanBeginAbility(AbilityData ability)
     {
         float cooldownRemaining = GetRemainingCooldown(ability);
+
         if (cooldownRemaining > 0f)
         {
             PostSystem($"{ability.DisplayName} is on cooldown for {Mathf.CeilToInt(cooldownRemaining)} more second(s).");
@@ -343,9 +336,9 @@ public class PlayerAbilityController : MonoBehaviour
 
     private void StartCooldown(AbilityData ability)
     {
-        if (ability.CooldownSeconds > 0f)
+        if (cooldownController != null)
         {
-            cooldownEndTimes[ability] = Time.time + ability.CooldownSeconds;
+            cooldownController.StartCooldown(ability);
         }
     }
 
