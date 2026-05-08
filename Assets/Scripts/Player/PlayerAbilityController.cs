@@ -6,29 +6,24 @@ using UnityEngine;
 [RequireComponent(typeof(AbilityExecutor))]
 [RequireComponent(typeof(AbilityCooldownController))]
 [RequireComponent(typeof(AbilityResourceController))]
+[RequireComponent(typeof(AbilityCastController))]
 public class PlayerAbilityController : MonoBehaviour
 {
-    [Header("Casting")]
-    [SerializeField] private float movementCancelDistance = 0.08f;
-
     private PlayerCombat playerCombat;
-    private Health playerHealth;
     private AbilityExecutor abilityExecutor;
     private AbilityCooldownController cooldownController;
     private AbilityResourceController resourceController;
+    private AbilityCastController castController;
 
-    private bool isCasting;
-    private AbilityData currentCastingAbility;
-    private float castStartTime;
-    private float castDuration;
-    private Vector3 castStartPosition;
+    public bool IsCasting => castController != null && castController.IsCasting;
 
-    public bool IsCasting => isCasting;
-    public AbilityData CurrentCastingAbility => currentCastingAbility;
+    public AbilityData CurrentCastingAbility => castController != null
+        ? castController.CurrentCastingAbility
+        : null;
 
-    public float CastProgress => !isCasting || castDuration <= 0f
-        ? 0f
-        : Mathf.Clamp01((Time.time - castStartTime) / castDuration);
+    public float CastProgress => castController != null
+        ? castController.CastProgress
+        : 0f;
 
     public event Action<AbilityData, float> OnCastStarted;
     public event Action<AbilityData> OnCastCompleted;
@@ -37,31 +32,30 @@ public class PlayerAbilityController : MonoBehaviour
     private void Awake()
     {
         playerCombat = GetComponent<PlayerCombat>();
-        playerHealth = GetComponent<Health>();
         abilityExecutor = GetComponent<AbilityExecutor>();
         cooldownController = GetComponent<AbilityCooldownController>();
         resourceController = GetComponent<AbilityResourceController>();
+        castController = GetComponent<AbilityCastController>();
     }
 
     private void OnEnable()
     {
-        if (playerHealth != null)
+        if (castController != null)
         {
-            playerHealth.OnDamaged += HandlePlayerDamaged;
+            castController.OnCastStarted += HandleCastStarted;
+            castController.OnCastReadyToComplete += HandleCastReadyToComplete;
+            castController.OnCastCancelled += HandleCastCancelled;
         }
     }
 
     private void OnDisable()
     {
-        if (playerHealth != null)
+        if (castController != null)
         {
-            playerHealth.OnDamaged -= HandlePlayerDamaged;
+            castController.OnCastStarted -= HandleCastStarted;
+            castController.OnCastReadyToComplete -= HandleCastReadyToComplete;
+            castController.OnCastCancelled -= HandleCastCancelled;
         }
-    }
-
-    private void Update()
-    {
-        UpdateCasting();
     }
 
     public float GetRemainingCooldown(AbilityData ability)
@@ -97,7 +91,7 @@ public class PlayerAbilityController : MonoBehaviour
             return false;
         }
 
-        if (isCasting)
+        if (IsCasting)
         {
             PostSystem("You are already casting.");
             return false;
@@ -148,96 +142,36 @@ public class PlayerAbilityController : MonoBehaviour
 
     private void StartCast(AbilityData ability)
     {
-        currentCastingAbility = ability;
-        isCasting = true;
-        castStartTime = Time.time;
-        castStartPosition = transform.position;
-
-        castDuration = ability.CastType switch
-        {
-            AbilityCastType.CastTime => ability.CastTimeSeconds,
-            AbilityCastType.Channel => ability.ChannelDurationSeconds,
-            _ => 0f
-        };
-
-        if (castDuration <= 0f)
+        if (castController == null)
         {
             ExecuteAbility(ability);
-            ClearCastState();
             return;
         }
 
         string castLabel = ability.CastType == AbilityCastType.Channel ? "channeling" : "casting";
         PostSystem($"You begin {castLabel} {ability.DisplayName}.");
 
-        OnCastStarted?.Invoke(ability, castDuration);
+        castController.BeginCast(ability);
     }
 
-    private void UpdateCasting()
+    private void HandleCastStarted(AbilityData ability, float duration)
     {
-        if (!isCasting || currentCastingAbility == null)
+        OnCastStarted?.Invoke(ability, duration);
+    }
+
+    private void HandleCastReadyToComplete(AbilityData ability)
+    {
+        bool executed = ExecuteAbility(ability);
+
+        if (executed)
         {
-            return;
-        }
-
-        if (!currentCastingAbility.CanMoveWhileCasting)
-        {
-            float distanceMoved = Vector3.Distance(castStartPosition, transform.position);
-
-            if (distanceMoved > movementCancelDistance)
-            {
-                CancelCast("Casting cancelled by movement.");
-                return;
-            }
-        }
-
-        if (Time.time - castStartTime >= castDuration)
-        {
-            AbilityData completedAbility = currentCastingAbility;
-
-            bool executed = ExecuteAbility(completedAbility);
-
-            if (executed)
-            {
-                OnCastCompleted?.Invoke(completedAbility);
-            }
-
-            ClearCastState();
+            OnCastCompleted?.Invoke(ability);
         }
     }
 
-    private void HandlePlayerDamaged(int amount, GameObject source)
+    private void HandleCastCancelled(AbilityData ability)
     {
-        if (!isCasting || currentCastingAbility == null)
-        {
-            return;
-        }
-
-        if (!currentCastingAbility.CanBeInterrupted)
-        {
-            return;
-        }
-
-        CancelCast("Casting interrupted.");
-    }
-
-    private void CancelCast(string message)
-    {
-        AbilityData cancelledAbility = currentCastingAbility;
-
-        PostSystem(message);
-
-        OnCastCancelled?.Invoke(cancelledAbility);
-        ClearCastState();
-    }
-
-    private void ClearCastState()
-    {
-        isCasting = false;
-        currentCastingAbility = null;
-        castStartTime = 0f;
-        castDuration = 0f;
-        castStartPosition = Vector3.zero;
+        OnCastCancelled?.Invoke(ability);
     }
 
     private bool ExecuteAbility(AbilityData ability)
