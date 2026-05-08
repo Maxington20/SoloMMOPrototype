@@ -5,6 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(AbilityExecutor))]
 [RequireComponent(typeof(AbilityCooldownController))]
+[RequireComponent(typeof(AbilityResourceController))]
 public class PlayerAbilityController : MonoBehaviour
 {
     [Header("Casting")]
@@ -12,9 +13,9 @@ public class PlayerAbilityController : MonoBehaviour
 
     private PlayerCombat playerCombat;
     private Health playerHealth;
-    private PlayerResource playerResource;
     private AbilityExecutor abilityExecutor;
     private AbilityCooldownController cooldownController;
+    private AbilityResourceController resourceController;
 
     private bool isCasting;
     private AbilityData currentCastingAbility;
@@ -37,9 +38,9 @@ public class PlayerAbilityController : MonoBehaviour
     {
         playerCombat = GetComponent<PlayerCombat>();
         playerHealth = GetComponent<Health>();
-        playerResource = GetComponent<PlayerResource>();
         abilityExecutor = GetComponent<AbilityExecutor>();
         cooldownController = GetComponent<AbilityCooldownController>();
+        resourceController = GetComponent<AbilityResourceController>();
     }
 
     private void OnEnable()
@@ -295,42 +296,23 @@ public class PlayerAbilityController : MonoBehaviour
 
     private bool CanPayResourceCost(AbilityData ability)
     {
-        if (ability.ResourceCost <= 0)
-        {
-            return true;
-        }
-
-        if (playerResource == null || !playerResource.HasResource)
-        {
-            return false;
-        }
-
-        return playerResource.HasEnoughResource(ability.ResourceCost);
+        return resourceController == null ||
+               resourceController.CanPayResourceCost(ability);
     }
 
     private void SpendResourceCost(AbilityData ability)
     {
-        if (ability.ResourceCost <= 0)
+        if (resourceController != null)
         {
-            return;
-        }
-
-        if (playerResource != null)
-        {
-            playerResource.TrySpendResource(ability.ResourceCost);
+            resourceController.SpendResourceCost(ability);
         }
     }
 
     private void GenerateResourceFromAbility(AbilityData ability)
     {
-        if (ability.ResourceGenerated <= 0)
+        if (resourceController != null)
         {
-            return;
-        }
-
-        if (playerResource != null)
-        {
-            playerResource.GenerateResource(ability.ResourceGenerated);
+            resourceController.GenerateResourceFromAbility(ability);
         }
     }
 
@@ -344,12 +326,9 @@ public class PlayerAbilityController : MonoBehaviour
 
     private string GetResourceName()
     {
-        if (playerResource == null || !playerResource.HasResource)
-        {
-            return "resource";
-        }
-
-        return playerResource.ResourceDisplayName.ToLower();
+        return resourceController != null
+            ? resourceController.GetResourceName()
+            : "resource";
     }
 
     private void PostSystem(string message)
