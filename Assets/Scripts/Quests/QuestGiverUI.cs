@@ -212,6 +212,7 @@ public class QuestGiverUI : MonoBehaviour
                 $"{GetSelectionPrefix(isSelected)}? {quest.definition.title}");
 
             TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
+
             if (text != null)
             {
                 text.color = isSelected ? Color.white : Color.gray;
@@ -333,9 +334,35 @@ public class QuestGiverUI : MonoBehaviour
         string text = "<b>Objectives</b>";
         bool hasObjective = false;
 
-        if (definition.killObjectives != null)
+        QuestStage displayStage = activeQuest != null
+            ? activeQuest.GetCurrentStage()
+            : definition.GetStage(0);
+
+        int stageNumber = activeQuest != null
+            ? activeQuest.CurrentStageNumber
+            : 1;
+
+        int totalStages = activeQuest != null
+            ? activeQuest.TotalStageCount
+            : definition.StageCount;
+
+        if (displayStage != null)
         {
-            foreach (QuestKillObjective objective in definition.killObjectives)
+            text += $"\n\n<b>Stage {stageNumber}/{totalStages}: {displayStage.DisplayName}</b>";
+
+            if (!string.IsNullOrWhiteSpace(displayStage.objectiveSummary))
+            {
+                text += $"\n{displayStage.objectiveSummary}";
+            }
+        }
+
+        List<QuestKillObjective> killObjectives = activeQuest != null
+            ? activeQuest.GetCurrentKillObjectives()
+            : displayStage?.killObjectives;
+
+        if (killObjectives != null)
+        {
+            foreach (QuestKillObjective objective in killObjectives)
             {
                 if (objective == null)
                 {
@@ -353,9 +380,13 @@ public class QuestGiverUI : MonoBehaviour
             }
         }
 
-        if (definition.collectionObjectives != null)
+        List<QuestCollectionObjective> collectionObjectives = activeQuest != null
+            ? activeQuest.GetCurrentCollectionObjectives()
+            : displayStage?.collectionObjectives;
+
+        if (collectionObjectives != null)
         {
-            foreach (QuestCollectionObjective objective in definition.collectionObjectives)
+            foreach (QuestCollectionObjective objective in collectionObjectives)
             {
                 if (objective == null || objective.Item == null)
                 {
@@ -369,6 +400,28 @@ public class QuestGiverUI : MonoBehaviour
                 text += $"\nCollect {objective.RequiredAmount} {objective.Item.DisplayName} " +
                         $"({currentAmount}/{objective.RequiredAmount})";
 
+                hasObjective = true;
+            }
+        }
+
+        List<QuestTalkObjective> talkObjectives = activeQuest != null
+            ? activeQuest.GetCurrentTalkObjectives()
+            : displayStage?.talkObjectives;
+
+        if (talkObjectives != null)
+        {
+            foreach (QuestTalkObjective objective in talkObjectives)
+            {
+                if (objective == null || objective.Npc == null)
+                {
+                    continue;
+                }
+
+                int currentAmount = activeQuest != null && activeQuest.HasTalkedToNpc(objective.Npc)
+                    ? 1
+                    : 0;
+
+                text += $"\nSpeak with {objective.DisplayName} ({currentAmount}/1)";
                 hasObjective = true;
             }
         }
@@ -501,6 +554,7 @@ public class QuestGiverUI : MonoBehaviour
         button.gameObject.SetActive(true);
 
         TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
+
         if (text != null)
         {
             text.text = label;
@@ -518,6 +572,7 @@ public class QuestGiverUI : MonoBehaviour
         button.interactable = false;
 
         TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
+
         if (text != null)
         {
             text.text = label;
@@ -547,6 +602,12 @@ public class QuestGiverUI : MonoBehaviour
 
     private void ValidateSelection()
     {
+        if (QuestManager.Instance == null)
+        {
+            ClearSelection();
+            return;
+        }
+
         if (selectedState == SelectedQuestState.Available)
         {
             if (selectedAvailableQuest == null || !QuestManager.Instance.GetAvailableQuests().Contains(selectedAvailableQuest))
@@ -584,6 +645,7 @@ public class QuestGiverUI : MonoBehaviour
         }
 
         List<ActiveQuest> completableQuests = QuestManager.Instance.GetCompletableQuests();
+
         if (completableQuests.Count > 0)
         {
             SelectCompletableQuestWithoutRefresh(completableQuests[0]);
@@ -591,6 +653,7 @@ public class QuestGiverUI : MonoBehaviour
         }
 
         List<QuestDefinition> availableQuests = QuestManager.Instance.GetAvailableQuests();
+
         if (availableQuests.Count > 0)
         {
             SelectAvailableQuestWithoutRefresh(availableQuests[0]);
@@ -598,6 +661,7 @@ public class QuestGiverUI : MonoBehaviour
         }
 
         List<ActiveQuest> inProgressQuests = QuestManager.Instance.GetInProgressQuests();
+
         if (inProgressQuests.Count > 0)
         {
             SelectInProgressQuestWithoutRefresh(inProgressQuests[0]);

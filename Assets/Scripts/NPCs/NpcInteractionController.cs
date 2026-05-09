@@ -46,6 +46,13 @@ public class NpcInteractionController : MonoBehaviour
             return;
         }
 
+        bool progressedTalkQuest = false;
+
+        if (QuestManager.Instance != null && npcData != null)
+        {
+            progressedTalkQuest = QuestManager.Instance.RegisterNpcTalkedTo(npcData);
+        }
+
         if (openQuestUIBeforeVendor)
         {
             if (TryOpenQuestUI())
@@ -69,6 +76,11 @@ public class NpcInteractionController : MonoBehaviour
             {
                 return;
             }
+        }
+
+        if (progressedTalkQuest)
+        {
+            return;
         }
 
         PostSystem($"{GetDisplayName()} has nothing to say right now.");

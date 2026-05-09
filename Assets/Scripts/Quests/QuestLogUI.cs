@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -114,10 +115,8 @@ public class QuestLogUI : MonoBehaviour
             selectedQuest = QuestManager.Instance.ActiveQuests[0];
         }
 
-        for (int i = 0; i < QuestManager.Instance.ActiveQuests.Count; i++)
+        foreach (ActiveQuest quest in QuestManager.Instance.ActiveQuests)
         {
-            ActiveQuest quest = QuestManager.Instance.ActiveQuests[i];
-
             if (quest == null || quest.definition == null)
             {
                 continue;
@@ -129,13 +128,14 @@ public class QuestLogUI : MonoBehaviour
             button.gameObject.SetActive(true);
 
             TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>(true);
+
             if (buttonText != null)
             {
                 bool isSelected = capturedQuest == selectedQuest;
                 bool isComplete = capturedQuest.IsComplete(PlayerInventory.Instance);
 
                 string prefix = isSelected ? "> " : "  ";
-                string suffix = isComplete ? " ✓" : string.Empty;
+                string suffix = isComplete ? " ✓" : "";
 
                 buttonText.text = prefix + capturedQuest.definition.title + suffix;
                 buttonText.color = isComplete ? Color.yellow : Color.white;
@@ -174,7 +174,11 @@ public class QuestLogUI : MonoBehaviour
 
         if (descriptionText != null)
         {
-            descriptionText.text = definition.description;
+            string stageSummary = selectedQuest.GetCurrentStageSummary();
+
+            descriptionText.text = !string.IsNullOrWhiteSpace(stageSummary)
+                ? stageSummary
+                : definition.description;
         }
 
         if (objectiveText != null)
@@ -191,51 +195,22 @@ public class QuestLogUI : MonoBehaviour
         {
             statusText.text = selectedQuest.IsComplete(inventory)
                 ? "Complete - return to the quest giver."
-                : "In progress";
+                : $"Stage {selectedQuest.CurrentStageNumber}/{selectedQuest.TotalStageCount}";
         }
-    }
-
-    private void ClearQuestList()
-    {
-        if (questListContainer == null)
-        {
-            return;
-        }
-
-        for (int i = questListContainer.childCount - 1; i >= 0; i--)
-        {
-            Destroy(questListContainer.GetChild(i).gameObject);
-        }
-    }
-
-    private bool IsSelectedQuestStillActive()
-    {
-        if (selectedQuest == null || QuestManager.Instance == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < QuestManager.Instance.ActiveQuests.Count; i++)
-        {
-            if (QuestManager.Instance.ActiveQuests[i] == selectedQuest)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private string BuildObjectiveText(ActiveQuest quest, PlayerInventory inventory)
     {
-        QuestDefinition definition = quest.definition;
         string text = "<b>Objectives</b>";
-
         bool hasObjective = false;
 
-        if (definition.killObjectives != null)
+        text += $"\n\n<b>Stage {quest.CurrentStageNumber}/{quest.TotalStageCount}: {quest.GetCurrentStageTitle()}</b>";
+
+        List<QuestKillObjective> killObjectives = quest.GetCurrentKillObjectives();
+
+        if (killObjectives != null)
         {
-            foreach (QuestKillObjective objective in definition.killObjectives)
+            foreach (QuestKillObjective objective in killObjectives)
             {
                 if (objective == null)
                 {
@@ -244,23 +219,47 @@ public class QuestLogUI : MonoBehaviour
 
                 text += $"\nKill {objective.RequiredAmount} {GetEnemyDisplayName(objective.EnemyType)} " +
                         $"({quest.GetKillProgress(objective.EnemyType)}/{objective.RequiredAmount})";
+
                 hasObjective = true;
             }
         }
 
-        if (definition.collectionObjectives != null)
+        List<QuestCollectionObjective> collectionObjectives = quest.GetCurrentCollectionObjectives();
+
+        if (collectionObjectives != null)
         {
-            foreach (QuestCollectionObjective objective in definition.collectionObjectives)
+            foreach (QuestCollectionObjective objective in collectionObjectives)
             {
                 if (objective == null || objective.Item == null)
                 {
                     continue;
                 }
 
-                int currentAmount = inventory != null ? inventory.GetTotalQuantityOfItem(objective.Item) : 0;
+                int currentAmount = inventory != null
+                    ? inventory.GetTotalQuantityOfItem(objective.Item)
+                    : 0;
 
                 text += $"\nCollect {objective.RequiredAmount} {objective.Item.DisplayName} " +
                         $"({currentAmount}/{objective.RequiredAmount})";
+
+                hasObjective = true;
+            }
+        }
+
+        List<QuestTalkObjective> talkObjectives = quest.GetCurrentTalkObjectives();
+
+        if (talkObjectives != null)
+        {
+            foreach (QuestTalkObjective objective in talkObjectives)
+            {
+                if (objective == null || objective.Npc == null)
+                {
+                    continue;
+                }
+
+                int currentAmount = quest.HasTalkedToNpc(objective.Npc) ? 1 : 0;
+
+                text += $"\nSpeak with {objective.DisplayName} ({currentAmount}/1)";
                 hasObjective = true;
             }
         }
@@ -335,11 +334,61 @@ public class QuestLogUI : MonoBehaviour
 
     private void ShowNoQuestSelected()
     {
-        if (titleText != null) titleText.text = "No Active Quest";
-        if (descriptionText != null) descriptionText.text = "You do not currently have an active quest.";
-        if (objectiveText != null) objectiveText.text = "<b>Objectives</b>\nNone";
-        if (rewardText != null) rewardText.text = "<b>Rewards</b>\nNone";
-        if (statusText != null) statusText.text = "No active quest";
+        if (titleText != null)
+        {
+            titleText.text = "No Active Quest";
+        }
+
+        if (descriptionText != null)
+        {
+            descriptionText.text = "You do not currently have an active quest.";
+        }
+
+        if (objectiveText != null)
+        {
+            objectiveText.text = "<b>Objectives</b>\nNone";
+        }
+
+        if (rewardText != null)
+        {
+            rewardText.text = "<b>Rewards</b>\nNone";
+        }
+
+        if (statusText != null)
+        {
+            statusText.text = "No active quest";
+        }
+    }
+
+    private void ClearQuestList()
+    {
+        if (questListContainer == null)
+        {
+            return;
+        }
+
+        for (int i = questListContainer.childCount - 1; i >= 0; i--)
+        {
+            Destroy(questListContainer.GetChild(i).gameObject);
+        }
+    }
+
+    private bool IsSelectedQuestStillActive()
+    {
+        if (selectedQuest == null || QuestManager.Instance == null)
+        {
+            return false;
+        }
+
+        foreach (ActiveQuest quest in QuestManager.Instance.ActiveQuests)
+        {
+            if (quest == selectedQuest)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private string GetEnemyDisplayName(EnemyType enemyType)

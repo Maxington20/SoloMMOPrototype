@@ -46,8 +46,63 @@ public class QuestManager : MonoBehaviour
         OpenQuestGiverUI();
     }
 
+    public bool RegisterNpcTalkedTo(NpcData npcData)
+    {
+        if (npcData == null)
+        {
+            return false;
+        }
+
+        bool progressedAnyQuest = false;
+        PlayerInventory inventory = GetPlayerInventory();
+
+        for (int i = 0; i < activeQuests.Count; i++)
+        {
+            ActiveQuest quest = activeQuests[i];
+
+            if (quest == null || quest.definition == null)
+            {
+                continue;
+            }
+
+            if (quest.IsComplete(inventory))
+            {
+                continue;
+            }
+
+            if (!quest.NeedsTalkToNpcInCurrentStage(npcData))
+            {
+                continue;
+            }
+
+            quest.RegisterTalkedToNpc(npcData);
+            progressedAnyQuest = true;
+
+            bool advancedStage = quest.TryAdvanceStage(inventory);
+
+            if (quest.IsComplete(inventory))
+            {
+                PostSystem($"Return to the correct quest giver to turn in {quest.definition.title}.");
+            }
+            else if (advancedStage)
+            {
+                PostSystem($"Quest stage advanced: {quest.GetCurrentStageTitle()}.");
+            }
+        }
+
+        if (progressedAnyQuest)
+        {
+            PostSystem("Quest progress updated.");
+            RefreshQuestUI();
+        }
+
+        return progressedAnyQuest;
+    }
+
     public string GetQuestOfferText()
     {
+        RefreshQuestStages();
+
         ActiveQuest completableQuest = GetFirstCompletableQuest();
 
         if (completableQuest != null)
@@ -72,6 +127,8 @@ public class QuestManager : MonoBehaviour
 
     public List<QuestDefinition> GetAvailableQuests()
     {
+        RefreshQuestStages();
+
         List<QuestDefinition> available = new List<QuestDefinition>();
         IReadOnlyList<QuestDefinition> sourceQuests = GetCurrentQuestSource();
 
@@ -107,6 +164,8 @@ public class QuestManager : MonoBehaviour
 
     public List<ActiveQuest> GetCompletableQuests()
     {
+        RefreshQuestStages();
+
         List<ActiveQuest> completable = new List<ActiveQuest>();
         PlayerInventory inventory = GetPlayerInventory();
 
@@ -130,6 +189,8 @@ public class QuestManager : MonoBehaviour
 
     public List<ActiveQuest> GetInProgressQuests()
     {
+        RefreshQuestStages();
+
         List<ActiveQuest> inProgress = new List<ActiveQuest>();
         PlayerInventory inventory = GetPlayerInventory();
 
@@ -182,7 +243,11 @@ public class QuestManager : MonoBehaviour
             return;
         }
 
-        activeQuests.Add(new ActiveQuest(definition));
+        ActiveQuest activeQuest = new ActiveQuest(definition);
+        activeQuest.TryAdvanceStage(GetPlayerInventory());
+
+        activeQuests.Add(activeQuest);
+
         PostSystem($"Quest accepted: {definition.title}.");
     }
 
@@ -262,9 +327,12 @@ public class QuestManager : MonoBehaviour
                 completedQuest,
                 selectedChoiceRewardIndex);
 
+        List<QuestCollectionObjective> consumedCollectionItems =
+            completedQuest.GetAllCollectionObjectives();
+
         if (!QuestRewardService.CanFitRewardsAfterTurnIn(
                 inventory,
-                completedQuest.collectionObjectives,
+                consumedCollectionItems,
                 finalItemRewards))
         {
             PostSystem("Inventory is full. Make space before turning in this quest.");
@@ -273,7 +341,7 @@ public class QuestManager : MonoBehaviour
 
         QuestRewardService.ConsumeCollectionItems(
             inventory,
-            completedQuest.collectionObjectives);
+            consumedCollectionItems);
 
         QuestRewardService.GrantRewards(
             completedQuest,
@@ -324,7 +392,7 @@ public class QuestManager : MonoBehaviour
                 continue;
             }
 
-            if (!QuestNeedsEnemyType(quest, enemyData.EnemyType))
+            if (!quest.NeedsEnemyTypeInCurrentStage(enemyData.EnemyType))
             {
                 continue;
             }
@@ -332,15 +400,39 @@ public class QuestManager : MonoBehaviour
             quest.RegisterKill(enemyData.EnemyType);
             progressedAnyQuest = true;
 
+            bool advancedStage = quest.TryAdvanceStage(inventory);
+
             if (quest.IsComplete(inventory))
             {
                 PostSystem($"Return to the correct quest giver to turn in {quest.definition.title}.");
+            }
+            else if (advancedStage)
+            {
+                PostSystem($"Quest stage advanced: {quest.GetCurrentStageTitle()}.");
             }
         }
 
         if (progressedAnyQuest)
         {
             PostSystem("Quest progress updated.");
+            RefreshQuestUI();
+        }
+    }
+
+    private void RefreshQuestStages()
+    {
+        PlayerInventory inventory = GetPlayerInventory();
+
+        for (int i = 0; i < activeQuests.Count; i++)
+        {
+            ActiveQuest quest = activeQuests[i];
+
+            if (quest == null || quest.IsComplete(inventory))
+            {
+                continue;
+            }
+
+            quest.TryAdvanceStage(inventory);
         }
     }
 
@@ -443,26 +535,6 @@ public class QuestManager : MonoBehaviour
         return completedQuests.Contains(definition);
     }
 
-    private bool QuestNeedsEnemyType(ActiveQuest quest, EnemyType enemyType)
-    {
-        if (quest?.definition?.killObjectives == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < quest.definition.killObjectives.Count; i++)
-        {
-            QuestKillObjective objective = quest.definition.killObjectives[i];
-
-            if (objective != null && objective.EnemyType == enemyType)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private PlayerInventory GetPlayerInventory()
     {
         if (PlayerInventory.Instance != null)
@@ -471,6 +543,7 @@ public class QuestManager : MonoBehaviour
         }
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
         return playerObject != null
             ? playerObject.GetComponent<PlayerInventory>()
             : null;
@@ -479,6 +552,7 @@ public class QuestManager : MonoBehaviour
     private PlayerProgression GetPlayerProgression()
     {
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
         return playerObject != null
             ? playerObject.GetComponent<PlayerProgression>()
             : null;

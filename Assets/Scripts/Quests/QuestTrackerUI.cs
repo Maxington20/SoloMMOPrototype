@@ -1,11 +1,11 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 public class QuestTrackerUI : MonoBehaviour
 {
     [SerializeField] private GameObject trackerRoot;
-    [SerializeField] private TMP_Text questTitleText;
-    [SerializeField] private TMP_Text questObjectiveText;
+    [SerializeField] private TMP_Text questText;
 
     private void Update()
     {
@@ -16,86 +16,105 @@ public class QuestTrackerUI : MonoBehaviour
     {
         if (QuestManager.Instance == null || QuestManager.Instance.ActiveQuests.Count == 0)
         {
-            SetVisible(false);
+            if (trackerRoot != null)
+            {
+                trackerRoot.SetActive(false);
+            }
+
             return;
         }
 
-        SetVisible(true);
-
-        if (questTitleText != null)
+        if (trackerRoot != null)
         {
-            questTitleText.text = "Active Quests";
+            trackerRoot.SetActive(true);
         }
 
-        if (questObjectiveText != null)
+        if (questText == null)
         {
-            questObjectiveText.text = BuildTrackerText();
+            return;
         }
+
+        questText.text = BuildTrackerText();
     }
 
     private string BuildTrackerText()
     {
-        string text = string.Empty;
-        PlayerInventory inventory = PlayerInventory.Instance;
+        string text = "";
 
-        foreach (ActiveQuest activeQuest in QuestManager.Instance.ActiveQuests)
+        foreach (ActiveQuest quest in QuestManager.Instance.ActiveQuests)
         {
-            if (activeQuest == null || activeQuest.definition == null)
+            if (quest == null || quest.definition == null)
             {
                 continue;
             }
 
-            if (!string.IsNullOrEmpty(text))
+            text += $"<b>{quest.definition.title}</b>\n";
+            text += $"Stage {quest.CurrentStageNumber}/{quest.TotalStageCount}: {quest.GetCurrentStageTitle()}\n";
+
+            string summary = quest.GetCurrentStageSummary();
+
+            if (!string.IsNullOrWhiteSpace(summary))
             {
-                text += "\n\n";
+                text += $"{summary}\n";
             }
 
-            QuestDefinition definition = activeQuest.definition;
-            text += definition.title;
+            List<QuestKillObjective> killObjectives = quest.GetCurrentKillObjectives();
 
-            if (definition.killObjectives != null)
+            if (killObjectives != null)
             {
-                foreach (QuestKillObjective objective in definition.killObjectives)
+                foreach (QuestKillObjective objective in killObjectives)
                 {
                     if (objective == null)
                     {
                         continue;
                     }
 
-                    text += $"\nKill {GetEnemyDisplayName(objective.EnemyType)}: " +
-                            $"{activeQuest.GetKillProgress(objective.EnemyType)}/{objective.RequiredAmount}";
+                    text += $"- Kill {GetEnemyDisplayName(objective.EnemyType)} " +
+                            $"({quest.GetKillProgress(objective.EnemyType)}/{objective.RequiredAmount})\n";
                 }
             }
 
-            if (definition.collectionObjectives != null)
+            List<QuestCollectionObjective> collectionObjectives = quest.GetCurrentCollectionObjectives();
+
+            if (collectionObjectives != null)
             {
-                foreach (QuestCollectionObjective objective in definition.collectionObjectives)
+                foreach (QuestCollectionObjective objective in collectionObjectives)
                 {
                     if (objective == null || objective.Item == null)
                     {
                         continue;
                     }
 
-                    int currentAmount = inventory != null ? inventory.GetTotalQuantityOfItem(objective.Item) : 0;
+                    int currentAmount = PlayerInventory.Instance != null
+                        ? PlayerInventory.Instance.GetTotalQuantityOfItem(objective.Item)
+                        : 0;
 
-                    text += $"\nCollect {objective.Item.DisplayName}: {currentAmount}/{objective.RequiredAmount}";
+                    text += $"- Collect {objective.Item.DisplayName} " +
+                            $"({currentAmount}/{objective.RequiredAmount})\n";
                 }
             }
+
+            List<QuestTalkObjective> talkObjectives = quest.GetCurrentTalkObjectives();
+
+            if (talkObjectives != null)
+            {
+                foreach (QuestTalkObjective objective in talkObjectives)
+                {
+                    if (objective == null || objective.Npc == null)
+                    {
+                        continue;
+                    }
+
+                    int currentAmount = quest.HasTalkedToNpc(objective.Npc) ? 1 : 0;
+
+                    text += $"- Speak with {objective.DisplayName} ({currentAmount}/1)\n";
+                }
+            }
+
+            text += "\n";
         }
 
-        return text;
-    }
-
-    private void SetVisible(bool visible)
-    {
-        if (trackerRoot != null)
-        {
-            trackerRoot.SetActive(visible);
-        }
-        else
-        {
-            gameObject.SetActive(visible);
-        }
+        return text.TrimEnd();
     }
 
     private string GetEnemyDisplayName(EnemyType enemyType)

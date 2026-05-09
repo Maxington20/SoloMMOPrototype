@@ -21,12 +21,37 @@ MonoBehaviour:
   - title: Cull the Wolves
     description: These damn wolves are causing a problem. Please kill 3 for me and
       collect their pelts.
-    killObjectives:
-    - enemyType: 0
-      requiredAmount: 3
-    collectionObjectives:
-    - item: {fileID: 11400000, guid: 966ada9cfd0dcfe4b83bed5712b7780f, type: 2}
-      requiredAmount: 3
+    stages:
+    - stageName: Speak with Mira
+      objectiveSummary: Find Mira and ask what happened.
+      killObjectives: []
+      collectionObjectives: []
+      talkObjectives:
+      - npc: {fileID: 11400000, guid: 902af2be7cfde2844bce06fb45e5e457, type: 2}
+    - stageName: Thin the Wolves
+      objectiveSummary: Deal with the wovles near the road.
+      killObjectives:
+      - enemyType: 0
+        requiredAmount: 3
+      collectionObjectives:
+      - item: {fileID: 11400000, guid: 966ada9cfd0dcfe4b83bed5712b7780f, type: 2}
+        requiredAmount: 4
+      talkObjectives:
+      - npc: {fileID: 11400000, guid: 902af2be7cfde2844bce06fb45e5e457, type: 2}
+    - stageName: Return to Quest Giver
+      objectiveSummary: Tell Quest Giver what you discovered.
+      killObjectives:
+      - enemyType: 0
+        requiredAmount: 3
+      collectionObjectives:
+      - item: {fileID: 11400000, guid: 966ada9cfd0dcfe4b83bed5712b7780f, type: 2}
+        requiredAmount: 4
+      talkObjectives:
+      - npc: {fileID: 11400000, guid: 902af2be7cfde2844bce06fb45e5e457, type: 2}
+    killObjectives: []
+    collectionObjectives: []
+    talkObjectives:
+    - npc: {fileID: 11400000}
     xpReward: 100
     goldReward: 10
     guaranteedItemRewards: []
