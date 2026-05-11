@@ -15,7 +15,6 @@ public class PlayerHotbar : MonoBehaviour
     public event Action OnHotbarChanged;
 
     [SerializeField] private int slotCount = 6;
-    [SerializeField] private AbilityData[] startingAbilityAssignments = new AbilityData[6];
 
     private HotbarSlotContentType[] slotTypes;
     private ItemData[] assignedItems;
@@ -45,17 +44,7 @@ public class PlayerHotbar : MonoBehaviour
 
         for (int i = 0; i < SlotCount; i++)
         {
-            if (startingAbilityAssignments != null &&
-                i < startingAbilityAssignments.Length &&
-                startingAbilityAssignments[i] != null)
-            {
-                slotTypes[i] = HotbarSlotContentType.Ability;
-                assignedAbilities[i] = startingAbilityAssignments[i];
-            }
-            else
-            {
-                slotTypes[i] = HotbarSlotContentType.Empty;
-            }
+            slotTypes[i] = HotbarSlotContentType.Empty;
         }
     }
 
@@ -146,6 +135,44 @@ public class PlayerHotbar : MonoBehaviour
         OnHotbarChanged?.Invoke();
     }
 
+    public bool AssignAbilityToFirstEmptySlot(AbilityData ability)
+    {
+        if (ability == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (IsSlotEmpty(i))
+            {
+                AssignAbilityToSlot(i, ability);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsAbilityAssigned(AbilityData ability)
+    {
+        if (ability == null || assignedAbilities == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < assignedAbilities.Length; i++)
+        {
+            if (slotTypes[i] == HotbarSlotContentType.Ability &&
+                assignedAbilities[i] == ability)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void ClearSlot(int slotIndex)
     {
         if (!IsValidSlot(slotIndex))
@@ -158,6 +185,28 @@ public class PlayerHotbar : MonoBehaviour
         assignedAbilities[slotIndex] = null;
 
         OnHotbarChanged?.Invoke();
+    }
+
+    public void ClearAbilitySlots()
+    {
+        bool changed = false;
+
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (slotTypes[i] != HotbarSlotContentType.Ability)
+            {
+                continue;
+            }
+
+            slotTypes[i] = HotbarSlotContentType.Empty;
+            assignedAbilities[i] = null;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            OnHotbarChanged?.Invoke();
+        }
     }
 
     public int GetQuantityForSlot(int slotIndex)

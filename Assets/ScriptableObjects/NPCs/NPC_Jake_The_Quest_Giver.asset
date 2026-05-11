@@ -48,10 +48,6 @@ MonoBehaviour:
         requiredAmount: 4
       talkObjectives:
       - npc: {fileID: 11400000, guid: 902af2be7cfde2844bce06fb45e5e457, type: 2}
-    killObjectives: []
-    collectionObjectives: []
-    talkObjectives:
-    - npc: {fileID: 11400000}
     xpReward: 100
     goldReward: 10
     guaranteedItemRewards: []

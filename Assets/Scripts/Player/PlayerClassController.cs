@@ -3,6 +3,8 @@ using UnityEngine;
 
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(PlayerCombat))]
+[RequireComponent(typeof(PlayerHotbar))]
+[RequireComponent(typeof(PlayerAbilityLoadout))]
 public class PlayerClassController : MonoBehaviour
 {
     [Header("Class")]
@@ -12,14 +14,13 @@ public class PlayerClassController : MonoBehaviour
     [SerializeField] private bool applyClassOnStart = false;
     [SerializeField] private bool applyClassStatsOnStart = true;
     [SerializeField] private bool assignClassAbilitiesToHotbar = true;
+    [SerializeField] private bool autoAssignUnlockedAbilitiesToHotbar = true;
 
     private Health health;
     private PlayerCombat combat;
-    private PlayerHotbar hotbar;
     private PlayerStats playerStats;
     private PlayerProgression progression;
-
-    private readonly HashSet<AbilityData> learnedAbilities = new HashSet<AbilityData>();
+    private PlayerAbilityLoadout abilityLoadout;
 
     public CharacterClassData SelectedClass => selectedClass;
     public string ClassName => selectedClass != null ? selectedClass.ClassName : "No Class";
@@ -29,9 +30,9 @@ public class PlayerClassController : MonoBehaviour
     {
         health = GetComponent<Health>();
         combat = GetComponent<PlayerCombat>();
-        hotbar = GetComponent<PlayerHotbar>();
         playerStats = GetComponent<PlayerStats>();
         progression = GetComponent<PlayerProgression>();
+        abilityLoadout = GetComponent<PlayerAbilityLoadout>();
     }
 
     private void OnEnable()
@@ -67,7 +68,11 @@ public class PlayerClassController : MonoBehaviour
         }
 
         selectedClass = newClass;
-        learnedAbilities.Clear();
+
+        if (abilityLoadout != null)
+        {
+            abilityLoadout.ResetLearnedAbilities();
+        }
 
         if (applyImmediately)
         {
@@ -88,12 +93,18 @@ public class PlayerClassController : MonoBehaviour
             ApplyClassBaseValues();
         }
 
-        if (assignClassAbilitiesToHotbar)
+        if (abilityLoadout != null)
         {
-            AssignStartingClassAbilities();
-        }
+            abilityLoadout.ApplyClassStartingAbilities(
+                selectedClass,
+                assignClassAbilitiesToHotbar);
 
-        LearnAvailableAbilitiesForCurrentLevel(false);
+            abilityLoadout.LearnAvailableAbilitiesForLevel(
+                selectedClass,
+                GetCurrentLevel(),
+                false,
+                autoAssignUnlockedAbilitiesToHotbar);
+        }
 
         if (playerStats != null)
         {
@@ -105,12 +116,17 @@ public class PlayerClassController : MonoBehaviour
 
     public bool HasLearnedAbility(AbilityData ability)
     {
-        return ability != null && learnedAbilities.Contains(ability);
+        return abilityLoadout != null && abilityLoadout.HasLearnedAbility(ability);
     }
 
     public IReadOnlyCollection<AbilityData> GetLearnedAbilities()
     {
-        return learnedAbilities;
+        if (abilityLoadout != null)
+        {
+            return abilityLoadout.LearnedAbilities;
+        }
+
+        return new List<AbilityData>();
     }
 
     private void ApplyClassBaseValues()
@@ -126,103 +142,25 @@ public class PlayerClassController : MonoBehaviour
         }
     }
 
-    private void AssignStartingClassAbilities()
-    {
-        if (hotbar == null || selectedClass.StartingAbilities == null)
-        {
-            return;
-        }
-
-        int maxSlots = Mathf.Min(hotbar.SlotCount, selectedClass.StartingAbilities.Length);
-
-        for (int i = 0; i < maxSlots; i++)
-        {
-            AbilityData ability = selectedClass.StartingAbilities[i];
-
-            if (ability == null)
-            {
-                continue;
-            }
-
-            LearnAbility(ability, false);
-
-            hotbar.AssignAbilityToSlot(i, ability);
-        }
-    }
-
     private void HandleLevelChanged()
     {
-        LearnAvailableAbilitiesForCurrentLevel(true);
+        if (abilityLoadout == null || selectedClass == null)
+        {
+            return;
+        }
+
+        abilityLoadout.LearnAvailableAbilitiesForLevel(
+            selectedClass,
+            GetCurrentLevel(),
+            true,
+            autoAssignUnlockedAbilitiesToHotbar);
     }
 
-    private void LearnAvailableAbilitiesForCurrentLevel(bool announceNewAbilities)
+    private int GetCurrentLevel()
     {
-        if (selectedClass == null || selectedClass.AbilityUnlocks == null)
-        {
-            return;
-        }
-
-        int currentLevel = progression != null ? progression.Level : 1;
-
-        foreach (ClassAbilityUnlock unlock in selectedClass.AbilityUnlocks)
-        {
-            if (unlock == null || unlock.Ability == null)
-            {
-                continue;
-            }
-
-            if (unlock.UnlockLevel > currentLevel)
-            {
-                continue;
-            }
-
-            if (HasLearnedAbility(unlock.Ability))
-            {
-                continue;
-            }
-
-            LearnAbility(unlock.Ability, announceNewAbilities);
-
-            if (unlock.AutoAssignToHotbar)
-            {
-                TryAssignAbilityToFirstEmptyHotbarSlot(unlock.Ability);
-            }
-        }
-    }
-
-    private void LearnAbility(AbilityData ability, bool announce)
-    {
-        if (ability == null)
-        {
-            return;
-        }
-
-        if (!learnedAbilities.Add(ability))
-        {
-            return;
-        }
-
-        if (announce)
-        {
-            PostSystem($"You learned {ability.DisplayName}.");
-        }
-    }
-
-    private void TryAssignAbilityToFirstEmptyHotbarSlot(AbilityData ability)
-    {
-        if (hotbar == null || ability == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < hotbar.SlotCount; i++)
-        {
-            if (hotbar.IsSlotEmpty(i))
-            {
-                hotbar.AssignAbilityToSlot(i, ability);
-                return;
-            }
-        }
+        return progression != null
+            ? progression.Level
+            : 1;
     }
 
     private void PostSystem(string message)
