@@ -15,6 +15,7 @@ public class PlayerAutoAttackController : MonoBehaviour
     private PlayerStats playerStats;
     private PlayerResource playerResource;
     private PlayerTargetingController targetingController;
+    private PlayerAnimationController playerAnimationController;
 
     public int Damage => CalculateAutoAttackDamage();
     public float CurrentAttackRange => GetCurrentAttackRange();
@@ -26,6 +27,7 @@ public class PlayerAutoAttackController : MonoBehaviour
         playerStats = GetComponent<PlayerStats>();
         playerResource = GetComponent<PlayerResource>();
         targetingController = GetComponent<PlayerTargetingController>();
+        playerAnimationController = GetComponent<PlayerAnimationController>();
     }
 
     private void Update()
@@ -96,6 +98,11 @@ public class PlayerAutoAttackController : MonoBehaviour
         Debug.Log($"Player {attackType} {currentTarget.name} for {finalDamage}");
 
         CombatFeedbackService.QueueImpactFeedback(currentTarget, null);
+
+        if (playerAnimationController != null)
+        {
+            playerAnimationController.PlayAttack();
+        }
 
         currentTarget.TakeDamage(finalDamage, gameObject);
         ThreatService.ApplyThreat(gameObject, currentTarget.gameObject, null, finalDamage);
