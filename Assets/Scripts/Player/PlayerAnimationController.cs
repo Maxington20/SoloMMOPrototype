@@ -11,6 +11,7 @@ public class PlayerAnimationController : MonoBehaviour
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
     private static readonly int PickupHash = Animator.StringToHash("Pickup");
+    private static readonly int IsDeadHash = Animator.StringToHash("IsDead");
 
     private Vector3 lastPosition;
 
@@ -93,5 +94,14 @@ public class PlayerAnimationController : MonoBehaviour
         holdingPickupPose = false;
         waitingToPausePickup = false;
         animator.speed = 1f;
+    }
+
+    public void PlayDeath()
+    {
+        if (animator == null)
+            return;
+
+        animator.speed = 1f;
+        animator.SetTrigger("Die");
     }
 }
