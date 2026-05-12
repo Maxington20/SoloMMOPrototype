@@ -104,4 +104,19 @@ public class PlayerAnimationController : MonoBehaviour
         animator.speed = 1f;
         animator.SetTrigger("Die");
     }
+
+    public void ResetToIdle()
+    {
+        if (animator == null)
+            return;
+
+        animator.speed = 1f;
+
+        animator.ResetTrigger("Attack");
+        animator.ResetTrigger("Pickup");
+        animator.ResetTrigger("Die");
+
+        animator.Play("CharacterArmature|Idle", 0, 0f);
+        animator.Update(0f);
+    }
 }
