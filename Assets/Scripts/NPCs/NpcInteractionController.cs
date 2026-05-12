@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class NpcInteractionController : MonoBehaviour
+public class NpcInteractionController : MonoBehaviour, IInteractable
 {
     [Header("NPC Data")]
     [SerializeField] private NpcData npcData;
@@ -15,6 +15,7 @@ public class NpcInteractionController : MonoBehaviour
 
     public NpcData NpcData => npcData;
     public float InteractionRange => interactionRange;
+    public string InteractionName => GetDisplayName();
 
     private void Awake()
     {
@@ -28,19 +29,28 @@ public class NpcInteractionController : MonoBehaviour
         ApplyNpcDataToComponents();
     }
 
-    public void Interact(Transform player)
+    public bool CanInteract(Transform interactor)
+    {
+        if (interactor == null)
+        {
+            return false;
+        }
+
+        float distance = Vector3.Distance(transform.position, interactor.position);
+        return distance <= interactionRange;
+    }
+
+    public void Interact(Transform interactor)
     {
         CacheComponents();
         ApplyNpcDataToComponents();
 
-        if (player == null)
+        if (interactor == null)
         {
             return;
         }
 
-        float distance = Vector3.Distance(transform.position, player.position);
-
-        if (distance > interactionRange)
+        if (!CanInteract(interactor))
         {
             PostSystem($"{GetDisplayName()} is too far away.");
             return;

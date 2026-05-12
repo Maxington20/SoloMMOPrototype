@@ -54,30 +54,35 @@ public class PlayerTargetingController : MonoBehaviour
             return;
         }
 
-        NpcInteractionController npcInteraction = hit.collider.GetComponentInParent<NpcInteractionController>();
-
-        if (npcInteraction != null)
+        if (TryHandleInteractableClick(hit))
         {
-            ClearTarget();
-            npcInteraction.Interact(transform);
             return;
         }
 
-        EnemyLoot enemyLoot = hit.collider.GetComponentInParent<EnemyLoot>();
-        Health clickedHealth = hit.collider.GetComponentInParent<Health>();
+        TryHandleEnemyTargetClick(hit);
+    }
 
-        if (enemyLoot != null && clickedHealth != null && clickedHealth.IsDead && enemyLoot.CanBeLooted)
+    private bool TryHandleInteractableClick(RaycastHit hit)
+    {
+        IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
+
+        if (interactable == null)
         {
-            ClearTarget();
-
-            if (LootWindowUI.Instance != null)
-            {
-                LootWindowUI.Instance.OpenLoot(enemyLoot);
-            }
-
-            return;
+            return false;
         }
 
+        if (interactable is EnemyLoot enemyLoot && !enemyLoot.CanBeLooted)
+        {
+            return false;
+        }
+
+        ClearTarget();
+        interactable.Interact(transform);
+        return true;
+    }
+
+    private void TryHandleEnemyTargetClick(RaycastHit hit)
+    {
         Health targetHealth = hit.collider.GetComponentInParent<Health>();
 
         if (targetHealth == null || targetHealth.IsDead)

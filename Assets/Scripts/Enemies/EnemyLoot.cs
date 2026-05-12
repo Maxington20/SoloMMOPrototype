@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyLoot : MonoBehaviour
+public class EnemyLoot : MonoBehaviour, IInteractable
 {
     [Header("References")]
     [SerializeField] private EnemyData enemyData;
@@ -30,6 +30,8 @@ public class EnemyLoot : MonoBehaviour
     public int GoldAmount => goldAmount;
     public int SlotCount => lootSlots.Count;
 
+    public string InteractionName => GetDisplayName();
+
     public bool CanBeLooted
     {
         get
@@ -50,6 +52,24 @@ public class EnemyLoot : MonoBehaviour
         BuildEmptyLootSlots();
         CreateLootIndicatorIfNeeded();
         SetLootInteractable(false);
+    }
+
+    public bool CanInteract(Transform interactor)
+    {
+        return CanBeLooted;
+    }
+
+    public void Interact(Transform interactor)
+    {
+        if (!CanBeLooted)
+        {
+            return;
+        }
+
+        if (LootWindowUI.Instance != null)
+        {
+            LootWindowUI.Instance.OpenLoot(this);
+        }
     }
 
     public void GenerateLoot()
@@ -108,6 +128,7 @@ public class EnemyLoot : MonoBehaviour
         }
 
         InventorySlotData slot = lootSlots[slotIndex];
+
         if (slot == null || slot.IsEmpty || slot.Item == null)
         {
             return false;
@@ -124,6 +145,7 @@ public class EnemyLoot : MonoBehaviour
         }
 
         bool added = playerInventory.AddItem(slot.Item, slot.Quantity);
+
         if (!added)
         {
             return false;
@@ -154,6 +176,7 @@ public class EnemyLoot : MonoBehaviour
     private void RollItems()
     {
         EnemyLootTableEntry[] lootTable = enemyData.LootTable;
+
         if (lootTable == null || lootTable.Length == 0)
         {
             return;
@@ -198,6 +221,7 @@ public class EnemyLoot : MonoBehaviour
         int quantity = UnityEngine.Random.Range(selectedEntry.MinQuantity, selectedEntry.MaxQuantity + 1);
 
         bool added = AddItemToLoot(selectedEntry.Item, quantity);
+
         if (added && selectedEntry.UniquePerCorpse)
         {
             uniqueItemsAlreadyDropped.Add(selectedEntry.Item);
@@ -218,12 +242,14 @@ public class EnemyLoot : MonoBehaviour
             for (int i = 0; i < lootSlots.Count; i++)
             {
                 InventorySlotData slot = lootSlots[i];
+
                 if (!slot.CanStack(item))
                 {
                     continue;
                 }
 
                 int freeSpace = item.MaxStack - slot.Quantity;
+
                 if (freeSpace <= 0)
                 {
                     continue;
@@ -248,12 +274,16 @@ public class EnemyLoot : MonoBehaviour
             }
 
             InventorySlotData slot = lootSlots[i];
+
             if (slot == null || !slot.IsEmpty)
             {
                 continue;
             }
 
-            int amountToAdd = item.IsStackable ? Mathf.Min(item.MaxStack, remaining) : 1;
+            int amountToAdd = item.IsStackable
+                ? Mathf.Min(item.MaxStack, remaining)
+                : 1;
+
             slot.Set(item, amountToAdd);
             remaining -= amountToAdd;
         }
@@ -276,6 +306,7 @@ public class EnemyLoot : MonoBehaviour
         for (int i = 0; i < lootSlots.Count; i++)
         {
             InventorySlotData slot = lootSlots[i];
+
             if (slot != null && !slot.IsEmpty && slot.Item != null)
             {
                 return true;
@@ -331,5 +362,17 @@ public class EnemyLoot : MonoBehaviour
         {
             spawnedLootIndicator.SetActive(isInteractable);
         }
+    }
+
+    private string GetDisplayName()
+    {
+        DisplayName displayName = GetComponent<DisplayName>();
+
+        if (displayName != null && !string.IsNullOrWhiteSpace(displayName.Display))
+        {
+            return displayName.Display;
+        }
+
+        return gameObject.name;
     }
 }
