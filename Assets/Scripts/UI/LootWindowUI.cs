@@ -25,6 +25,7 @@ public class LootWindowUI : MonoBehaviour
     [SerializeField] private int minimumVisibleSlotCount = 6;
 
     private readonly List<InventorySlotUI> lootSlotUIs = new List<InventorySlotUI>();
+    private PlayerAnimationController playerAnimationController;
 
     private EnemyLoot currentLootSource;
     private bool isOpen;
@@ -41,6 +42,8 @@ public class LootWindowUI : MonoBehaviour
         }
 
         Instance = this;
+
+        playerAnimationController = FindObjectOfType<PlayerAnimationController>();
     }
 
     private void Start()
@@ -108,6 +111,11 @@ public class LootWindowUI : MonoBehaviour
             lootWindow.SetActive(true);
         }
 
+        if (playerAnimationController != null)
+        {
+            playerAnimationController.StartPickupHold();
+        }
+
         RefreshAll();
     }
 
@@ -132,6 +140,11 @@ public class LootWindowUI : MonoBehaviour
 
         UnsubscribeFromCurrentLoot();
         currentLootSource = null;
+
+        if (playerAnimationController != null)
+        {
+            playerAnimationController.FinishPickupHold();
+        }
     }
 
     private void BuildLootSlots(int slotCount)
