@@ -24,6 +24,10 @@ GameObject:
   - component: {fileID: 4236334684162656714}
   - component: {fileID: -8259962012400392994}
   - component: {fileID: 3859163404910090744}
+  - component: {fileID: 3775630085900739434}
+  - component: {fileID: 1371233927845501021}
+  - component: {fileID: 5502473880453092907}
+  - component: {fileID: 7912635687756153547}
   m_Layer: 0
   m_Name: Goblin
   m_TagString: Untagged
@@ -154,22 +158,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 217e026959e6ea94bb66ac32d29cac50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  aggroRange: 8
-  leashRange: 14
   attackRange: 1.8
-  moveSpeed: 2.5
-  damage: 12
-  attackCooldown: 1.8
-  gravity: -20
   returnStopDistance: 0.2
-  wanderRadius: 2
-  wanderStopDistance: 0.2
-  minIdleTimeBetweenWanders: 2
-  maxIdleTimeBetweenWanders: 5
-  respawnDelay: 8
-  renderersToHideOnDeath: []
-  objectsToHideOnDeath: []
-  hideBodyOnDeath: 0
 --- !u!143 &3684617761936486195
 CharacterController:
   m_ObjectHideFlags: 0
@@ -208,7 +198,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisplayName
   displayName: Goblin
-  defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  nameText: {fileID: 0}
 --- !u!114 &732027118408212616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -266,6 +257,8 @@ MonoBehaviour:
     dodgeChancePerAgility: 0.25
     maxDodgeChance: 15
     armourMitigationBase: 100
+  abilities:
+  - {fileID: 11400000, guid: 3e683677770cb534eb1ff51d3ab82f8e, type: 2}
   goldDropChance: 1
   minGold: 3
   maxGold: 9
@@ -357,9 +350,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6a7c82557ad8ae46ac03a201aabc3fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAbilityController
-  abilities:
-  - {fileID: 11400000, guid: 0ed1e79ee86cd424b8d21f325c709937, type: 2}
-  - {fileID: 11400000, guid: 3e683677770cb534eb1ff51d3ab82f8e, type: 2}
+  fallbackAbilities: []
 --- !u!114 &3859163404910090744
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -384,6 +375,69 @@ MonoBehaviour:
   playDeathScale: 1
   deathScaleAmount: 0.85
   deathScaleDuration: 0.12
+--- !u!114 &3775630085900739434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64da4d1d284022e4ca13d2fce1dde5a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDeathRespawnController
+  respawnDelay: 8
+  renderersToHideOnDeath: []
+  objectsToHideOnDeath: []
+  hideBodyOnDeath: 0
+--- !u!114 &1371233927845501021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bc13728a3fe76f4498af5fbe3259086, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyMovementController
+  moveSpeed: 3
+  gravity: -20
+  rotationSpeed: 10
+  wanderRadius: 3
+  wanderStopDistance: 0.2
+  minIdleTimeBetweenWanders: 1.5
+  maxIdleTimeBetweenWanders: 4
+--- !u!114 &5502473880453092907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eaf36242d343a848af274d70a148512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAggroController
+  aggroRange: 8
+  leashRange: 14
+--- !u!114 &7912635687756153547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824103936319127935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bfb70f323283754d98ce9a071cc1341, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAttackController
+  fallbackDamage: 10
+  attackCooldown: 1.5
 --- !u!1 &1105335585389521241
 GameObject:
   m_ObjectHideFlags: 0

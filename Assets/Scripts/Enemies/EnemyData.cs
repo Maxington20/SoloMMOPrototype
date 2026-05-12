@@ -18,6 +18,9 @@ public class EnemyData : MonoBehaviour
     [Header("Combat Tuning")]
     [SerializeField] private ClassCombatTuning combatTuning = new ClassCombatTuning();
 
+    [Header("Abilities")]
+    [SerializeField] private AbilityData[] abilities = new AbilityData[0];
+
     [Header("Gold Loot")]
     [SerializeField, Range(0f, 1f)] private float goldDropChance = 1f;
     [SerializeField] private int minGold = 1;
@@ -39,6 +42,8 @@ public class EnemyData : MonoBehaviour
     public PrimaryStatType PrimaryStat => primaryStat;
     public StatBlock Stats => stats ?? StatBlock.Zero;
     public ClassCombatTuning CombatTuning => combatTuning ?? new ClassCombatTuning();
+
+    public AbilityData[] Abilities => abilities;
 
     public float GoldDropChance => Mathf.Clamp01(goldDropChance);
     public int MinGold => ApplyIntMultiplier(Mathf.Max(0, minGold), GetGoldMultiplier());

@@ -61,6 +61,10 @@ GameObject:
   - component: {fileID: -396876268204103541}
   - component: {fileID: 7488256861975007940}
   - component: {fileID: 5611192114866430655}
+  - component: {fileID: 2113227142333635886}
+  - component: {fileID: 8734582046623775274}
+  - component: {fileID: 7812515903860812142}
+  - component: {fileID: 7431877416082733999}
   m_Layer: 0
   m_Name: Wolf
   m_TagString: Untagged
@@ -191,22 +195,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 217e026959e6ea94bb66ac32d29cac50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  aggroRange: 8
-  leashRange: 14
   attackRange: 1.5
-  moveSpeed: 3
-  damage: 10
-  attackCooldown: 1.5
-  gravity: -20
   returnStopDistance: 0.2
-  wanderRadius: 3
-  wanderStopDistance: 0.2
-  minIdleTimeBetweenWanders: 1.5
-  maxIdleTimeBetweenWanders: 4
-  respawnDelay: 8
-  renderersToHideOnDeath: []
-  objectsToHideOnDeath: []
-  hideBodyOnDeath: 0
 --- !u!143 &2425998168440231064
 CharacterController:
   m_ObjectHideFlags: 0
@@ -245,7 +235,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisplayName
   displayName: Wolf
-  defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  nameText: {fileID: 0}
 --- !u!114 &8634603557529143385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -303,6 +294,8 @@ MonoBehaviour:
     dodgeChancePerAgility: 0.4
     maxDodgeChance: 20
     armourMitigationBase: 100
+  abilities:
+  - {fileID: 11400000, guid: 89dd47b93ae4d994a8fe7a58d76a6a40, type: 2}
   goldDropChance: 1
   minGold: 1
   maxGold: 5
@@ -389,8 +382,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6a7c82557ad8ae46ac03a201aabc3fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAbilityController
-  abilities:
-  - {fileID: 11400000, guid: 89dd47b93ae4d994a8fe7a58d76a6a40, type: 2}
+  fallbackAbilities: []
 --- !u!114 &5611192114866430655
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -415,6 +407,69 @@ MonoBehaviour:
   playDeathScale: 1
   deathScaleAmount: 0.85
   deathScaleDuration: 0.12
+--- !u!114 &2113227142333635886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895793233579756450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64da4d1d284022e4ca13d2fce1dde5a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDeathRespawnController
+  respawnDelay: 8
+  renderersToHideOnDeath: []
+  objectsToHideOnDeath: []
+  hideBodyOnDeath: 0
+--- !u!114 &8734582046623775274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895793233579756450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bc13728a3fe76f4498af5fbe3259086, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyMovementController
+  moveSpeed: 3
+  gravity: -20
+  rotationSpeed: 10
+  wanderRadius: 3
+  wanderStopDistance: 0.2
+  minIdleTimeBetweenWanders: 1.5
+  maxIdleTimeBetweenWanders: 4
+--- !u!114 &7812515903860812142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895793233579756450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eaf36242d343a848af274d70a148512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAggroController
+  aggroRange: 8
+  leashRange: 14
+--- !u!114 &7431877416082733999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895793233579756450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bfb70f323283754d98ce9a071cc1341, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAttackController
+  fallbackDamage: 10
+  attackCooldown: 1.5
 --- !u!1 &4193225523691303986
 GameObject:
   m_ObjectHideFlags: 0

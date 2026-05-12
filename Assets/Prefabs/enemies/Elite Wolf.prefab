@@ -44,6 +44,14 @@ PrefabInstance:
       propertyPath: stats.hitChance
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 4269588256471811823, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
+      propertyPath: abilities.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4269588256471811823, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
+      propertyPath: 'abilities.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 89dd47b93ae4d994a8fe7a58d76a6a40, type: 2}
     - target: {fileID: 4486358482448419676, guid: 0a13ce5ca09893c4794d95bc5d87be0d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -139,4 +147,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6a7c82557ad8ae46ac03a201aabc3fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAbilityController
-  abilities: []
+  fallbackAbilities: []

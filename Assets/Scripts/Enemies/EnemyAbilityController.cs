@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(EnemyData))]
 [RequireComponent(typeof(EnemyStats))]
 [RequireComponent(typeof(StatusEffectController))]
 public class EnemyAbilityController : MonoBehaviour
 {
-    [Header("Abilities")]
-    [SerializeField] private AbilityData[] abilities;
+    [Header("Fallback Abilities")]
+    [SerializeField] private AbilityData[] fallbackAbilities = new AbilityData[0];
 
     private readonly Dictionary<AbilityData, float> cooldownEndTimes = new Dictionary<AbilityData, float>();
 
+    private EnemyData enemyData;
     private EnemyStats enemyStats;
     private StatusEffectController statusEffectController;
 
@@ -37,6 +39,7 @@ public class EnemyAbilityController : MonoBehaviour
 
     private void Awake()
     {
+        enemyData = GetComponent<EnemyData>();
         enemyStats = GetComponent<EnemyStats>();
         statusEffectController = GetComponent<StatusEffectController>();
     }
@@ -52,6 +55,8 @@ public class EnemyAbilityController : MonoBehaviour
         {
             return true;
         }
+
+        AbilityData[] abilities = GetActiveAbilities();
 
         if (target == null || abilities == null || abilities.Length == 0)
         {
@@ -93,6 +98,16 @@ public class EnemyAbilityController : MonoBehaviour
         }
 
         return false;
+    }
+
+    private AbilityData[] GetActiveAbilities()
+    {
+        if (enemyData != null && enemyData.Abilities != null && enemyData.Abilities.Length > 0)
+        {
+            return enemyData.Abilities;
+        }
+
+        return fallbackAbilities;
     }
 
     private void StartCast(AbilityData ability, Transform target)

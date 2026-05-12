@@ -40,6 +40,14 @@ PrefabInstance:
       propertyPath: stats.intellect
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 2998863200717848812, guid: 4790d502dc7f55046b096a4b926dc122, type: 3}
+      propertyPath: abilities.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2998863200717848812, guid: 4790d502dc7f55046b096a4b926dc122, type: 3}
+      propertyPath: 'abilities.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 7bcc0b0a44163724c80180a07ff0ba85, type: 2}
     - target: {fileID: 4009147639689331890, guid: 4790d502dc7f55046b096a4b926dc122, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
