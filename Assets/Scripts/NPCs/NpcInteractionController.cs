@@ -11,6 +11,7 @@ public class NpcInteractionController : MonoBehaviour, IInteractable
 
     private VendorNPC vendorNpc;
     private QuestGiver questGiver;
+    private TrainerNPC trainerNpc;
     private DisplayName displayName;
 
     public NpcData NpcData => npcData;
@@ -70,6 +71,11 @@ public class NpcInteractionController : MonoBehaviour, IInteractable
                 return;
             }
 
+            if (TryOpenTrainerUI())
+            {
+                return;
+            }
+
             if (TryOpenVendorUI())
             {
                 return;
@@ -78,6 +84,11 @@ public class NpcInteractionController : MonoBehaviour, IInteractable
         else
         {
             if (TryOpenVendorUI())
+            {
+                return;
+            }
+
+            if (TryOpenTrainerUI())
             {
                 return;
             }
@@ -123,6 +134,11 @@ public class NpcInteractionController : MonoBehaviour, IInteractable
             questGiver = GetComponent<QuestGiver>();
         }
 
+        if (trainerNpc == null)
+        {
+            trainerNpc = GetComponent<TrainerNPC>();
+        }
+
         if (displayName == null)
         {
             displayName = GetComponent<DisplayName>();
@@ -155,6 +171,19 @@ public class NpcInteractionController : MonoBehaviour, IInteractable
         return true;
     }
 
+    private bool TryOpenTrainerUI()
+    {
+        bool canTrain = npcData == null || npcData.CanTrain;
+
+        if (!canTrain || trainerNpc == null)
+        {
+            return false;
+        }
+
+        trainerNpc.OpenTrainer();
+        return true;
+    }
+
     private void ApplyNpcDataToComponents()
     {
         if (npcData == null)
@@ -175,6 +204,11 @@ public class NpcInteractionController : MonoBehaviour, IInteractable
         if (questGiver != null)
         {
             questGiver.ApplyNpcData(npcData);
+        }
+
+        if (trainerNpc != null)
+        {
+            trainerNpc.ApplyNpcData(npcData);
         }
     }
 
