@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,137 +8,93 @@ public class LootWindowUI : MonoBehaviour
 
     [Header("Window")]
     [SerializeField] private GameObject lootWindow;
-    [SerializeField] private TMP_Text corpseNameText;
+    [SerializeField] private TMP_Text titleText;
     [SerializeField] private Button closeButton;
 
     [Header("Gold")]
-    [SerializeField] private Button goldButton;
+    [SerializeField] private GameObject goldRow;
     [SerializeField] private TMP_Text goldText;
+    [SerializeField] private Button lootGoldButton;
 
-    [Header("Item Grid")]
-    [SerializeField] private Transform lootSlotContainer;
-    [SerializeField] private InventorySlotUI lootSlotPrefab;
+    [Header("Items")]
+    [SerializeField] private Transform itemContainer;
+    [SerializeField] private InventorySlotUI itemSlotPrefab;
 
-    [Header("Controls")]
-    [SerializeField] private KeyCode closeKey = KeyCode.Escape;
-    [SerializeField] private int minimumVisibleSlotCount = 6;
-
-    private readonly List<InventorySlotUI> lootSlotUIs = new List<InventorySlotUI>();
+    private ILootContainer currentLoot;
+    private PlayerInventory playerInventory;
     private PlayerAnimationController playerAnimationController;
-
-    private EnemyLoot currentLootSource;
-    private bool isOpen;
-
-    public bool IsOpen => isOpen;
-    public EnemyLoot CurrentLootSource => currentLootSource;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         Instance = this;
-
-        playerAnimationController = FindObjectOfType<PlayerAnimationController>();
     }
 
     private void Start()
     {
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
+        if (playerObject != null)
+        {
+            playerInventory = playerObject.GetComponent<PlayerInventory>();
+            playerAnimationController = playerObject.GetComponent<PlayerAnimationController>();
+        }
+
         if (closeButton != null)
         {
             closeButton.onClick.AddListener(Close);
         }
 
-        if (goldButton != null)
+        if (lootGoldButton != null)
         {
-            goldButton.onClick.AddListener(HandleGoldClicked);
+            lootGoldButton.onClick.AddListener(LootGold);
         }
 
-        if (lootWindow != null)
-        {
-            lootWindow.SetActive(false);
-        }
-
-        BuildLootSlots(minimumVisibleSlotCount);
-    }
-
-    private void OnDestroy()
-    {
-        UnsubscribeFromCurrentLoot();
+        Close();
     }
 
     private void Update()
     {
-        if (!isOpen)
-        {
-            return;
-        }
-
-        if (Input.GetKeyDown(closeKey))
+        if (lootWindow != null && lootWindow.activeSelf && Input.GetKeyDown(KeyCode.Escape))
         {
             Close();
         }
     }
 
-    public void OpenLoot(EnemyLoot lootSource)
+    public void OpenLoot(ILootContainer lootContainer)
     {
-        if (lootSource == null || !lootSource.CanBeLooted)
+        if (lootContainer == null || !lootContainer.CanBeLooted)
         {
             return;
         }
 
-        if (currentLootSource != lootSource)
+        if (currentLoot != null)
         {
-            UnsubscribeFromCurrentLoot();
-            currentLootSource = lootSource;
-            currentLootSource.OnLootChanged += HandleLootChanged;
+            currentLoot.OnLootChanged -= Refresh;
         }
 
-        int slotCount = Mathf.Max(minimumVisibleSlotCount, currentLootSource.SlotCount);
-        if (lootSlotUIs.Count != slotCount)
-        {
-            BuildLootSlots(slotCount);
-        }
+        currentLoot = lootContainer;
+        currentLoot.OnLootChanged += Refresh;
 
-        isOpen = true;
-
-        if (lootWindow != null)
-        {
-            lootWindow.SetActive(true);
-        }
+        lootWindow.SetActive(true);
 
         if (playerAnimationController != null)
         {
             playerAnimationController.StartPickupHold();
         }
 
-        RefreshAll();
+        Refresh();
     }
 
     public void Close()
     {
-        isOpen = false;
-
-        if (lootWindow != null)
+        if (currentLoot != null)
         {
-            lootWindow.SetActive(false);
+            currentLoot.OnLootChanged -= Refresh;
         }
 
-        if (ItemContextMenuUI.Instance != null)
-        {
-            ItemContextMenuUI.Instance.Hide();
-        }
+        currentLoot = null;
 
-        if (ItemTooltipUI.Instance != null)
-        {
-            ItemTooltipUI.Instance.Hide();
-        }
-
-        UnsubscribeFromCurrentLoot();
-        currentLootSource = null;
+        lootWindow.SetActive(false);
 
         if (playerAnimationController != null)
         {
@@ -147,161 +102,91 @@ public class LootWindowUI : MonoBehaviour
         }
     }
 
-    private void BuildLootSlots(int slotCount)
+    private void Refresh()
     {
-        if (lootSlotContainer == null || lootSlotPrefab == null)
+        ClearItems();
+
+        if (currentLoot == null)
         {
             return;
         }
 
-        for (int i = lootSlotContainer.childCount - 1; i >= 0; i--)
-        {
-            Destroy(lootSlotContainer.GetChild(i).gameObject);
-        }
-
-        lootSlotUIs.Clear();
-
-        int finalSlotCount = Mathf.Max(1, slotCount);
-
-        for (int i = 0; i < finalSlotCount; i++)
-        {
-            InventorySlotUI slotUI = Instantiate(lootSlotPrefab, lootSlotContainer);
-            slotUI.Initialize(i, HandleLootSlotLeftClicked);
-            lootSlotUIs.Add(slotUI);
-        }
-    }
-
-    private void RefreshAll()
-    {
-        if (currentLootSource == null)
+        if (!currentLoot.CanBeLooted)
         {
             Close();
             return;
         }
 
-        if (!currentLootSource.CanBeLooted)
-        {
-            Close();
-            return;
-        }
+        titleText.text = currentLoot.LootDisplayName;
 
-        RefreshHeader();
         RefreshGold();
-        RefreshSlots();
-
-        if (!HasAnyRemainingLoot())
-        {
-            Close();
-        }
-    }
-
-    private void RefreshHeader()
-    {
-        if (corpseNameText == null || currentLootSource == null)
-        {
-            return;
-        }
-
-        DisplayName displayName = currentLootSource.GetComponent<DisplayName>();
-        corpseNameText.text = displayName != null
-            ? displayName.Display
-            : currentLootSource.gameObject.name;
+        RefreshItems();
     }
 
     private void RefreshGold()
     {
-        if (goldText != null)
-        {
-            goldText.text = currentLootSource != null && currentLootSource.GoldAmount > 0
-                ? $"{currentLootSource.GoldAmount} Gold"
-                : "No Gold";
-        }
+        bool hasGold = currentLoot != null && currentLoot.GoldAmount > 0;
 
-        if (goldButton != null)
-        {
-            goldButton.interactable = currentLootSource != null && currentLootSource.GoldAmount > 0;
-        }
+        goldRow.SetActive(hasGold);
+
+        goldText.text = hasGold
+            ? $"{currentLoot.GoldAmount} Gold"
+            : "No Gold";
+
+        lootGoldButton.interactable = hasGold;
     }
 
-    private void RefreshSlots()
+    private void RefreshItems()
     {
-        if (currentLootSource == null)
+        if (currentLoot == null || currentLoot.LootSlots == null || itemSlotPrefab == null)
         {
             return;
         }
 
-        IReadOnlyList<InventorySlotData> lootSlots = currentLootSource.LootSlots;
-
-        for (int i = 0; i < lootSlotUIs.Count; i++)
+        for (int i = 0; i < currentLoot.LootSlots.Count; i++)
         {
-            InventorySlotData slotData = i < lootSlots.Count ? lootSlots[i] : null;
-            lootSlotUIs[i].Refresh(slotData);
-        }
-    }
+            InventorySlotData slot = currentLoot.LootSlots[i];
 
-    private void HandleGoldClicked()
-    {
-        if (currentLootSource == null || PlayerInventory.Instance == null)
-        {
-            return;
-        }
-
-        bool looted = currentLootSource.TryLootGold(PlayerInventory.Instance);
-        if (looted)
-        {
-            RefreshAll();
-        }
-    }
-
-    private void HandleLootSlotLeftClicked(int slotIndex)
-    {
-        if (currentLootSource == null || PlayerInventory.Instance == null)
-        {
-            return;
-        }
-
-        bool looted = currentLootSource.TryLootItem(slotIndex, PlayerInventory.Instance);
-        if (looted)
-        {
-            RefreshAll();
-        }
-    }
-
-    private void HandleLootChanged()
-    {
-        RefreshAll();
-    }
-
-    private bool HasAnyRemainingLoot()
-    {
-        if (currentLootSource == null)
-        {
-            return false;
-        }
-
-        if (currentLootSource.GoldAmount > 0)
-        {
-            return true;
-        }
-
-        IReadOnlyList<InventorySlotData> lootSlots = currentLootSource.LootSlots;
-        for (int i = 0; i < lootSlots.Count; i++)
-        {
-            InventorySlotData slot = lootSlots[i];
-            if (slot != null && !slot.IsEmpty && slot.Item != null)
+            if (slot == null || slot.IsEmpty)
             {
-                return true;
+                continue;
             }
-        }
 
-        return false;
+            int capturedIndex = i;
+
+            InventorySlotUI slotUI = Instantiate(itemSlotPrefab, itemContainer);
+            slotUI.gameObject.SetActive(true);
+
+            slotUI.Initialize(capturedIndex, OnItemClicked);
+            slotUI.Refresh(slot);
+        }
     }
 
-    private void UnsubscribeFromCurrentLoot()
+    private void OnItemClicked(int slotIndex)
     {
-        if (currentLootSource != null)
+        if (currentLoot == null || playerInventory == null)
         {
-            currentLootSource.OnLootChanged -= HandleLootChanged;
+            return;
+        }
+
+        currentLoot.TryLootItem(slotIndex, playerInventory);
+    }
+
+    private void LootGold()
+    {
+        if (currentLoot == null || playerInventory == null)
+        {
+            return;
+        }
+
+        currentLoot.TryLootGold(playerInventory);
+    }
+
+    private void ClearItems()
+    {
+        for (int i = itemContainer.childCount - 1; i >= 0; i--)
+        {
+            Destroy(itemContainer.GetChild(i).gameObject);
         }
     }
 }

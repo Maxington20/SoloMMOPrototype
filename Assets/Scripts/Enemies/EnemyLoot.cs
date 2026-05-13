@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyLoot : MonoBehaviour, IInteractable
+public class EnemyLoot : MonoBehaviour, IInteractable, ILootContainer
 {
     [Header("References")]
     [SerializeField] private EnemyData enemyData;
@@ -25,20 +25,15 @@ public class EnemyLoot : MonoBehaviour, IInteractable
 
     public event Action OnLootChanged;
 
+    public string InteractionName => LootDisplayName;
+    public string LootDisplayName => GetDisplayName();
+
     public IReadOnlyList<InventorySlotData> LootSlots => lootSlots;
     public Collider LootClickCollider => lootClickCollider;
     public int GoldAmount => goldAmount;
     public int SlotCount => lootSlots.Count;
 
-    public string InteractionName => GetDisplayName();
-
-    public bool CanBeLooted
-    {
-        get
-        {
-            return lootGenerated && health != null && health.IsDead && HasAnyLoot();
-        }
-    }
+    public bool CanBeLooted => lootGenerated && health != null && health.IsDead && HasAnyLoot();
 
     private void Awake()
     {
@@ -136,11 +131,7 @@ public class EnemyLoot : MonoBehaviour, IInteractable
 
         if (!playerInventory.CanAddItem(slot.Item, slot.Quantity))
         {
-            if (ChatManager.Instance != null)
-            {
-                ChatManager.Instance.PostSystem("Inventory is full.");
-            }
-
+            PostSystem("Inventory is full.");
             return false;
         }
 
@@ -374,5 +365,13 @@ public class EnemyLoot : MonoBehaviour, IInteractable
         }
 
         return gameObject.name;
+    }
+
+    private void PostSystem(string message)
+    {
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.PostSystem(message);
+        }
     }
 }
