@@ -15,6 +15,7 @@ public class QuestStage
     public List<QuestKillObjective> killObjectives = new List<QuestKillObjective>();
     public List<QuestCollectionObjective> collectionObjectives = new List<QuestCollectionObjective>();
     public List<QuestTalkObjective> talkObjectives = new List<QuestTalkObjective>();
+    public List<QuestWorldInteractObjective> worldInteractObjectives = new List<QuestWorldInteractObjective>();
 
     public string DisplayName
     {

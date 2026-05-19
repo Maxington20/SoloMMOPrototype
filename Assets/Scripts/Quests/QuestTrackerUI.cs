@@ -111,6 +111,23 @@ public class QuestTrackerUI : MonoBehaviour
                 }
             }
 
+            List<QuestWorldInteractObjective> worldObjectives = quest.GetCurrentWorldInteractObjectives();
+
+            if (worldObjectives != null)
+            {
+                foreach (QuestWorldInteractObjective objective in worldObjectives)
+                {
+                    if (objective == null || objective.Interactable == null)
+                    {
+                        continue;
+                    }
+
+                    int currentAmount = quest.HasInteractedWithWorldInteractable(objective.Interactable) ? 1 : 0;
+
+                    text += $"- Interact with {objective.DisplayName} ({currentAmount}/1)\n";
+                }
+            }
+
             text += "\n";
         }
 

@@ -99,6 +99,59 @@ public class QuestManager : MonoBehaviour
         return progressedAnyQuest;
     }
 
+    public bool RegisterWorldInteractableUsed(WorldInteractableData interactableData)
+    {
+        if (interactableData == null)
+        {
+            return false;
+        }
+
+        bool progressedAnyQuest = false;
+        PlayerInventory inventory = GetPlayerInventory();
+
+        for (int i = 0; i < activeQuests.Count; i++)
+        {
+            ActiveQuest quest = activeQuests[i];
+
+            if (quest == null || quest.definition == null)
+            {
+                continue;
+            }
+
+            if (quest.IsComplete(inventory))
+            {
+                continue;
+            }
+
+            if (!quest.NeedsWorldInteractableInCurrentStage(interactableData))
+            {
+                continue;
+            }
+
+            quest.RegisterWorldInteractable(interactableData);
+            progressedAnyQuest = true;
+
+            bool advancedStage = quest.TryAdvanceStage(inventory);
+
+            if (quest.IsComplete(inventory))
+            {
+                PostSystem($"Return to the correct quest giver to turn in {quest.definition.title}.");
+            }
+            else if (advancedStage)
+            {
+                PostSystem($"Quest stage advanced: {quest.GetCurrentStageTitle()}.");
+            }
+        }
+
+        if (progressedAnyQuest)
+        {
+            PostSystem("Quest progress updated.");
+            RefreshQuestUI();
+        }
+
+        return progressedAnyQuest;
+    }
+
     public string GetQuestOfferText()
     {
         RefreshQuestStages();

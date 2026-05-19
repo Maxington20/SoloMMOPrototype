@@ -6,6 +6,7 @@ public class ActiveQuest
 
     private readonly Dictionary<EnemyType, int> killProgress = new Dictionary<EnemyType, int>();
     private readonly HashSet<NpcData> talkedToNpcs = new HashSet<NpcData>();
+    private readonly HashSet<WorldInteractableData> interactedWorldObjects = new HashSet<WorldInteractableData>();
 
     public int CurrentStageIndex { get; private set; }
 
@@ -36,6 +37,11 @@ public class ActiveQuest
     public List<QuestTalkObjective> GetCurrentTalkObjectives()
     {
         return GetCurrentStage()?.talkObjectives;
+    }
+
+    public List<QuestWorldInteractObjective> GetCurrentWorldInteractObjectives()
+    {
+        return GetCurrentStage()?.worldInteractObjectives;
     }
 
     public string GetCurrentStageTitle()
@@ -76,6 +82,21 @@ public class ActiveQuest
     public bool HasTalkedToNpc(NpcData npc)
     {
         return npc != null && talkedToNpcs.Contains(npc);
+    }
+
+    public void RegisterWorldInteractable(WorldInteractableData interactable)
+    {
+        if (interactable == null)
+        {
+            return;
+        }
+
+        interactedWorldObjects.Add(interactable);
+    }
+
+    public bool HasInteractedWithWorldInteractable(WorldInteractableData interactable)
+    {
+        return interactable != null && interactedWorldObjects.Contains(interactable);
     }
 
     public bool NeedsEnemyTypeInCurrentStage(EnemyType enemyType)
@@ -122,11 +143,33 @@ public class ActiveQuest
         return false;
     }
 
+    public bool NeedsWorldInteractableInCurrentStage(WorldInteractableData interactable)
+    {
+        List<QuestWorldInteractObjective> objectives = GetCurrentWorldInteractObjectives();
+
+        if (objectives == null || interactable == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < objectives.Count; i++)
+        {
+            QuestWorldInteractObjective objective = objectives[i];
+
+            if (objective != null && objective.Interactable == interactable)
+            {
+                return !HasInteractedWithWorldInteractable(interactable);
+            }
+        }
+
+        return false;
+    }
+
     public bool TryAdvanceStage(PlayerInventory inventory)
     {
         bool advanced = false;
 
-        while (CurrentStageIndex < definition.StageCount && IsCurrentStageComplete(inventory))
+        while (definition != null && CurrentStageIndex < definition.StageCount && IsCurrentStageComplete(inventory))
         {
             CurrentStageIndex++;
             advanced = true;
@@ -197,12 +240,32 @@ public class ActiveQuest
             }
         }
 
+        List<QuestWorldInteractObjective> worldObjectives = GetCurrentWorldInteractObjectives();
+
+        if (worldObjectives != null)
+        {
+            for (int i = 0; i < worldObjectives.Count; i++)
+            {
+                QuestWorldInteractObjective objective = worldObjectives[i];
+
+                if (objective == null || objective.Interactable == null)
+                {
+                    continue;
+                }
+
+                if (!HasInteractedWithWorldInteractable(objective.Interactable))
+                {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
     public bool IsComplete(PlayerInventory inventory)
     {
         TryAdvanceStage(inventory);
-        return CurrentStageIndex >= definition.StageCount;
+        return definition != null && CurrentStageIndex >= definition.StageCount;
     }
 }

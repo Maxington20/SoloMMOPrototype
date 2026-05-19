@@ -28,6 +28,8 @@ public class WorldInteractable : MonoBehaviour, IInteractable, ILootContainer
 
     public event Action OnLootChanged;
 
+    public WorldInteractableData InteractableData => interactableData;
+
     public string InteractionName => LootDisplayName;
     public string LootDisplayName => GetDisplayName();
     public IReadOnlyList<InventorySlotData> LootSlots => lootSlots;
@@ -78,6 +80,13 @@ public class WorldInteractable : MonoBehaviour, IInteractable, ILootContainer
             return;
         }
 
+        bool progressedQuest = false;
+
+        if (QuestManager.Instance != null && interactableData != null)
+        {
+            progressedQuest = QuestManager.Instance.RegisterWorldInteractableUsed(interactableData);
+        }
+
         if (!lootGenerated)
         {
             GenerateLootFromData();
@@ -97,7 +106,11 @@ public class WorldInteractable : MonoBehaviour, IInteractable, ILootContainer
             return;
         }
 
-        PostSystem(GetInteractionMessage());
+        if (!progressedQuest)
+        {
+            PostSystem(GetInteractionMessage());
+        }
+
         hasBeenUsed = true;
 
         if (ShouldHideAfterUse())

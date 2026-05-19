@@ -17,6 +17,7 @@ MonoBehaviour:
   portrait: {fileID: 0}
   canGiveQuests: 1
   canVendor: 0
+  canTrain: 0
   quests:
   - title: Cull the Wolves
     description: These damn wolves are causing a problem. Please kill 3 for me and
@@ -28,6 +29,7 @@ MonoBehaviour:
       collectionObjectives: []
       talkObjectives:
       - npc: {fileID: 11400000, guid: 902af2be7cfde2844bce06fb45e5e457, type: 2}
+      worldInteractObjectives: []
     - stageName: Thin the Wolves
       objectiveSummary: Deal with the wovles near the road.
       killObjectives:
@@ -38,6 +40,14 @@ MonoBehaviour:
         requiredAmount: 4
       talkObjectives:
       - npc: {fileID: 11400000, guid: 902af2be7cfde2844bce06fb45e5e457, type: 2}
+      worldInteractObjectives: []
+    - stageName: Collect Chest stuff
+      objectiveSummary: Get stuff from the chest
+      killObjectives: []
+      collectionObjectives: []
+      talkObjectives: []
+      worldInteractObjectives:
+      - interactable: {fileID: 11400000, guid: 02ba5f1ad3b698c40a141bf5f4886a19, type: 2}
     - stageName: Return to Quest Giver
       objectiveSummary: Tell Quest Giver what you discovered.
       killObjectives:
@@ -48,8 +58,11 @@ MonoBehaviour:
         requiredAmount: 4
       talkObjectives:
       - npc: {fileID: 11400000, guid: 902af2be7cfde2844bce06fb45e5e457, type: 2}
+      worldInteractObjectives: []
     xpReward: 100
     goldReward: 10
     guaranteedItemRewards: []
     choiceItemRewards: []
   vendorItems: []
+  trainerClassRestriction: {fileID: 0}
+  trainableAbilities: []
