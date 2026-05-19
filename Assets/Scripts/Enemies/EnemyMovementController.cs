@@ -41,6 +41,7 @@ public class EnemyMovementController : MonoBehaviour
     public void SetHomePosition(Vector3 position)
     {
         homePosition = position;
+        homePosition.y = transform.position.y;
     }
 
     public void TickGravity()
@@ -122,9 +123,11 @@ public class EnemyMovementController : MonoBehaviour
     {
         if (hasWanderDestination)
         {
-            float distanceToDestination = Vector3.Distance(transform.position, wanderDestination);
+            float horizontalDistanceToDestination = GetHorizontalDistance(
+                transform.position,
+                wanderDestination);
 
-            if (distanceToDestination <= wanderStopDistance)
+            if (horizontalDistanceToDestination <= wanderStopDistance)
             {
                 ClearWanderDestination();
                 ResetWanderTimer();
@@ -150,13 +153,27 @@ public class EnemyMovementController : MonoBehaviour
 
     public void ResetWanderTimer()
     {
-        wanderIdleTimer = Random.Range(minIdleTimeBetweenWanders, maxIdleTimeBetweenWanders);
+        float min = Mathf.Max(0f, minIdleTimeBetweenWanders);
+        float max = Mathf.Max(min, maxIdleTimeBetweenWanders);
+
+        wanderIdleTimer = Random.Range(min, max);
     }
 
     private void PickNewWanderDestination()
     {
         Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
+
         wanderDestination = homePosition + new Vector3(randomCircle.x, 0f, randomCircle.y);
+        wanderDestination.y = transform.position.y;
+
         hasWanderDestination = true;
+    }
+
+    private float GetHorizontalDistance(Vector3 a, Vector3 b)
+    {
+        a.y = 0f;
+        b.y = 0f;
+
+        return Vector3.Distance(a, b);
     }
 }
