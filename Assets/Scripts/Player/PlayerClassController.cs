@@ -21,6 +21,7 @@ public class PlayerClassController : MonoBehaviour
     private PlayerStats playerStats;
     private PlayerProgression progression;
     private PlayerAbilityLoadout abilityLoadout;
+    private PlayerVisualController visualController;
 
     public CharacterClassData SelectedClass => selectedClass;
     public string ClassName => selectedClass != null ? selectedClass.ClassName : "No Class";
@@ -33,6 +34,7 @@ public class PlayerClassController : MonoBehaviour
         playerStats = GetComponent<PlayerStats>();
         progression = GetComponent<PlayerProgression>();
         abilityLoadout = GetComponent<PlayerAbilityLoadout>();
+        visualController = GetComponent<PlayerVisualController>();
     }
 
     private void OnEnable()
@@ -86,6 +88,11 @@ public class PlayerClassController : MonoBehaviour
         {
             Debug.LogWarning("PlayerClassController has no selected class assigned.");
             return;
+        }
+
+        if (visualController != null)
+        {
+            visualController.ApplyClassVisuals(selectedClass);
         }
 
         if (applyClassStatsOnStart)

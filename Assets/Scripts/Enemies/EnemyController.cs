@@ -10,6 +10,8 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyMovementController))]
 [RequireComponent(typeof(EnemyAggroController))]
 [RequireComponent(typeof(EnemyAttackController))]
+
+
 public class EnemyController : MonoBehaviour
 {
     [Header("Combat")]

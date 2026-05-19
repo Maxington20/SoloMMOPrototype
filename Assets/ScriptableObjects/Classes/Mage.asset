@@ -18,6 +18,10 @@ MonoBehaviour:
   description: A fragile spellcaster who deals strong damage from range and relies
     on magic to survice.
   icon: {fileID: 21300000, guid: a0a1d349d708a8849ae66bba032fd638, type: 3}
+  classModelPrefab: {fileID: 2368226777269408145, guid: ef268d3416d440c4396ee12e79fe41e1, type: 3}
+  modelLocalPositionOffset: {x: 0, y: -1.08, z: 0}
+  modelLocalRotationOffset: {x: 0, y: 0, z: 0}
+  modelLocalScale: {x: 1, y: 1, z: 1}
   startingMaxHealth: 90
   startingBaseDamage: 8
   startingStats:

@@ -17,6 +17,10 @@ MonoBehaviour:
   primaryStat: 0
   description: A durable melee fighter who relies on direct attacks and self-sustain.
   icon: {fileID: 21300000, guid: 6bf42695095e5cd4b879215ea50c47d3, type: 3}
+  classModelPrefab: {fileID: 6149849390851829352, guid: c9cd08bb3c5666b48836aa7be93c1592, type: 3}
+  modelLocalPositionOffset: {x: 0, y: -1.08, z: 0}
+  modelLocalRotationOffset: {x: 0, y: 0, z: 0}
+  modelLocalScale: {x: 1, y: 1, z: 1}
   startingMaxHealth: 140
   startingBaseDamage: 20
   startingStats:

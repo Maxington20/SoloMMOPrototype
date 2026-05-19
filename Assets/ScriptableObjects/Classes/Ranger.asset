@@ -18,6 +18,10 @@ MonoBehaviour:
   description: A mobile ranged fighter who attacks from a distnace and keeps themselves
     alive through surival skills.
   icon: {fileID: 21300000, guid: 98159e93975bdef40b1f4334e35ebde0, type: 3}
+  classModelPrefab: {fileID: 5403161935448205911, guid: 49152ddea7d100b4c9bddc3ef441f666, type: 3}
+  modelLocalPositionOffset: {x: 0, y: -1.08, z: 0}
+  modelLocalRotationOffset: {x: 0, y: 0, z: 0}
+  modelLocalScale: {x: 1, y: 1, z: 1}
   startingMaxHealth: 115
   startingBaseDamage: 14
   startingStats:

@@ -13,6 +13,12 @@ public class CharacterClassData : ScriptableObject
 
     [SerializeField] private Sprite icon;
 
+    [Header("Visuals")]
+    [SerializeField] private GameObject classModelPrefab;
+    [SerializeField] private Vector3 modelLocalPositionOffset;
+    [SerializeField] private Vector3 modelLocalRotationOffset;
+    [SerializeField] private Vector3 modelLocalScale = Vector3.one;
+
     [Header("Starting Values")]
     [SerializeField] private int startingMaxHealth = 100;
     [SerializeField] private int startingBaseDamage = 20;
@@ -40,6 +46,11 @@ public class CharacterClassData : ScriptableObject
     public PrimaryStatType PrimaryStat => primaryStat;
     public string Description => description;
     public Sprite Icon => icon;
+
+    public GameObject ClassModelPrefab => classModelPrefab;
+    public Vector3 ModelLocalPositionOffset => modelLocalPositionOffset;
+    public Vector3 ModelLocalRotationOffset => modelLocalRotationOffset;
+    public Vector3 ModelLocalScale => modelLocalScale == Vector3.zero ? Vector3.one : modelLocalScale;
 
     public int StartingMaxHealth => Mathf.Max(1, startingMaxHealth);
     public int StartingBaseDamage => Mathf.Max(0, startingBaseDamage);

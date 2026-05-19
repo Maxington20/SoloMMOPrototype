@@ -107,12 +107,11 @@ public class PlayerDeathController : MonoBehaviour
             health.ResetHealth();
         }
 
-
-        if (playerAnimationController != null)if (playerAnimationController != null)
+        if (playerAnimationController != null)
         {
             playerAnimationController.ResetToIdle();
         }
-        
+
         isDead = false;
 
         SetDeadStateEnabled(false);
