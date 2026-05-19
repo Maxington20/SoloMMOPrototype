@@ -11,12 +11,15 @@ public class EnemySpawnPoint : MonoBehaviour
     [SerializeField] private float respawnDelaySeconds = 10f;
     [SerializeField] private bool respawnAfterDeath = true;
 
+    [Header("Corpse Cleanup")]
+    [SerializeField] private float unlootedCorpseLifetimeSeconds = 60f;
+    [SerializeField] private float lootedCorpseLifetimeSeconds = 30f;
+
     [Header("Spawn Transform")]
     [SerializeField] private bool useSpawnPointRotation = true;
 
-    private GameObject currentEnemy;
-    private Health currentEnemyHealth;
-    private Coroutine respawnCoroutine;
+    private GameObject currentLivingEnemy;
+    private bool deathAlreadyHandled;
 
     private void Start()
     {
@@ -34,41 +37,36 @@ public class EnemySpawnPoint : MonoBehaviour
             return;
         }
 
-        CleanupCurrentEnemy();
-
         Quaternion spawnRotation = useSpawnPointRotation
             ? transform.rotation
             : enemyPrefab.transform.rotation;
 
-        currentEnemy = Instantiate(
-            enemyPrefab,
-            transform.position,
-            spawnRotation);
+        currentLivingEnemy = Instantiate(enemyPrefab, transform.position, spawnRotation);
+        currentLivingEnemy.name = enemyPrefab.name;
+        deathAlreadyHandled = false;
 
-        currentEnemy.name = enemyPrefab.name;
+        InitializeSpawnedEnemy(currentLivingEnemy);
 
-        InitializeSpawnedEnemy();
+        Health health = currentLivingEnemy.GetComponent<Health>();
 
-        currentEnemyHealth = currentEnemy.GetComponent<Health>();
-
-        if (currentEnemyHealth != null)
+        if (health != null)
         {
-            currentEnemyHealth.OnDied += HandleEnemyDied;
+            health.OnDied += HandleEnemyDied;
         }
         else
         {
-            Debug.LogWarning($"{currentEnemy.name} spawned from {name} has no Health component.");
+            Debug.LogWarning($"{currentLivingEnemy.name} spawned from {name} has no Health component.");
         }
     }
 
-    private void InitializeSpawnedEnemy()
+    private void InitializeSpawnedEnemy(GameObject enemy)
     {
-        if (currentEnemy == null)
+        if (enemy == null)
         {
             return;
         }
 
-        EnemyMovementController movementController = currentEnemy.GetComponent<EnemyMovementController>();
+        EnemyMovementController movementController = enemy.GetComponent<EnemyMovementController>();
 
         if (movementController != null)
         {
@@ -80,60 +78,80 @@ public class EnemySpawnPoint : MonoBehaviour
 
     private void HandleEnemyDied()
     {
-        if (currentEnemyHealth != null)
-        {
-            currentEnemyHealth.OnDied -= HandleEnemyDied;
-        }
-
-        if (!respawnAfterDeath)
+        if (deathAlreadyHandled)
         {
             return;
         }
 
-        if (respawnCoroutine != null)
+        deathAlreadyHandled = true;
+
+        GameObject corpse = currentLivingEnemy;
+        currentLivingEnemy = null;
+
+        if (corpse != null)
         {
-            StopCoroutine(respawnCoroutine);
+            Health health = corpse.GetComponent<Health>();
+
+            if (health != null)
+            {
+                health.OnDied -= HandleEnemyDied;
+            }
+
+            StartCoroutine(CleanupCorpseAfterDelay(corpse));
         }
 
-        respawnCoroutine = StartCoroutine(RespawnAfterDelay());
+        if (respawnAfterDeath)
+        {
+            StartCoroutine(RespawnAfterDelay());
+        }
     }
 
     private IEnumerator RespawnAfterDelay()
     {
         yield return new WaitForSeconds(respawnDelaySeconds);
-
-        CleanupCurrentEnemy();
         SpawnEnemy();
-
-        respawnCoroutine = null;
     }
 
-    private void CleanupCurrentEnemy()
+    private IEnumerator CleanupCorpseAfterDelay(GameObject corpse)
     {
-        if (currentEnemyHealth != null)
+        if (corpse == null)
         {
-            currentEnemyHealth.OnDied -= HandleEnemyDied;
-            currentEnemyHealth = null;
+            yield break;
         }
 
-        if (currentEnemy != null)
-        {
-            Destroy(currentEnemy);
-            currentEnemy = null;
-        }
-    }
+        EnemyLoot loot = corpse.GetComponent<EnemyLoot>();
+        float deathTime = Time.time;
 
-    private void OnDisable()
-    {
-        if (respawnCoroutine != null)
+        if (loot == null)
         {
-            StopCoroutine(respawnCoroutine);
-            respawnCoroutine = null;
+            yield return new WaitForSeconds(lootedCorpseLifetimeSeconds);
+
+            if (corpse != null)
+            {
+                Destroy(corpse);
+            }
+
+            yield break;
         }
 
-        if (currentEnemyHealth != null)
+        while (corpse != null && loot.CanBeLooted && Time.time - deathTime < unlootedCorpseLifetimeSeconds)
         {
-            currentEnemyHealth.OnDied -= HandleEnemyDied;
+            yield return null;
+        }
+
+        if (corpse == null)
+        {
+            yield break;
+        }
+
+        if (!loot.CanBeLooted)
+        {
+            yield return new WaitForSeconds(lootedCorpseLifetimeSeconds);
+        }
+
+        if (corpse != null)
+        {
+            Destroy(corpse);
         }
     }
 
